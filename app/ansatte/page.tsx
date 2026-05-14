@@ -1,0 +1,954 @@
+"use client";
+
+import Link from "next/link";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import { MOCK_RUTER, fullNavn, type Ansatt, type AnsattSelskap, type Bil, type Fravær, type Henger } from "@/lib/domain";
+import { useAnsattStore } from "@/lib/state/ansattStore";
+import { useBilStore } from "@/lib/state/bilStore";
+import { useFraværStore } from "@/lib/state/fravaerStore";
+import { useHengerStore } from "@/lib/state/hengerStore";
+import { useMasterplanStore } from "@/lib/state/masterplanStore";
+import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
+import { useTurnus4UkerStore, type TurnusSkiftType } from "@/lib/state/turnus4ukerStore";
+import styles from "./page.module.css";
+
+const TURNUS_REKKEFØLGE: TurnusSkiftType[] = ["Ingen", "Dag", "Kveld", "Begge"];
+const TURNUS_UKEDAGER = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
+
+function nesteTurnusSkift(s: TurnusSkiftType): TurnusSkiftType {
+  const idx = TURNUS_REKKEFØLGE.indexOf(s);
+  return TURNUS_REKKEFØLGE[(idx + 1) % TURNUS_REKKEFØLGE.length];
+}
+
+function turnusPillClass(skift: TurnusSkiftType): string {
+  if (skift === "Dag") return `${styles.turnusPill} ${styles.turnusDay}`;
+  if (skift === "Kveld") return `${styles.turnusPill} ${styles.turnusEvening}`;
+  if (skift === "Begge") return `${styles.turnusPill} ${styles.turnusBoth}`;
+  return `${styles.turnusPill} ${styles.turnusNone}`;
+}
+
+type AktivFilter = "alle" | "aktiv" | "inaktiv";
+
+type AnsattSkjema = {
+  id: string;
+  fornavn: string;
+  etternavn: string;
+  telefon: string;
+  epost: string;
+  rolle: string;
+  avdeling: string;
+  selskap: AnsattSelskap | "";
+  stillingsprosent: string;
+  kompetanse: string;
+  førerkort: string;
+  ruteIds: string[];
+  fastBilId: string;
+  fastHengerId: string;
+  aktiv: boolean;
+  kommentar: string;
+};
+
+/** Gjør like navn skillebare i sammenslåingsmodul (tlf., avdeling, intern id). */
+
+function formatIsoDato(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  return new Date(y, m - 1, d).toLocaleDateString("nb-NO", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function badgeClass(aktiv: boolean): string {
+  return aktiv
+    ? `${styles.badge} ${styles.badgeActive}`
+    : `${styles.badge} ${styles.badgeInactive}`;
+}
+
+function toSkjema(ansatt?: Ansatt): AnsattSkjema {
+  if (!ansatt) {
+    return {
+      id: "",
+      fornavn: "",
+      etternavn: "",
+      telefon: "",
+      epost: "",
+      rolle: "",
+      avdeling: "",
+      selskap: "Asko",
+      stillingsprosent: "100",
+      kompetanse: "",
+      førerkort: "",
+      ruteIds: [],
+      fastBilId: "",
+      fastHengerId: "",
+      aktiv: true,
+      kommentar: "",
+    };
+  }
+
+  return {
+    id: ansatt.id,
+    fornavn: ansatt.fornavn,
+    etternavn: ansatt.etternavn,
+    telefon: ansatt.telefon,
+    epost: ansatt.epost,
+    rolle: ansatt.rolle,
+    avdeling: ansatt.avdeling,
+    selskap: ansatt.selskap ?? "",
+    stillingsprosent: String(ansatt.stillingsprosent),
+    kompetanse: ansatt.kompetanse.join(", "),
+    førerkort: ansatt.førerkort.join(", "),
+    ruteIds: [...(ansatt.ruteIds ?? [])],
+    fastBilId: ansatt.fastBilId ?? "",
+    fastHengerId: ansatt.fastHengerId ?? "",
+    aktiv: ansatt.aktiv,
+    kommentar: ansatt.kommentar ?? "",
+  };
+}
+
+function parseListe(verdi: string): string[] {
+  return verdi
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function sanitizeStillingsprosent(verdi: string): number {
+  const n = Number(verdi);
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(100, Math.max(0, Math.round(n)));
+}
+
+function nyId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `a-${Date.now()}`;
+}
+
+function ruteEtikett(ruteId: string): string {
+  const r = MOCK_RUTER.find((x) => x.id === ruteId);
+  return r ? `${r.rutenummer} · ${r.rutenavn}` : ruteId;
+}
+
+function FraværListeBlokk({ rader }: { rader: Fravær[] }) {
+  return (
+    <div className={styles.fravaerSection}>
+      <div className={styles.fravaerSectionTitle}>Fravær</div>
+      {rader.length === 0 ? (
+        <p className={styles.helper}>Ingen registrert fravær for denne ansatte.</p>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table className={styles.fravaerTable}>
+            <thead>
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Periode</th>
+                <th scope="col">Merknad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rader.map((f) => (
+                <tr key={f.id}>
+                  <td>
+                    <span className={styles.typePill}>{f.type}</span>
+                    {f.planlagt ? (
+                      <span className={styles.helper} style={{ marginLeft: "0.35rem" }}>
+                        (planlagt)
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className={styles.muted}>
+                    {formatIsoDato(f.fraDato)}
+                    {f.tilDato !== f.fraDato ? ` – ${formatIsoDato(f.tilDato)}` : ""}
+                  </td>
+                  <td className={styles.muted}>{f.kommentar?.trim() ? f.kommentar.trim() : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <Link href="/fravaer" className={styles.linkFravaer}>
+        Åpne Fravær-modulen for å legge til eller endre
+      </Link>
+    </div>
+  );
+}
+
+function DetailPair({ term, children }: { term: string; children: ReactNode }) {
+  return (
+    <Fragment>
+      <dt className={styles.detailTerm}>{term}</dt>
+      <dd className={styles.detailDef}>{children}</dd>
+    </Fragment>
+  );
+}
+
+function bilEtikettLang(b: Bil): string {
+  const mm = [b.merke, b.modell].filter(Boolean).join(" ");
+  return mm ? `${b.kjennemerke} · ${mm}` : b.kjennemerke;
+}
+
+function visFastBil(id: string | undefined, bil: Bil | undefined): ReactNode {
+  if (!id) return <span className={styles.muted}>Ingen</span>;
+  if (!bil) return <span className={styles.muted}>Ukjent bil (kan være slettet)</span>;
+  return (
+    <>
+      {bilEtikettLang(bil)}
+      {!bil.aktiv ? <span className={styles.muted}> (inaktiv)</span> : null}
+    </>
+  );
+}
+
+function visFastHenger(id: string | undefined, h: Henger | undefined): ReactNode {
+  if (!id) return <span className={styles.muted}>Ingen</span>;
+  if (!h) return <span className={styles.muted}>Ukjent henger (kan være slettet)</span>;
+  return (
+    <>
+      {h.type ? `${h.kjennemerke} · ${h.type}` : h.kjennemerke}
+      {!h.aktiv ? <span className={styles.muted}> (inaktiv)</span> : null}
+    </>
+  );
+}
+
+export default function AnsattePage() {
+  const { ansatte, setAnsatte } = useAnsattStore();
+  const { fravær, slettForAnsatt: slettFraværForAnsatt } = useFraværStore();
+  const { biler } = useBilStore();
+  const { hengere } = useHengerStore();
+  const { masterplan } = useMasterplanStore();
+  const { fjernReferanser: fjernTildelingRef } = usePlanRuteTildelingStore();
+  const { hentTurnus, setDag: setTurnusDag } = useTurnus4UkerStore();
+  const [turnusUke, setTurnusUke] = useState<0 | 1 | 2 | 3>(0);
+  const [søk, setSøk] = useState("");
+  const [filter, setFilter] = useState<AktivFilter>("aktiv");
+
+  const [modalÅpen, setModalÅpen] = useState(false);
+  const [redigererId, setRedigererId] = useState<string | null>(null);
+  const [visId, setVisId] = useState<string | null>(null);
+  const [skjema, setSkjema] = useState<AnsattSkjema>(() => toSkjema());
+
+  const redigerer = useMemo(
+    () => (redigererId ? ansatte.find((a) => a.id === redigererId) : undefined),
+    [ansatte, redigererId],
+  );
+
+  const visAnsatt = useMemo(
+    () => (visId ? ansatte.find((a) => a.id === visId) : undefined),
+    [ansatte, visId],
+  );
+
+  const detaljAnsattId = redigererId ?? visId;
+  const fraværForDetaljAnsatt = useMemo(() => {
+    if (!detaljAnsattId) return [];
+    return fravær
+      .filter((f) => f.ansattId === detaljAnsattId)
+      .sort(
+        (a, b) =>
+          a.fraDato.localeCompare(b.fraDato) ||
+          a.tilDato.localeCompare(b.tilDato) ||
+          a.id.localeCompare(b.id),
+      );
+  }, [fravær, detaljAnsattId]);
+
+  useEffect(() => {
+    if (visId && !visAnsatt) setVisId(null);
+  }, [visId, visAnsatt]);
+
+  useEffect(() => {
+    if (!visId && !modalÅpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      setModalÅpen(false);
+      setRedigererId(null);
+      setVisId(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [visId, modalÅpen]);
+
+  const fasteRuterPerAnsatt = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const slot of masterplan.slots) {
+      if (!slot.standardSjåførAnsattId) continue;
+      if (!map.has(slot.standardSjåførAnsattId)) map.set(slot.standardSjåførAnsattId, new Set());
+      map.get(slot.standardSjåførAnsattId)!.add(slot.rutekode);
+    }
+    return map;
+  }, [masterplan.slots]);
+
+  const bilerSortert = useMemo(
+    () =>
+      [...biler].sort((a, b) =>
+        a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }),
+      ),
+    [biler],
+  );
+
+  const hengereSortert = useMemo(
+    () =>
+      [...hengere].sort((a, b) =>
+        a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }),
+      ),
+    [hengere],
+  );
+
+  const bilById = useMemo(() => new Map(biler.map((b) => [b.id, b] as const)), [biler]);
+  const hengerById = useMemo(() => new Map(hengere.map((h) => [h.id, h] as const)), [hengere]);
+
+
+  const synlige = useMemo(() => {
+    const q = søk.trim().toLowerCase();
+    return ansatte
+      .filter((a) => {
+        if (filter === "aktiv") return a.aktiv;
+        if (filter === "inaktiv") return !a.aktiv;
+        return true;
+      })
+      .filter((a) => {
+        if (!q) return true;
+        return fullNavn(a).toLowerCase().includes(q);
+      })
+      .sort((a, b) => fullNavn(a).localeCompare(fullNavn(b), "nb"));
+  }, [ansatte, filter, søk]);
+
+
+  function åpneNy() {
+    setVisId(null);
+    setRedigererId(null);
+    setSkjema(toSkjema());
+    setModalÅpen(true);
+  }
+
+  function åpneVisning(ansatt: Ansatt) {
+    setModalÅpen(false);
+    setRedigererId(null);
+    setVisId(ansatt.id);
+  }
+
+  function åpneRedigering(ansatt: Ansatt) {
+    setVisId(null);
+    setRedigererId(ansatt.id);
+    setSkjema(toSkjema(ansatt));
+    setModalÅpen(true);
+  }
+
+  function lukkModal() {
+    setModalÅpen(false);
+    setRedigererId(null);
+  }
+
+  function lukkVisning() {
+    setVisId(null);
+  }
+
+  function redigerFraVisning() {
+    if (!visAnsatt) return;
+    setVisId(null);
+    setRedigererId(visAnsatt.id);
+    setSkjema(toSkjema(visAnsatt));
+    setModalÅpen(true);
+  }
+
+  function toggleAktiv(ansatt: Ansatt) {
+    setAnsatte((prev) =>
+      prev.map((a) => (a.id === ansatt.id ? { ...a, aktiv: !a.aktiv } : a)),
+    );
+  }
+
+  function lagre(e: React.FormEvent) {
+    e.preventDefault();
+
+    const nyFornavn = skjema.fornavn.trim();
+    const nyEtternavn = skjema.etternavn.trim();
+    const nyttNavn = `${nyFornavn} ${nyEtternavn}`.trim().toLowerCase();
+
+    if (!redigererId) {
+      const nyttTlf = skjema.telefon.trim().replace(/\s+/g, "");
+
+      const navnTreff = nyttNavn
+        ? ansatte.find((a) => fullNavn(a).toLowerCase() === nyttNavn)
+        : undefined;
+
+      const tlfTreff = nyttTlf
+        ? ansatte.find((a) => (a.telefon ?? "").replace(/\s+/g, "") === nyttTlf)
+        : undefined;
+
+      if (navnTreff && tlfTreff && navnTreff.id === tlfTreff.id) {
+        const ok = window.confirm(
+          `Det finnes allerede en ansatt med samme navn og telefonnummer: «${fullNavn(navnTreff)}» (${nyttTlf}). Vil du opprette en ny profil likevel?`,
+        );
+        if (!ok) return;
+      } else {
+        if (navnTreff) {
+          const ok = window.confirm(
+            `Det finnes allerede en ansatt med navnet «${fullNavn(navnTreff)}». Vil du opprette en ny profil likevel?`,
+          );
+          if (!ok) return;
+        }
+        if (tlfTreff) {
+          const ok = window.confirm(
+            `Telefonnummeret ${nyttTlf} er allerede registrert på «${fullNavn(tlfTreff)}». Vil du opprette en ny profil likevel?`,
+          );
+          if (!ok) return;
+        }
+      }
+    }
+
+    const oppdatert: Ansatt = {
+      id: redigererId ?? nyId(),
+      fornavn: nyFornavn,
+      etternavn: nyEtternavn,
+      telefon: skjema.telefon.trim(),
+      epost: skjema.epost.trim(),
+      rolle: skjema.rolle.trim(),
+      avdeling: skjema.avdeling.trim(),
+      selskap: (skjema.selskap as AnsattSelskap) || undefined,
+      stillingsprosent: sanitizeStillingsprosent(skjema.stillingsprosent),
+      kompetanse: parseListe(skjema.kompetanse),
+      førerkort: parseListe(skjema.førerkort),
+      ruteIds: skjema.ruteIds.length ? [...skjema.ruteIds] : undefined,
+      fastBilId: skjema.fastBilId.trim() ? skjema.fastBilId.trim() : undefined,
+      fastHengerId: skjema.fastHengerId.trim() ? skjema.fastHengerId.trim() : undefined,
+      aktiv: skjema.aktiv,
+      kommentar: skjema.kommentar.trim() ? skjema.kommentar.trim() : undefined,
+    };
+
+    setAnsatte((prev) => {
+      const finnes = prev.some((a) => a.id === oppdatert.id);
+      if (finnes) return prev.map((a) => (a.id === oppdatert.id ? oppdatert : a));
+      return [oppdatert, ...prev];
+    });
+
+    setModalÅpen(false);
+    setRedigererId(null);
+  }
+
+  return (
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Ansatte</h1>
+        </div>
+        <div className={styles.controls}>
+          <input
+            className={styles.input}
+            value={søk}
+            onChange={(e) => setSøk(e.target.value)}
+            placeholder="Søk på navn"
+            aria-label="Søk på navn"
+          />
+          <select
+            className={styles.select}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as AktivFilter)}
+            aria-label="Filter"
+          >
+            <option value="aktiv">Kun aktive</option>
+            <option value="inaktiv">Kun inaktive</option>
+            <option value="alle">Alle</option>
+          </select>
+          <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
+            Ny ansatt
+          </button>
+        </div>
+      </header>
+
+      <div className={styles.desktopOnly}>
+        <div className={styles.tableWrap}>
+          <table className={styles.desktopTable}>
+            <thead>
+              <tr>
+                <th scope="col">Navn</th>
+                <th scope="col">Selskap</th>
+                <th scope="col">Telefon</th>
+                <th scope="col">Aktiv</th>
+                <th scope="col">Handlinger</th>
+              </tr>
+            </thead>
+            <tbody>
+              {synlige.map((a) => (
+                <tr key={a.id}>
+                  <td>
+                    <button
+                      type="button"
+                      className={`${styles.nameCell} ${styles.visNavnBtn}`}
+                      onClick={() => åpneVisning(a)}
+                    >
+                      {fullNavn(a)}
+                    </button>
+                  </td>
+                  <td className={styles.muted}>{a.selskap || "Asko"}</td>
+                  <td className={styles.muted}>{a.telefon}</td>
+                  <td>
+                    <span className={badgeClass(a.aktiv)}>{a.aktiv ? "Aktiv" : "Inaktiv"}</span>
+                  </td>
+                  <td>
+                    <div className={styles.rowActions}>
+                      <button
+                        type="button"
+                        className={styles.secondaryBtn}
+                        onClick={() => åpneVisning(a)}
+                      >
+                        Vis
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.secondaryBtn}
+                        onClick={() => åpneRedigering(a)}
+                      >
+                        Rediger
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {synlige.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className={styles.muted}>
+                    Ingen treff.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className={styles.mobileOnly}>
+        <div className={styles.mobileList}>
+          {synlige.map((a) => (
+            <div key={a.id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <button
+                    type="button"
+                    className={`${styles.cardTitle} ${styles.visNavnBtn}`}
+                    onClick={() => åpneVisning(a)}
+                  >
+                    {fullNavn(a)}
+                  </button>
+                  <div className={styles.cardMeta}>
+                    {a.rolle} · {a.avdeling}
+                    <br />
+                    {a.telefon} · {a.stillingsprosent}%
+                  </div>
+                </div>
+                <span className={badgeClass(a.aktiv)}>{a.aktiv ? "Aktiv" : "Inaktiv"}</span>
+              </div>
+              <div className={styles.cardActions}>
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => åpneVisning(a)}
+                >
+                  Vis
+                </button>
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => åpneRedigering(a)}
+                >
+                  Rediger
+                </button>
+              </div>
+            </div>
+          ))}
+          {synlige.length === 0 ? <div className={styles.muted}>Ingen treff.</div> : null}
+        </div>
+      </div>
+
+      <p className={styles.footerNote}>
+        {synlige.length} {synlige.length === 1 ? "ansatt" : "ansatte"}
+      </p>
+
+
+      {modalÅpen ? (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label={redigerer ? "Rediger ansatt" : "Ny ansatt"}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) lukkModal();
+          }}
+        >
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <div className={styles.modalTitle}>
+                  {redigerer ? "Rediger ansatt" : "Ny ansatt"}
+                </div>
+                <div className={styles.helper}>
+                  Felter med * er påkrevd.
+                </div>
+              </div>
+              <button type="button" className={styles.closeBtn} onClick={lukkModal} aria-label="Lukk">
+                Lukk
+              </button>
+            </div>
+
+            <form className={styles.modalForm} onSubmit={lagre}>
+              <div className={styles.modalBody}>
+              <div className={styles.formGrid}>
+                <div className={styles.field}>
+                  <label className={styles.label}>Fornavn *</label>
+                  <input
+                    className={styles.input}
+                    value={skjema.fornavn}
+                    onChange={(e) => setSkjema((s) => ({ ...s, fornavn: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Etternavn *</label>
+                  <input
+                    className={styles.input}
+                    value={skjema.etternavn}
+                    onChange={(e) => setSkjema((s) => ({ ...s, etternavn: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Telefon *</label>
+                  <input
+                    className={styles.input}
+                    value={skjema.telefon}
+                    onChange={(e) => setSkjema((s) => ({ ...s, telefon: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>E-post</label>
+                  <input
+                    className={styles.input}
+                    type="email"
+                    value={skjema.epost}
+                    onChange={(e) => setSkjema((s) => ({ ...s, epost: e.target.value }))}
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Rolle</label>
+                  <input
+                    className={styles.input}
+                    value={skjema.rolle}
+                    onChange={(e) => setSkjema((s) => ({ ...s, rolle: e.target.value }))}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Avdeling</label>
+                  <input
+                    className={styles.input}
+                    value={skjema.avdeling}
+                    onChange={(e) => setSkjema((s) => ({ ...s, avdeling: e.target.value }))}
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Selskap</label>
+                  <select
+                    className={styles.select}
+                    value={skjema.selskap}
+                    onChange={(e) => setSkjema((s) => ({ ...s, selskap: e.target.value as AnsattSelskap | "" }))}
+                  >
+                    <option value="Asko">Asko</option>
+                    <option value="Bring">Bring</option>
+                    <option value="TF">TF</option>
+                    <option value="GDF">GDF</option>
+                  </select>
+                  <div className={styles.helper}>Kun Asko-ansatte vises som tilgjengelige i daglig planlegging.</div>
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Stillingsprosent</label>
+                  <input
+                    className={styles.input}
+                    inputMode="numeric"
+                    value={skjema.stillingsprosent}
+                    onChange={(e) => setSkjema((s) => ({ ...s, stillingsprosent: e.target.value }))}
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Fast bil</label>
+                  <select
+                    className={styles.select}
+                    value={skjema.fastBilId}
+                    onChange={(e) => setSkjema((s) => ({ ...s, fastBilId: e.target.value }))}
+                  >
+                    <option value="">Ingen</option>
+                    {bilerSortert.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {bilEtikettLang(b)}
+                        {!b.aktiv ? " (inaktiv)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <div className={styles.helper}>Registrer nye biler under menyen Biler.</div>
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Fast henger</label>
+                  <select
+                    className={styles.select}
+                    value={skjema.fastHengerId}
+                    onChange={(e) => setSkjema((s) => ({ ...s, fastHengerId: e.target.value }))}
+                  >
+                    <option value="">Ingen</option>
+                    {hengereSortert.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.type ? `${h.kjennemerke} · ${h.type}` : h.kjennemerke}
+                        {!h.aktiv ? " (inaktiv)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <div className={styles.helper}>Registrer nye hengere under menyen Henger.</div>
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Kompetanse</label>
+                  <input
+                    className={styles.input}
+                    value={skjema.kompetanse}
+                    onChange={(e) => setSkjema((s) => ({ ...s, kompetanse: e.target.value }))}
+                    placeholder="Skill A, Skill B"
+                  />
+                  <div className={styles.helper}>Skriv som kommaseparert liste.</div>
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Førerkort</label>
+                  <input
+                    className={styles.input}
+                    value={skjema.førerkort}
+                    onChange={(e) => setSkjema((s) => ({ ...s, førerkort: e.target.value }))}
+                    placeholder="B, C1"
+                  />
+                  <div className={styles.helper}>Skriv som kommaseparert liste.</div>
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>Aktiv</label>
+                  <select
+                    className={styles.select}
+                    value={skjema.aktiv ? "ja" : "nei"}
+                    onChange={(e) =>
+                      setSkjema((s) => ({ ...s, aktiv: e.target.value === "ja" }))
+                    }
+                  >
+                    <option value="ja">Aktiv</option>
+                    <option value="nei">Inaktiv</option>
+                  </select>
+                </div>
+
+                <div className={styles.field} style={{ gridColumn: "1 / -1" }}>
+                  <label className={styles.label}>Kommentar</label>
+                  <textarea
+                    className={styles.textarea}
+                    value={skjema.kommentar}
+                    onChange={(e) => setSkjema((s) => ({ ...s, kommentar: e.target.value }))}
+                  />
+                </div>
+
+                {redigererId ? (
+                  <div className={styles.spanFullGrid}>
+                    <FraværListeBlokk rader={fraværForDetaljAnsatt} />
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Turnus-editor */}
+              {redigererId && (
+                <div className={styles.turnusSection}>
+                  <div className={styles.turnusHeader}>
+                    <span className={styles.turnusTitle}>Turnus (4 uker)</span>
+                    <div className={styles.turnusUkeTabs}>
+                      {([0, 1, 2, 3] as const).map((idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className={`${styles.turnusUkeTab} ${turnusUke === idx ? styles.turnusUkeTabActive : ""}`}
+                          onClick={() => setTurnusUke(idx)}
+                        >
+                          U{idx + 1}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.turnusGrid}>
+                    {TURNUS_UKEDAGER.map((dag, dagIndex) => {
+                      const turnus = hentTurnus(redigererId);
+                      const skift = turnus.plan[turnusUke]?.[dagIndex] ?? "Ingen";
+                      return (
+                        <button
+                          key={dag}
+                          type="button"
+                          className={styles.turnusDagBtn}
+                          title={`Klikk for å endre: ${TURNUS_REKKEFØLGE.join(" → ")}`}
+                          onClick={() =>
+                            setTurnusDag({
+                              ansattId: redigererId,
+                              ukeIndex: turnusUke,
+                              dagIndex,
+                              skift: nesteTurnusSkift(skift),
+                            })
+                          }
+                        >
+                          <span className={styles.turnusDagLabel}>{dag}</span>
+                          <span className={turnusPillClass(skift)}>{skift}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className={styles.turnusHint}>Klikk på en dag for å bytte: Ingen → Dag → Kveld → Begge</div>
+                </div>
+              )}
+
+              </div>
+              <div className={styles.formActionsSticky}>
+                <button type="button" className={styles.secondaryBtn} onClick={lukkModal}>
+                  Avbryt
+                </button>
+                <button type="submit" className={styles.primaryBtn}>
+                  Lagre
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {visId && visAnsatt ? (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Ansatt: ${fullNavn(visAnsatt)}`}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) lukkVisning();
+          }}
+        >
+          <div className={`${styles.modal} ${styles.modalWide}`}>
+            <div className={styles.modalHeader}>
+              <div>
+                <div className={styles.modalTitle}>{fullNavn(visAnsatt)}</div>
+                <div className={styles.helper} style={{ marginTop: "0.35rem" }}>
+                  <span className={badgeClass(visAnsatt.aktiv)}>
+                    {visAnsatt.aktiv ? "Aktiv" : "Inaktiv"}
+                  </span>
+                  <span style={{ marginLeft: "0.5rem" }}>
+                    {visAnsatt.rolle} · {visAnsatt.avdeling}
+                  </span>
+                </div>
+              </div>
+              <button type="button" className={styles.closeBtn} onClick={lukkVisning} aria-label="Lukk">
+                Lukk
+              </button>
+            </div>
+
+            <div className={`${styles.modalBody} ${styles.modalBodyScroll}`}>
+              <dl className={styles.detailGrid}>
+                <DetailPair term="Telefon">{visAnsatt.telefon || "—"}</DetailPair>
+                <DetailPair term="E-post">{visAnsatt.epost || "—"}</DetailPair>
+                <DetailPair term="Selskap">{visAnsatt.selskap || "Asko"}</DetailPair>
+                <DetailPair term="Stillingsprosent">{visAnsatt.stillingsprosent}%</DetailPair>
+                <DetailPair term="Faste ruter (fra masterplan)">
+                  {fasteRuterPerAnsatt.has(visAnsatt.id) ? (
+                    <ul className={styles.ruteBulletList}>
+                      {[...fasteRuterPerAnsatt.get(visAnsatt.id)!].sort((a, b) => a.localeCompare(b, "nb", { numeric: true })).map((kode) => (
+                        <li key={kode}>{kode}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className={styles.muted}>Ingen faste ruter i masterplan</span>
+                  )}
+                </DetailPair>
+                <DetailPair term="Fast bil">
+                  {visFastBil(visAnsatt.fastBilId, bilById.get(visAnsatt.fastBilId ?? ""))}
+                </DetailPair>
+                <DetailPair term="Fast henger">
+                  {visFastHenger(visAnsatt.fastHengerId, hengerById.get(visAnsatt.fastHengerId ?? ""))}
+                </DetailPair>
+                <DetailPair term="Kompetanse">
+                  {visAnsatt.kompetanse.length ? visAnsatt.kompetanse.join(", ") : "—"}
+                </DetailPair>
+                <DetailPair term="Førerkort">
+                  {visAnsatt.førerkort.length ? visAnsatt.førerkort.join(", ") : "—"}
+                </DetailPair>
+                <DetailPair term="Kommentar">
+                  {visAnsatt.kommentar?.trim() ? (
+                    visAnsatt.kommentar.trim()
+                  ) : (
+                    <span className={styles.muted}>Ingen</span>
+                  )}
+                </DetailPair>
+              </dl>
+
+              <FraværListeBlokk rader={fraværForDetaljAnsatt} />
+
+              {/* Turnus (read-only visning) */}
+              <div className={styles.turnusSection}>
+                <div className={styles.turnusHeader}>
+                  <span className={styles.turnusTitle}>Turnus (4 uker)</span>
+                  <div className={styles.turnusUkeTabs}>
+                    {([0, 1, 2, 3] as const).map((idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className={`${styles.turnusUkeTab} ${turnusUke === idx ? styles.turnusUkeTabActive : ""}`}
+                        onClick={() => setTurnusUke(idx)}
+                      >
+                        U{idx + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.turnusGrid}>
+                  {TURNUS_UKEDAGER.map((dag, dagIndex) => {
+                    const turnus = hentTurnus(visAnsatt.id);
+                    const skift = turnus.plan[turnusUke]?.[dagIndex] ?? "Ingen";
+                    return (
+                      <div key={dag} className={styles.turnusDagReadonly}>
+                        <span className={styles.turnusDagLabel}>{dag}</span>
+                        <span className={turnusPillClass(skift)}>{skift}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalFooterBar}>
+              <button
+                type="button"
+                className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
+                onClick={() => {
+                  if (window.confirm(`Er du sikker på at du vil slette oppføringen for ${fullNavn(visAnsatt)}? Fravær og tildelinger knyttet til denne personen fjernes også.`)) {
+                    const id = visAnsatt.id;
+                    setAnsatte((prev) => prev.filter((a) => a.id !== id));
+                    slettFraværForAnsatt(id);
+                    fjernTildelingRef("ansattId", id);
+                    lukkVisning();
+                  }
+                }}
+              >
+                Slett
+              </button>
+              <div style={{ flex: 1 }} />
+              <button type="button" className={styles.secondaryBtn} onClick={lukkVisning}>
+                Lukk
+              </button>
+              <button type="button" className={styles.primaryBtn} onClick={redigerFraVisning}>
+                Rediger
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
