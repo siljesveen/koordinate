@@ -1,5 +1,6 @@
 "use client";
 
+import { clearAllAnsatteData } from "@/lib/maintenance/clearAllAnsatte";
 import { useRef, useState } from "react";
 import styles from "./page.module.css";
 
@@ -119,6 +120,19 @@ export default function InnstillingerPage() {
     window.location.reload();
   }
 
+  function handleSlettAlleAnsatte() {
+    if (
+      !window.confirm(
+        "Slette alle ansatte? Fravær og turnus fjernes også. Sjåfør-referanser i masterplan og plan tømmes. Biler og hengere beholdes.",
+      )
+    ) {
+      return;
+    }
+    clearAllAnsatteData();
+    setStatus("Alle ansatte er slettet. Laster inn siden på nytt …");
+    window.setTimeout(() => window.location.reload(), 400);
+  }
+
   const nåværende = typeof window !== "undefined" ? eksporterData() : {};
   const { nøkler, poster } = tellPoster(nåværende);
 
@@ -144,6 +158,17 @@ export default function InnstillingerPage() {
         </p>
         <button type="button" className={styles.primaryBtn} onClick={handleEksport}>
           Last ned backup
+        </button>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Ansatte</h2>
+        <p className={styles.info}>
+          Tømmer alle ansatte før du legger inn nye fra dokument. Fravær og turnus slettes.
+          Fast sjåfør i masterplan og plan fjernes, men biler og hengere beholdes.
+        </p>
+        <button type="button" className={styles.dangerBtn} onClick={handleSlettAlleAnsatte}>
+          Slett alle ansatte
         </button>
       </section>
 

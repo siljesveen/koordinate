@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MOCK_ANSATTE, type Ansatt } from "@/lib/domain";
+import type { Ansatt } from "@/lib/domain";
+import { IMPORTERTE_ANSATTE_BEMANNING_2026 } from "@/lib/imported/ansatte-bemanning-2026";
 import { IMPORTERTE_RUTER } from "@/lib/imported/ruter-from-ringnes";
 
 type LagretAnsatt = Ansatt & { fastRute?: string };
@@ -28,24 +29,36 @@ type AnsattStoreValue = {
 const AnsattStoreContext = createContext<AnsattStoreValue | null>(null);
 const STORAGE_KEY = "bemanning.ansatte.v2";
 
+function standardAnsatte(): Ansatt[] {
+  return IMPORTERTE_ANSATTE_BEMANNING_2026.map(migrateAnsatt);
+}
+
 export function AnsattStoreProvider({ children }: { children: React.ReactNode }) {
-  const [ansatte, setAnsatte] = useState<Ansatt[]>(() => MOCK_ANSATTE.map(migrateAnsatt));
+  const [ansatte, setAnsatte] = useState<Ansatt[]>(standardAnsatte);
   const loaded = useRef(false);
 
   // Last fra nettleser-lagring ved oppstart (hvis finnes).
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) {
+        setAnsatte(standardAnsatte());
+        loaded.current = true;
+        return;
+      }
       const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) return;
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        setAnsatte(standardAnsatte());
+        loaded.current = true;
+        return;
+      }
       setAnsatte(
         parsed
           .filter((x) => x && typeof x === "object")
           .map((x) => migrateAnsatt(x as LagretAnsatt)),
       );
     } catch {
-      // Ignorer hvis lagring er korrupt/ikke tilgjengelig.
+      setAnsatte(standardAnsatte());
     }
     loaded.current = true;
   }, []);
