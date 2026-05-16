@@ -9,6 +9,10 @@ export function dagEndringId(dato: string, skift: Skift, rutekode: string): stri
   return `de-${dato}-${skift}-${encodeURIComponent(rutekode)}`;
 }
 
+export function dagKoblingOpphevetId(dato: string, skift: Skift, gruppeKey: string): string {
+  return `de-kobling-${dato}-${skift}-${encodeURIComponent(gruppeKey)}`;
+}
+
 function normalizeLoaded(data: unknown): DagEndring[] {
   if (!Array.isArray(data)) return [];
   return data
@@ -18,16 +22,33 @@ function normalizeLoaded(data: unknown): DagEndring[] {
       const id = String(r.id ?? "");
       const dato = String(r.dato ?? "");
       const skift = r.skift === "Dag" || r.skift === "Kveld" ? r.skift : null;
-      const type = r.type === "fjernet" || r.type === "lagt_til" ? r.type : null;
+      const type =
+        r.type === "fjernet" || r.type === "lagt_til" || r.type === "kobling_opphevet"
+          ? r.type
+          : null;
       const rutekode = String(r.rutekode ?? "");
-      if (!id || !dato || !skift || !type || !rutekode) return null;
+      const rutekoderRaw = r.rutekoder;
+      const rutekoder = Array.isArray(rutekoderRaw)
+        ? rutekoderRaw.filter((x) => typeof x === "string").map(String)
+        : undefined;
+      const koblingsgruppe =
+        typeof r.koblingsgruppe === "string" && r.koblingsgruppe.trim()
+          ? r.koblingsgruppe.trim()
+          : undefined;
+      if (!id || !dato || !skift || !type) return null;
+      if (type !== "kobling_opphevet" && !rutekode) return null;
+      if (type === "kobling_opphevet" && !rutekode && (!rutekoder || rutekoder.length < 2)) {
+        return null;
+      }
       return {
         id,
         dato,
         skift,
         type,
-        rutekode,
+        rutekode: rutekode || rutekoder![0],
         rutenavn: typeof r.rutenavn === "string" ? r.rutenavn : undefined,
+        koblingsgruppe,
+        rutekoder,
       } as DagEndring;
     })
     .filter(Boolean) as DagEndring[];

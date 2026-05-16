@@ -9,8 +9,8 @@ const NAV_ITEMS: { href: string; label: string; group: "plan" | "ressurs" | "adm
   { href: "/masterplan", label: "Masterplan", group: "plan" },
   { href: "/ansatte", label: "Ansatte", group: "ressurs" },
   { href: "/biler", label: "Biler", group: "ressurs" },
+  { href: "/verksted", label: "Verksted", group: "ressurs" },
   { href: "/henger", label: "Hengere", group: "ressurs" },
-  { href: "/kjoretoy-utilgjengelig", label: "Utilgjengelighet", group: "ressurs" },
   { href: "/fravaer", label: "Fravær", group: "admin" },
   { href: "/innstillinger", label: "Innstillinger", group: "admin" },
 ];
@@ -29,7 +29,9 @@ export default function TopNav() {
         <div className={styles.divider} />
 
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/biler" && pathname.startsWith(item.href + "/"));
           return (
             <Link
               key={item.href}

@@ -134,7 +134,7 @@ export default function BilerPage() {
           <h1 className={styles.title}>Biler</h1>
           <p className={styles.helper}>
             Registrerte kjøretøy. Fast sjåfør settes under Ansatte.{" "}
-            <Link href="/biler/utilgjengelig">Utilgjengelighetsperioder</Link>.
+            <Link href="/verksted">Verksted</Link> (kalender og utilgjengelighetsperioder).
           </p>
         </div>
         <div className={styles.controls}>
@@ -142,9 +142,12 @@ export default function BilerPage() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk (kjennemerke, merke …)"
+            placeholder="Søk kjennemerke"
             aria-label="Søk"
           />
+          <Link href="/verksted" className={styles.secondaryBtn}>
+            Verksted
+          </Link>
           <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
             Ny bil
           </button>
@@ -156,8 +159,6 @@ export default function BilerPage() {
           <thead>
             <tr>
               <th scope="col">Kjennemerke</th>
-              <th scope="col">Merke / modell</th>
-              <th scope="col">Status</th>
               <th scope="col">Fast sjåfør</th>
               <th scope="col">I dag</th>
               <th scope="col">Handlinger</th>
@@ -170,12 +171,6 @@ export default function BilerPage() {
               return (
                 <tr key={b.id}>
                   <td className={styles.muted}>{b.kjennemerke}</td>
-                  <td className={styles.muted}>
-                    {[b.merke, b.modell].filter(Boolean).join(" ") || "—"}
-                  </td>
-                  <td>
-                    <span className={styles.badge}>{b.aktiv ? "Aktiv" : "Inaktiv"}</span>
-                  </td>
                   <td className={styles.muted}>
                     {sjåfører.length
                       ? sjåfører.map((a) => fullNavn(a)).join(", ")
@@ -215,7 +210,7 @@ export default function BilerPage() {
             })}
             {synlige.length === 0 ? (
               <tr>
-                <td colSpan={6} className={styles.helper}>
+                <td colSpan={4} className={styles.helper}>
                   Ingen biler registrert.
                 </td>
               </tr>

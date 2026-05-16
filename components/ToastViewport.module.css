@@ -1,0 +1,62 @@
+.viewport {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.6rem;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+  pointer-events: auto;
+  animation: slideIn 0.25s ease-out;
+}
+
+.toastSuccess {
+  background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+}
+
+.message {
+  flex: 1;
+}
+
+.close {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

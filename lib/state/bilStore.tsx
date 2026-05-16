@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Bil } from "@/lib/domain";
+import { IMPORTERTE_BILER_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type BilStoreValue = {
   biler: Bil[];
@@ -11,6 +12,10 @@ type BilStoreValue = {
 
 const STORAGE_KEY = "bemanning.biler.v1";
 const Ctx = createContext<BilStoreValue | null>(null);
+
+function standardBiler(): Bil[] {
+  return IMPORTERTE_BILER_REFERANSE_2026;
+}
 
 function normalizeLoaded(data: unknown): Bil[] {
   if (!Array.isArray(data)) return [];
@@ -22,7 +27,7 @@ function normalizeLoaded(data: unknown): Bil[] {
       const kjennemerke = String(x.kjennemerke ?? "").trim();
       const merke = typeof x.merke === "string" ? x.merke.trim() : undefined;
       const modell = typeof x.modell === "string" ? x.modell.trim() : undefined;
-      const aktiv = Boolean(x.aktiv);
+      const aktiv = x.aktiv === false || x.aktiv === "nei" ? false : true;
       const kommentar = typeof x.kommentar === "string" ? x.kommentar : undefined;
       if (!id || !kjennemerke) return null;
       return { id, kjennemerke, merke, modell, aktiv, kommentar } as Bil;
@@ -36,15 +41,27 @@ function nyId(): string {
 }
 
 export function BilStoreProvider({ children }: { children: React.ReactNode }) {
-  const [biler, setBiler] = useState<Bil[]>([]);
+  const [biler, setBiler] = useState<Bil[]>(standardBiler);
   const loaded = useRef(false);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setBiler(normalizeLoaded(JSON.parse(raw)));
+      if (!raw) {
+        setBiler(standardBiler());
+        loaded.current = true;
+        return;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        setBiler(standardBiler());
+        loaded.current = true;
+        return;
+      }
+      const normalized = normalizeLoaded(parsed);
+      setBiler(normalized.length > 0 ? normalized : standardBiler());
     } catch {
-      // ignorer
+      setBiler(standardBiler());
     }
     loaded.current = true;
   }, []);

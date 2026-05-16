@@ -130,7 +130,7 @@ export default function HengerPage() {
           <h1 className={styles.title}>Henger</h1>
           <p className={styles.helper}>
             Registrerte hengere. Fast tilknytning settes under Ansatte.{" "}
-            <Link href="/henger/utilgjengelig">Utilgjengelighetsperioder</Link>.
+            <Link href="/verksted?tab=hengere">Verksted · hengere</Link>.
           </p>
         </div>
         <div className={styles.controls}>
@@ -138,7 +138,7 @@ export default function HengerPage() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk (kjennemerke, type …)"
+            placeholder="Søk kjennemerke"
             aria-label="Søk"
           />
           <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
@@ -152,8 +152,6 @@ export default function HengerPage() {
           <thead>
             <tr>
               <th scope="col">Kjennemerke</th>
-              <th scope="col">Type</th>
-              <th scope="col">Status</th>
               <th scope="col">Fast sjåfør</th>
               <th scope="col">I dag</th>
               <th scope="col">Handlinger</th>
@@ -166,10 +164,6 @@ export default function HengerPage() {
               return (
                 <tr key={h.id}>
                   <td className={styles.muted}>{h.kjennemerke}</td>
-                  <td className={styles.muted}>{h.type ?? "—"}</td>
-                  <td>
-                    <span className={styles.badge}>{h.aktiv ? "Aktiv" : "Inaktiv"}</span>
-                  </td>
                   <td className={styles.muted}>
                     {sjåfører.length
                       ? sjåfører.map((a) => fullNavn(a)).join(", ")
@@ -209,7 +203,7 @@ export default function HengerPage() {
             })}
             {synlige.length === 0 ? (
               <tr>
-                <td colSpan={6} className={styles.helper}>
+                <td colSpan={4} className={styles.helper}>
                   Ingen hengere registrert.
                 </td>
               </tr>

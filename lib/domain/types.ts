@@ -54,6 +54,7 @@ export type Henger = {
 
 /** Årsak til at bil/henger ikke kan brukes i en periode (planlagt eller akutt). */
 export type KjøretøyUtilgjengeligType =
+  | "Verksted"
   | "Vedlikehold"
   | "Havari"
   | "Service"
@@ -65,7 +66,13 @@ export type BilUtilgjengelig = {
   bilId: string;
   type: KjøretøyUtilgjengeligType;
   fraDato: string;
-  tilDato: string;
+  /** Utelatt = på verksted/utilgjengelig til noen avslutter perioden. */
+  tilDato?: string;
+  /**
+   * Kalenderdag da perioden ble avsluttet med «tilbake» — skjul i «borte i dag»
+   * samme dag (plan/disponibilitet bruker fortsatt lukket til i dag ved behov).
+   */
+  tilbakeIDriftDato?: string;
   /** Planlagt frem i tid vs akutt problem */
   planlagt?: boolean;
   kommentar?: string;
@@ -136,6 +143,10 @@ export type PlanRuteTildeling = {
    * (f.eks. etter at sjåfør er dratt til tilgjengelig).
    */
   skjulBaselineSjåfør?: boolean;
+  /** Når sann og ingen bilId: ingen bil på denne ruten (heller ikke fra master/fast/koblet). */
+  skjulBaselineBil?: boolean;
+  /** Når sann og ingen hengerId: ingen henger på denne ruten (heller ikke fra master/fast/koblet). */
+  skjulBaselineHenger?: boolean;
 };
 
 /* ─── Master-ruteplan (4-ukers syklus) ─── */
@@ -181,7 +192,11 @@ export type DagEndring = {
   id: string;
   dato: string;
   skift: Skift;
-  type: "fjernet" | "lagt_til";
+  type: "fjernet" | "lagt_til" | "kobling_opphevet";
   rutekode: string;
   rutenavn?: string;
+  /** Masterplan-gruppenavn (når kobling kommer fra koblingsgrupper). */
+  koblingsgruppe?: string;
+  /** Alle rutekoder som var koblet denne dagen (før oppheving). */
+  rutekoder?: string[];
 };

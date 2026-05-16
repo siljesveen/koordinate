@@ -1,18 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { Bil, BilUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
-import {
-  bilMerkeTilbakeBekreftMelding,
-  bilPeriodeKanMerkesTilbake,
-  erUtilgjengeligPeriodeÅpen,
-  formatUtilgjengeligPeriode,
-  utilgjengeligPeriodeSorterKey,
-} from "@/lib/kjoretoyTilgjengelighet";
-import { useBilStore } from "@/lib/state/bilStore";
-import { useMerkBilTilbake } from "@/lib/hooks/useMerkBilTilbake";
-import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
+import type { Henger, HengerUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { useHengerStore } from "@/lib/state/hengerStore";
+import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
 import styles from "@/app/fravaer/page.module.css";
 
 const TYPER: KjøretøyUtilgjengeligType[] = [
@@ -26,11 +17,10 @@ const TYPER: KjøretøyUtilgjengeligType[] = [
 
 type Skjema = {
   id: string;
-  bilId: string;
+  hengerId: string;
   type: KjøretøyUtilgjengeligType;
   fraDato: string;
   tilDato: string;
-  utenSluttdato: boolean;
   planlagt: "ja" | "nei";
   kommentar: string;
 };
@@ -43,49 +33,45 @@ function isoIDag(): string {
   return `${y}-${m}-${d}`;
 }
 
-function bilTekst(b: Bil): string {
-  const mm = [b.merke, b.modell].filter(Boolean).join(" ");
-  return mm ? `${b.kjennemerke} · ${mm}` : b.kjennemerke;
+function hengerTekst(h: Henger): string {
+  return h.type ? `${h.kjennemerke} · ${h.type}` : h.kjennemerke;
 }
 
-function toSkjema(item: BilUtilgjengelig | null, biler: Bil[]): Skjema {
+function toSkjema(item: HengerUtilgjengelig | null, hengere: Henger[]): Skjema {
   if (!item) {
     return {
       id: "",
-      bilId: biler[0]?.id ?? "",
-      type: "Verksted",
+      hengerId: hengere[0]?.id ?? "",
+      type: "Vedlikehold",
       fraDato: isoIDag(),
       tilDato: isoIDag(),
-      utenSluttdato: false,
       planlagt: "ja",
       kommentar: "",
     };
   }
   return {
     id: item.id,
-    bilId: item.bilId,
+    hengerId: item.hengerId,
     type: item.type,
     fraDato: item.fraDato,
-    tilDato: item.tilDato ?? "",
-    utenSluttdato: erUtilgjengeligPeriodeÅpen(item),
+    tilDato: item.tilDato,
     planlagt: item.planlagt ? "ja" : "nei",
     kommentar: item.kommentar ?? "",
   };
 }
 
-export default function BilUtilgjengeligPage() {
-  const { biler } = useBilStore();
-  const { poster, lagre, slett } = useBilUtilgjengeligStore();
-  const merkTilbake = useMerkBilTilbake();
+export function HengerPerioderTab() {
+  const { hengere } = useHengerStore();
+  const { poster, lagre, slett } = useHengerUtilgjengeligStore();
 
-  const bilById = useMemo(() => new Map(biler.map((b) => [b.id, b] as const)), [biler]);
+  const hengerById = useMemo(() => new Map(hengere.map((h) => [h.id, h] as const)), [hengere]);
 
   const [søk, setSøk] = useState("");
   const [typeFilter, setTypeFilter] = useState<"" | KjøretøyUtilgjengeligType>("");
 
   const [modalÅpen, setModalÅpen] = useState(false);
   const [redigererId, setRedigererId] = useState<string | null>(null);
-  const [skjema, setSkjema] = useState<Skjema>(() => toSkjema(null, biler));
+  const [skjema, setSkjema] = useState<Skjema>(() => toSkjema(null, hengere));
 
   const redigerer = useMemo(
     () => (redigererId ? poster.find((p) => p.id === redigererId) ?? null : null),
@@ -101,24 +87,22 @@ export default function BilUtilgjengeligPage() {
       })
       .filter((p) => {
         if (!q) return true;
-        const b = bilById.get(p.bilId);
-        if (!b) return p.bilId.toLowerCase().includes(q);
-        return bilTekst(b).toLowerCase().includes(q);
+        const h = hengerById.get(p.hengerId);
+        if (!h) return p.hengerId.toLowerCase().includes(q);
+        return hengerTekst(h).toLowerCase().includes(q);
       })
-      .sort((a, b) =>
-        utilgjengeligPeriodeSorterKey(b).localeCompare(utilgjengeligPeriodeSorterKey(a)),
-      );
-  }, [bilById, poster, søk, typeFilter]);
+      .sort((a, b) => (b.fraDato + b.tilDato).localeCompare(a.fraDato + a.tilDato));
+  }, [hengerById, poster, søk, typeFilter]);
 
   function åpneNy() {
     setRedigererId(null);
-    setSkjema(toSkjema(null, biler));
+    setSkjema(toSkjema(null, hengere));
     setModalÅpen(true);
   }
 
-  function åpneRedigering(item: BilUtilgjengelig) {
+  function åpneRedigering(item: HengerUtilgjengelig) {
     setRedigererId(item.id);
-    setSkjema(toSkjema(item, biler));
+    setSkjema(toSkjema(item, hengere));
     setModalÅpen(true);
   }
 
@@ -129,21 +113,20 @@ export default function BilUtilgjengeligPage() {
 
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
-    if (!skjema.bilId || !skjema.fraDato) return;
-    if (!skjema.utenSluttdato && !skjema.tilDato) return;
-    if (!skjema.utenSluttdato && skjema.fraDato > skjema.tilDato) {
+    if (!skjema.hengerId || !skjema.fraDato || !skjema.tilDato) return;
+    if (skjema.fraDato > skjema.tilDato) {
       alert("Fra-dato kan ikke være etter til-dato.");
       return;
     }
 
-    const item: BilUtilgjengelig = {
+    const item: HengerUtilgjengelig = {
       id:
         redigererId ??
-        (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `bu-${Date.now()}`),
-      bilId: skjema.bilId,
+        (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `hu-${Date.now()}`),
+      hengerId: skjema.hengerId,
       type: skjema.type,
       fraDato: skjema.fraDato,
-      tilDato: skjema.utenSluttdato ? undefined : skjema.tilDato,
+      tilDato: skjema.tilDato,
       planlagt: skjema.planlagt === "ja",
       kommentar: skjema.kommentar.trim() ? skjema.kommentar.trim() : undefined,
     };
@@ -152,38 +135,15 @@ export default function BilUtilgjengeligPage() {
     lukk();
   }
 
-  function bekreftOgMerkTilbake(p: BilUtilgjengelig) {
-    if (!bilPeriodeKanMerkesTilbake(p)) return;
-    const b = bilById.get(p.bilId);
-    const navn = b ? bilTekst(b) : p.bilId;
-    if (window.confirm(bilMerkeTilbakeBekreftMelding(p, navn))) {
-      void merkTilbake(p.id, { kjennemerke: navn });
-    }
-  }
-
   return (
-    <div className={styles.page}>
+    <>
       <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Bil · utilgjengelighet</h1>
-          <p className={styles.helper}>
-            Registrer perioder bilen ikke kan brukes (planlagt service eller akutt havari). Samme logikk som
-            fravær hos ansatte.
-          </p>
-          <p className={styles.helper}>
-            <Link href="/kjoretoy-utilgjengelig">← Tilbake til kjøretøy</Link>
-            {" · "}
-            <Link href="/biler">Bilregister</Link>
-            {" · "}
-            <Link href="/biler/kalender">Verkstedkalender</Link>
-          </p>
-        </div>
         <div className={styles.controls}>
           <input
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk bil"
+            placeholder="Søk henger"
             aria-label="Søk"
           />
           <select
@@ -199,7 +159,7 @@ export default function BilUtilgjengeligPage() {
               </option>
             ))}
           </select>
-          <button type="button" className={styles.primaryBtn} onClick={åpneNy} disabled={!biler.length}>
+          <button type="button" className={styles.primaryBtn} onClick={åpneNy} disabled={!hengere.length}>
             Ny periode
           </button>
         </div>
@@ -209,7 +169,7 @@ export default function BilUtilgjengeligPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th scope="col">Bil</th>
+              <th scope="col">Henger</th>
               <th scope="col">Årsak</th>
               <th scope="col">Periode</th>
               <th scope="col">Planlagt</th>
@@ -219,13 +179,13 @@ export default function BilUtilgjengeligPage() {
           </thead>
           <tbody>
             {synlige.map((p) => {
-              const b = bilById.get(p.bilId);
+              const h = hengerById.get(p.hengerId);
               return (
                 <tr key={p.id}>
-                  <td>{b ? bilTekst(b) : p.bilId}</td>
+                  <td>{h ? hengerTekst(h) : p.hengerId}</td>
                   <td className={styles.muted}>{p.type}</td>
                   <td className={styles.muted}>
-                    {formatUtilgjengeligPeriode(p.fraDato, p.tilDato)}
+                    {p.fraDato} → {p.tilDato}
                   </td>
                   <td>
                     <span
@@ -237,21 +197,6 @@ export default function BilUtilgjengeligPage() {
                   <td className={styles.muted}>{p.kommentar ?? "—"}</td>
                   <td>
                     <div className={styles.actions}>
-                      <button
-                        type="button"
-                        className={styles.primaryBtn}
-                        disabled={!bilPeriodeKanMerkesTilbake(p)}
-                        title={
-                          bilPeriodeKanMerkesTilbake(p)
-                            ? erUtilgjengeligPeriodeÅpen(p)
-                              ? undefined
-                              : "Forkort nedetiden til i dag – bil kan brukes i plan fra nå av"
-                            : "Ikke aktiv for plan lengre"
-                        }
-                        onClick={() => bekreftOgMerkTilbake(p)}
-                      >
-                        Tilbake
-                      </button>
                       <button type="button" className={styles.secondaryBtn} onClick={() => åpneRedigering(p)}>
                         Rediger
                       </button>
@@ -294,7 +239,7 @@ export default function BilUtilgjengeligPage() {
                 <div className={styles.modalTitle}>
                   {redigerer ? "Rediger periode" : "Ny utilgjengelighetsperiode"}
                 </div>
-                <div className={styles.helper}>Bilen kan ikke disponeres i dette datointervallet.</div>
+                <div className={styles.helper}>Hengeren kan ikke disponeres i dette datointervallet.</div>
               </div>
               <button type="button" className={styles.closeBtn} onClick={lukk} aria-label="Lukk">
                 Lukk
@@ -303,20 +248,22 @@ export default function BilUtilgjengeligPage() {
             <form className={styles.modalBody} onSubmit={lagreSkjema}>
               <div className={styles.formGrid}>
                 <div className={styles.field}>
-                  <label className={styles.label}>Bil *</label>
+                  <label className={styles.label}>Henger *</label>
                   <select
                     className={styles.select}
-                    value={skjema.bilId}
-                    onChange={(e) => setSkjema((s) => ({ ...s, bilId: e.target.value }))}
+                    value={skjema.hengerId}
+                    onChange={(e) => setSkjema((s) => ({ ...s, hengerId: e.target.value }))}
                     required
                   >
-                    {biler
+                    {hengere
                       .slice()
-                      .sort((a, b) => a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }))
-                      .map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {bilTekst(b)}
-                          {!b.aktiv ? " (inaktiv)" : ""}
+                      .sort((a, b) =>
+                        a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }),
+                      )
+                      .map((h) => (
+                        <option key={h.id} value={h.id}>
+                          {hengerTekst(h)}
+                          {!h.aktiv ? " (inaktiv)" : ""}
                         </option>
                       ))}
                   </select>
@@ -350,32 +297,14 @@ export default function BilUtilgjengeligPage() {
                     required
                   />
                 </div>
-                <div className={styles.field} style={{ gridColumn: "1 / -1" }}>
-                  <label className={styles.label}>
-                    <input
-                      type="checkbox"
-                      checked={skjema.utenSluttdato}
-                      onChange={(e) =>
-                        setSkjema((s) => ({
-                          ...s,
-                          utenSluttdato: e.target.checked,
-                        }))
-                      }
-                    />{" "}
-                    Uten sluttdato (bilen er utilgjengelig til noen merker den tilbake)
-                  </label>
-                </div>
                 <div className={styles.field}>
-                  <label className={styles.label}>
-                    Til dato{skjema.utenSluttdato ? "" : " *"}
-                  </label>
+                  <label className={styles.label}>Til dato *</label>
                   <input
                     className={styles.input}
                     type="date"
                     value={skjema.tilDato}
                     onChange={(e) => setSkjema((s) => ({ ...s, tilDato: e.target.value }))}
-                    disabled={skjema.utenSluttdato}
-                    required={!skjema.utenSluttdato}
+                    required
                   />
                 </div>
 
@@ -414,6 +343,6 @@ export default function BilUtilgjengeligPage() {
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Henger } from "@/lib/domain";
+import { IMPORTERTE_HENGERE_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type HengerStoreValue = {
   hengere: Henger[];
@@ -12,6 +13,10 @@ type HengerStoreValue = {
 const STORAGE_KEY = "bemanning.henger.v1";
 const Ctx = createContext<HengerStoreValue | null>(null);
 
+function standardHengere(): Henger[] {
+  return IMPORTERTE_HENGERE_REFERANSE_2026;
+}
+
 function normalizeLoaded(data: unknown): Henger[] {
   if (!Array.isArray(data)) return [];
   return data
@@ -21,7 +26,7 @@ function normalizeLoaded(data: unknown): Henger[] {
       const id = String(x.id ?? "");
       const kjennemerke = String(x.kjennemerke ?? "").trim();
       const type = typeof x.type === "string" ? x.type.trim() : undefined;
-      const aktiv = Boolean(x.aktiv);
+      const aktiv = x.aktiv === false || x.aktiv === "nei" ? false : true;
       const kommentar = typeof x.kommentar === "string" ? x.kommentar : undefined;
       if (!id || !kjennemerke) return null;
       return { id, kjennemerke, type, aktiv, kommentar } as Henger;
@@ -35,15 +40,27 @@ function nyId(): string {
 }
 
 export function HengerStoreProvider({ children }: { children: React.ReactNode }) {
-  const [hengere, setHengere] = useState<Henger[]>([]);
+  const [hengere, setHengere] = useState<Henger[]>(standardHengere);
   const loaded = useRef(false);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setHengere(normalizeLoaded(JSON.parse(raw)));
+      if (!raw) {
+        setHengere(standardHengere());
+        loaded.current = true;
+        return;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        setHengere(standardHengere());
+        loaded.current = true;
+        return;
+      }
+      const normalized = normalizeLoaded(parsed);
+      setHengere(normalized.length > 0 ? normalized : standardHengere());
     } catch {
-      // ignorer
+      setHengere(standardHengere());
     }
     loaded.current = true;
   }, []);

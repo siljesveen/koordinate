@@ -30,10 +30,12 @@ function syklusUke(d: Date): 1 | 2 | 3 | 4 {
 }
 
 function overlapperDato(
-  post: { fraDato: string; tilDato: string },
+  post: { fraDato: string; tilDato?: string },
   dato: string,
 ): boolean {
-  return dato >= post.fraDato && dato <= post.tilDato;
+  if (dato < post.fraDato) return false;
+  if (!post.tilDato) return true;
+  return dato <= post.tilDato;
 }
 
 export default function Home() {

@@ -204,7 +204,28 @@
 }
 
 .table tbody tr:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
+}
+
+.table tbody tr.dataRow:focus-within {
+  background: #dbeafe;
+  box-shadow: inset 4px 0 0 #1d4ed8;
+}
+
+.table tbody tr.dataRow:focus-within > td {
+  border-bottom-color: #93c5fd;
+}
+
+.table tbody tr.dataRow:focus-within:hover {
+  background: #dbeafe;
+}
+
+.dropCell:focus {
+  outline: none;
+}
+
+.dropCell:focus-visible {
+  box-shadow: inset 0 0 0 2px #1d4ed8;
 }
 
 /* ── Statusknapper ── */
@@ -249,8 +270,9 @@
 }
 
 .tdTildel {
-  min-width: 7rem;
-  max-width: 11rem;
+  position: relative;
+  min-width: 8rem;
+  max-width: 12rem;
 }
 
 .selectSm {
@@ -267,6 +289,200 @@
 .selectSm:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 1px;
+}
+
+.kjoretoyCombo {
+  position: relative;
+  min-width: 0;
+}
+
+.kjoretoyComboTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.25rem 0.3rem;
+  border-radius: 0.35rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.kjoretoyComboTrigger:hover {
+  background: #f8fafc;
+}
+
+.kjoretoyComboTriggerOpen {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.kjoretoyComboTriggerMaster {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.kjoretoyComboTriggerMaster:hover {
+  background: #ecfdf5;
+}
+
+.kjoretoyComboValueMaster {
+  color: #14532d;
+}
+
+.kjoretoyComboItemMaster:not(.kjoretoyComboItemWarn) {
+  background: #f0fdf4;
+}
+
+.kjoretoyComboItemMaster:not(.kjoretoyComboItemWarn):hover {
+  background: #dcfce7;
+}
+
+.kjoretoyComboItemWarn.kjoretoyComboItemMaster:hover {
+  background: #fef3c7;
+}
+
+.kjoretoyComboRegMaster {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.kjoretoyComboTriggerMaster.kjoretoyComboTriggerOpen {
+  background: #ecfdf5;
+}
+
+.kjoretoyComboValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.kjoretoyComboChevron {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.kjoretoyComboPanel {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  min-width: 10rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+.kjoretoyComboSøkWrap {
+  padding: 0.3rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.kjoretoyComboSøk {
+  width: 100%;
+  padding: 0.28rem 0.35rem;
+  border-radius: 0.3rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 600;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.kjoretoyComboSøk::placeholder {
+  color: #94a3b8;
+}
+
+.kjoretoyComboSøk:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+}
+
+.kjoretoyComboListe {
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.kjoretoyComboItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  border: 0;
+  border-bottom: 1px solid #f8fafc;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.kjoretoyComboItem:last-child {
+  border-bottom: 0;
+}
+
+.kjoretoyComboItem:hover {
+  background: #eff6ff;
+}
+
+.kjoretoyComboItemWarn {
+  background: #fffbeb;
+}
+
+.kjoretoyComboItemWarn:hover {
+  background: #fef3c7;
+}
+
+.kjoretoyComboReg {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kjoretoyComboStatusOk {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.kjoretoyComboStatusWarn {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #b45309;
+  text-align: right;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kjoretoyComboTom {
+  padding: 0.45rem 0.5rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-style: italic;
 }
 
 .baselineHint {
@@ -519,36 +735,32 @@
 
 /* ── Fjern rute-knapp i tabell ── */
 
-.linkIcon {
-  position: relative;
+.linkIconBtn {
+  margin-left: 0.2rem;
+  padding: 0 0.15rem;
+  border: 0;
+  background: none;
   color: #6366f1;
   font-size: 0.7rem;
   font-weight: 800;
-  cursor: default;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+  border-radius: 0.2rem;
 }
 
-.linkIcon::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  transform: translateX(-50%);
-  padding: 0.3rem 0.5rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  white-space: nowrap;
-  background: #1e293b;
-  color: #fff;
-  border-radius: 0.3rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s;
-  margin-bottom: 0.2rem;
-  z-index: 10;
+.linkIconBtn:hover {
+  background: #eef2ff;
+  color: #4338ca;
 }
 
-.linkIcon:hover::after {
-  opacity: 1;
+.linkIconBtnOpphevet {
+  color: #94a3b8;
+}
+
+.linkIconBtnOpphevet:hover {
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .removeBtn {

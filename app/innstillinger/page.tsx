@@ -1,6 +1,11 @@
 "use client";
 
 import { clearAllAnsatteData } from "@/lib/maintenance/clearAllAnsatte";
+import { gjenopprettStandardKjoretoy } from "@/lib/maintenance/seedKjoretoy";
+import {
+  IMPORTERTE_BILER_REFERANSE_2026,
+  IMPORTERTE_HENGERE_REFERANSE_2026,
+} from "@/lib/imported/kjoretoy-referanse-2026";
 import { useRef, useState } from "react";
 import styles from "./page.module.css";
 
@@ -120,6 +125,19 @@ export default function InnstillingerPage() {
     window.location.reload();
   }
 
+  function handleGjenopprettKjoretoy() {
+    if (
+      !window.confirm(
+        `Gjenopprette standardlisten? Dette legger inn ${IMPORTERTE_BILER_REFERANSE_2026.length} biler og ${IMPORTERTE_HENGERE_REFERANSE_2026.length} hengere (kun reg.nr). Eksisterende biler/hengere i listen erstattes.`,
+      )
+    ) {
+      return;
+    }
+    gjenopprettStandardKjoretoy();
+    setStatus("Biler og hengere er gjenopprettet. Laster inn siden på nytt …");
+    window.setTimeout(() => window.location.reload(), 400);
+  }
+
   function handleSlettAlleAnsatte() {
     if (
       !window.confirm(
@@ -158,6 +176,18 @@ export default function InnstillingerPage() {
         </p>
         <button type="button" className={styles.primaryBtn} onClick={handleEksport}>
           Last ned backup
+        </button>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Biler og hengere</h2>
+        <p className={styles.info}>
+          Hvis bil- eller hengerlisten er tom, kan du hente inn standardlisten fra importen
+          ({IMPORTERTE_BILER_REFERANSE_2026.length} biler, {IMPORTERTE_HENGERE_REFERANSE_2026.length}{" "}
+          hengere).
+        </p>
+        <button type="button" className={styles.primaryBtn} onClick={handleGjenopprettKjoretoy}>
+          Gjenopprett biler og hengere
         </button>
       </section>
 

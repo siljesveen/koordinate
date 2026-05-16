@@ -16,10 +16,14 @@ import {
   type PlanRuteTildeling,
   type Skift,
 } from "@/lib/domain";
-import { erBilUtilgjengeligPåDato, erHengerUtilgjengeligPåDato } from "@/lib/kjoretoyTilgjengelighet";
+import { erBilUtilgjengeligPåDato, erHengerUtilgjengeligPåDato, overlapperUtilgjengeligPeriodeDisponibilitet } from "@/lib/kjoretoyTilgjengelighet";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
-import { dagEndringId, useDagEndringStore } from "@/lib/state/dagEndringStore";
+import {
+  dagEndringId,
+  dagKoblingOpphevetId,
+  useDagEndringStore,
+} from "@/lib/state/dagEndringStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
@@ -28,6 +32,7 @@ import {
   planRuteSlotId,
   usePlanRuteTildelingStore,
 } from "@/lib/state/planRuteTildelingStore";
+import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
 import styles from "./page.module.css";
 
 const DRAG_MIME = "application/x-bemanning-plan-ansatt";
@@ -64,8 +69,10 @@ function hengerTekst(h: Henger): string {
   return h.type ? `${h.kjennemerke} · ${h.type}` : h.kjennemerke;
 }
 
-function overlapperDato(p: { fraDato: string; tilDato: string }, dato: string): boolean {
-  return p.fraDato <= dato && dato <= p.tilDato;
+function overlapperDato(p: { fraDato: string; tilDato?: string }, dato: string): boolean {
+  if (dato < p.fraDato) return false;
+  if (!p.tilDato) return true;
+  return dato <= p.tilDato;
 }
 
 /**
@@ -126,12 +133,6 @@ export default function PlanPage() {
     return m;
   }, [masterplan.koblingsgrupper, skift, dayNo]);
 
-  function kobleteMedRute(rutekode: string): string[] {
-    const gruppe = koblingsgruppeFraRute.get(rutekode);
-    if (!gruppe) return [];
-    return (ruterIKoblingsgruppe.get(gruppe) ?? []).filter((k) => k !== rutekode);
-  }
-
   /* ── Effektive ruter: master-slots + dag-endringer ── */
 
   const masterSlotsForDag = useMemo(
@@ -146,6 +147,18 @@ export default function PlanPage() {
     () => dagEndringer.filter((e) => e.dato === dato && e.skift === skift),
     [dagEndringer, dato, skift],
   );
+
+  const opphevedeKoblinger = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of dagEndringerForDag) {
+      if (e.type !== "kobling_opphevet") continue;
+      if (e.koblingsgruppe) set.add(e.koblingsgruppe);
+      if (e.rutekoder && e.rutekoder.length >= 2) {
+        set.add([...e.rutekoder].sort().join("|"));
+      }
+    }
+    return set;
+  }, [dagEndringerForDag]);
 
   const effektiveRuter = useMemo(() => {
     const fjernede = new Set(
@@ -166,6 +179,86 @@ export default function PlanPage() {
       }));
     return [...fra_master, ...lagtTil];
   }, [masterSlotsForDag, dagEndringerForDag, uke, dayNo, skift]);
+
+  function erKoblingOpphevetForDag(gruppeKey: string, rutekoder: string[]): boolean {
+    if (gruppeKey && opphevedeKoblinger.has(gruppeKey)) return true;
+    if (rutekoder.length >= 2) {
+      return opphevedeKoblinger.has([...rutekoder].sort().join("|"));
+    }
+    return false;
+  }
+
+  function finnKoblingForRute(
+    rutekode: string,
+  ): { gruppeKey: string; rutekoder: string[] } | null {
+    const gruppe = koblingsgruppeFraRute.get(rutekode);
+    if (gruppe) {
+      const rutekoder = ruterIKoblingsgruppe.get(gruppe) ?? [];
+      if (rutekoder.length >= 2) return { gruppeKey: gruppe, rutekoder };
+    }
+    const slot = effektiveRuter.find((s) => s.rutekode === rutekode);
+    if (slot?.koblingsgruppe) {
+      const rutekoder = effektiveRuter
+        .filter((s) => s.koblingsgruppe === slot.koblingsgruppe)
+        .map((s) => s.rutekode);
+      if (rutekoder.length >= 2) return { gruppeKey: slot.koblingsgruppe, rutekoder };
+    }
+    return null;
+  }
+
+  function koblingLagringsNøkkel(info: { gruppeKey: string; rutekoder: string[] }): string {
+    return info.gruppeKey || [...info.rutekoder].sort().join("|");
+  }
+
+  function kobleteMedRute(rutekode: string): string[] {
+    const gruppe = koblingsgruppeFraRute.get(rutekode);
+    if (gruppe) {
+      const alle = ruterIKoblingsgruppe.get(gruppe) ?? [];
+      if (erKoblingOpphevetForDag(gruppe, alle)) return [];
+      return alle.filter((k) => k !== rutekode);
+    }
+    const slot = effektiveRuter.find((s) => s.rutekode === rutekode);
+    if (slot?.koblingsgruppe) {
+      const alle = effektiveRuter
+        .filter((s) => s.koblingsgruppe === slot.koblingsgruppe)
+        .map((s) => s.rutekode);
+      if (erKoblingOpphevetForDag(slot.koblingsgruppe, alle)) return [];
+      return alle.filter((k) => k !== rutekode);
+    }
+    return [];
+  }
+
+  function opphevKoblingForDag(rutekode: string) {
+    const info = finnKoblingForRute(rutekode);
+    if (!info) return;
+    const nøkkel = koblingLagringsNøkkel(info);
+    const liste = info.rutekoder.join(", ");
+    const ok = window.confirm(
+      `Oppheve kobling mellom ${liste} for ${dato} (${skift})?\n\nRutene kan planlegges separat denne dagen. Masterplan endres ikke.`,
+    );
+    if (!ok) return;
+    lagreDagEndring({
+      id: dagKoblingOpphevetId(dato, skift as Skift, nøkkel),
+      dato,
+      skift: skift as Skift,
+      type: "kobling_opphevet",
+      rutekode: info.rutekoder[0],
+      koblingsgruppe: info.gruppeKey || undefined,
+      rutekoder: info.rutekoder,
+    });
+  }
+
+  function gjenopprettKoblingForDag(rutekode: string) {
+    const info = finnKoblingForRute(rutekode);
+    if (!info) return;
+    const nøkkel = koblingLagringsNøkkel(info);
+    const liste = info.rutekoder.join(", ");
+    const ok = window.confirm(
+      `Gjenopprette kobling mellom ${liste} for ${dato} (${skift})?\n\nSjåfør, bil og henger deles igjen mellom rutene.`,
+    );
+    if (!ok) return;
+    fjernDagEndring(dagKoblingOpphevetId(dato, skift as Skift, nøkkel));
+  }
 
   /* ── Tildelinger og oppslag ── */
 
@@ -211,14 +304,39 @@ export default function PlanPage() {
   const hengerById = useMemo(() => new Map(hengere.map((h) => [h.id, h] as const)), [hengere]);
 
   const bilPosterPåDato = useMemo(
-    () => bilUtilgjengelig.filter((p) => overlapperDato(p, dato)),
+    () => bilUtilgjengelig.filter((p) => overlapperUtilgjengeligPeriodeDisponibilitet(dato, p)),
     [bilUtilgjengelig, dato],
   );
 
   const hengerPosterPåDato = useMemo(
-    () => hengerUtilgjengelig.filter((p) => overlapperDato(p, dato)),
+    () => hengerUtilgjengelig.filter((p) => overlapperUtilgjengeligPeriodeDisponibilitet(dato, p)),
     [hengerUtilgjengelig, dato],
   );
+
+  /** Dagens bil/henger-valg deles innen koblingsgruppe (som ved lagring). */
+  function tildelingKjoretoyForRute(rute: string): PlanRuteTildeling | undefined {
+    const egen = tildelingMap.get(rute);
+    if (
+      egen?.bilId ||
+      egen?.hengerId ||
+      egen?.skjulBaselineBil ||
+      egen?.skjulBaselineHenger
+    ) {
+      return egen;
+    }
+    for (const kr of kobleteMedRute(rute)) {
+      const kTil = tildelingMap.get(kr);
+      if (
+        kTil?.bilId ||
+        kTil?.hengerId ||
+        kTil?.skjulBaselineBil ||
+        kTil?.skjulBaselineHenger
+      ) {
+        return kTil;
+      }
+    }
+    return egen;
+  }
 
   /* ── Effektiv sjåfør/bil/henger per rute (master → sjekk → overstyring) ── */
 
@@ -265,48 +383,60 @@ export default function PlanPage() {
       }
     }
 
+    const tilKj = tildelingKjoretoyForRute(slot.rutekode);
+
     // Bil
-    let bilId = til?.bilId;
+    let bilId = tilKj?.bilId;
     let bilFraMaster = false;
-    if (!bilId && slot.standardBilId) {
-      bilId = slot.standardBilId;
-      bilFraMaster = true;
-    }
-    if (!bilId && sjåfør?.fastBilId) {
-      bilId = sjåfør.fastBilId;
-      bilFraMaster = true;
-    }
-    // Arv fra koblet rute
-    if (!bilId) {
-      for (const kr of kobleteMedRute(slot.rutekode)) {
-        const kTil = tildelingMap.get(kr);
-        if (kTil?.bilId) { bilId = kTil.bilId; bilFraMaster = false; break; }
-        const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
-        if (kSlot?.standardBilId) { bilId = kSlot.standardBilId; bilFraMaster = true; break; }
+    if (!(tilKj?.skjulBaselineBil && !tilKj?.bilId)) {
+      if (!bilId && slot.standardBilId) {
+        bilId = slot.standardBilId;
+        bilFraMaster = true;
       }
+      if (!bilId && sjåfør?.fastBilId) {
+        bilId = sjåfør.fastBilId;
+        bilFraMaster = true;
+      }
+      // Arv fra koblet rute
+      if (!bilId) {
+        for (const kr of kobleteMedRute(slot.rutekode)) {
+          const kTil = tildelingMap.get(kr);
+          if (kTil?.bilId) { bilId = kTil.bilId; bilFraMaster = false; break; }
+          if (kTil?.skjulBaselineBil) continue;
+          const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
+          if (kSlot?.standardBilId) { bilId = kSlot.standardBilId; bilFraMaster = true; break; }
+        }
+      }
+    } else {
+      bilId = undefined;
     }
     const bilUtilgjengeligFlag =
       Boolean(bilId) && erBilUtilgjengeligPåDato(bilId!, dato, bilUtilgjengelig);
 
     // Henger
-    let hengerId = til?.hengerId;
+    let hengerId = tilKj?.hengerId;
     let hengerFraMaster = false;
-    if (!hengerId && slot.standardHengerId) {
-      hengerId = slot.standardHengerId;
-      hengerFraMaster = true;
-    }
-    if (!hengerId && sjåfør?.fastHengerId) {
-      hengerId = sjåfør.fastHengerId;
-      hengerFraMaster = true;
-    }
-    // Arv fra koblet rute
-    if (!hengerId) {
-      for (const kr of kobleteMedRute(slot.rutekode)) {
-        const kTil = tildelingMap.get(kr);
-        if (kTil?.hengerId) { hengerId = kTil.hengerId; hengerFraMaster = false; break; }
-        const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
-        if (kSlot?.standardHengerId) { hengerId = kSlot.standardHengerId; hengerFraMaster = true; break; }
+    if (!(tilKj?.skjulBaselineHenger && !tilKj?.hengerId)) {
+      if (!hengerId && slot.standardHengerId) {
+        hengerId = slot.standardHengerId;
+        hengerFraMaster = true;
       }
+      if (!hengerId && sjåfør?.fastHengerId) {
+        hengerId = sjåfør.fastHengerId;
+        hengerFraMaster = true;
+      }
+      // Arv fra koblet rute
+      if (!hengerId) {
+        for (const kr of kobleteMedRute(slot.rutekode)) {
+          const kTil = tildelingMap.get(kr);
+          if (kTil?.hengerId) { hengerId = kTil.hengerId; hengerFraMaster = false; break; }
+          if (kTil?.skjulBaselineHenger) continue;
+          const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
+          if (kSlot?.standardHengerId) { hengerId = kSlot.standardHengerId; hengerFraMaster = true; break; }
+        }
+      }
+    } else {
+      hengerId = undefined;
     }
     const hengerUtilgjengeligFlag =
       Boolean(hengerId) && erHengerUtilgjengeligPåDato(hengerId!, dato, hengerUtilgjengelig);
@@ -322,6 +452,43 @@ export default function PlanPage() {
       hengerFraMaster,
       hengerUtilgjengeligFlag,
     };
+  }
+
+  /** Masterplanens kjøretøy for ruten (inkl. arv fra koblede ruter) — uavhengig av «—» på dagen. */
+  function masterplanBilIdForSlot(slot: MasterRuteSlot): string | undefined {
+    if (slot.standardBilId) return slot.standardBilId;
+    if (slot.standardSjåførAnsattId) {
+      const fast = ansattById.get(slot.standardSjåførAnsattId)?.fastBilId;
+      if (fast) return fast;
+    }
+    for (const kr of kobleteMedRute(slot.rutekode)) {
+      const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
+      if (!kSlot) continue;
+      if (kSlot.standardBilId) return kSlot.standardBilId;
+      if (kSlot.standardSjåførAnsattId) {
+        const fast = ansattById.get(kSlot.standardSjåførAnsattId)?.fastBilId;
+        if (fast) return fast;
+      }
+    }
+    return undefined;
+  }
+
+  function masterplanHengerIdForSlot(slot: MasterRuteSlot): string | undefined {
+    if (slot.standardHengerId) return slot.standardHengerId;
+    if (slot.standardSjåførAnsattId) {
+      const fast = ansattById.get(slot.standardSjåførAnsattId)?.fastHengerId;
+      if (fast) return fast;
+    }
+    for (const kr of kobleteMedRute(slot.rutekode)) {
+      const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
+      if (!kSlot) continue;
+      if (kSlot.standardHengerId) return kSlot.standardHengerId;
+      if (kSlot.standardSjåførAnsattId) {
+        const fast = ansattById.get(kSlot.standardSjåførAnsattId)?.fastHengerId;
+        if (fast) return fast;
+      }
+    }
+    return undefined;
   }
 
   /* ── Ressurser blokkert av flerdagsruter (fra foregående dager) ── */
@@ -372,23 +539,81 @@ export default function PlanPage() {
     return { blokkerteAnsatte, blokkerteBiler, blokkerteHengere };
   }, [masterplan.slots, tildelinger, dato, skift]);
 
-  const bilerValgbare = useMemo(
-    () =>
-      bilerValgbarePre.filter((b) =>
-        !erBilUtilgjengeligPåDato(b.id, dato, bilUtilgjengelig) &&
-        !blokkerteAvFlerdagsruter.blokkerteBiler.has(b.id)
-      ),
-    [bilerValgbarePre, dato, bilUtilgjengelig, blokkerteAvFlerdagsruter],
-  );
+  /** Kun manuell plan-tildeling (ikke master/fast bil) — brukes til dropdown-filter. */
+  const planlagteKjøretøy = useMemo(() => {
+    const bilTilRute = new Map<string, string>();
+    const hengerTilRute = new Map<string, string>();
+    for (const slot of effektiveRuter) {
+      const til = tildelingMap.get(slot.rutekode);
+      if (til?.bilId) bilTilRute.set(til.bilId, slot.rutekode);
+      if (til?.hengerId) hengerTilRute.set(til.hengerId, slot.rutekode);
+    }
+    return { bilTilRute, hengerTilRute };
+  }, [effektiveRuter, tildelingMap]);
 
-  const hengereValgbare = useMemo(
-    () =>
-      hengereValgbarePre.filter((h) =>
-        !erHengerUtilgjengeligPåDato(h.id, dato, hengerUtilgjengelig) &&
-        !blokkerteAvFlerdagsruter.blokkerteHengere.has(h.id)
-      ),
-    [hengereValgbarePre, dato, hengerUtilgjengelig, blokkerteAvFlerdagsruter],
-  );
+  function kobleteRuterSet(rute: string): Set<string> {
+    return new Set([rute, ...kobleteMedRute(rute)]);
+  }
+
+  function bilValgbareForRute(rute: string): Bil[] {
+    const koblet = kobleteRuterSet(rute);
+    return bilerValgbarePre.filter((b) => {
+      if (!b.aktiv) return false;
+      if (erBilUtilgjengeligPåDato(b.id, dato, bilUtilgjengelig)) return false;
+      if (blokkerteAvFlerdagsruter.blokkerteBiler.has(b.id)) return false;
+      const bruktPå = planlagteKjøretøy.bilTilRute.get(b.id);
+      if (bruktPå && !koblet.has(bruktPå)) return false;
+      return true;
+    });
+  }
+
+  function hengerValgbareForRute(rute: string): Henger[] {
+    const koblet = kobleteRuterSet(rute);
+    return hengereValgbarePre.filter((h) => {
+      if (!h.aktiv) return false;
+      if (erHengerUtilgjengeligPåDato(h.id, dato, hengerUtilgjengelig)) return false;
+      if (blokkerteAvFlerdagsruter.blokkerteHengere.has(h.id)) return false;
+      const bruktPå = planlagteKjøretøy.hengerTilRute.get(h.id);
+      if (bruktPå && !koblet.has(bruktPå)) return false;
+      return true;
+    });
+  }
+
+  function bilUtilgjengeligGrunn(bilId: string): string | undefined {
+    const poster = bilPosterPåDato.filter((p) => p.bilId === bilId);
+    if (poster.length === 0) return undefined;
+    return poster.map((p) => p.type).join(", ");
+  }
+
+  function hengerUtilgjengeligGrunn(hengerId: string): string | undefined {
+    const poster = hengerPosterPåDato.filter((p) => p.hengerId === hengerId);
+    if (poster.length === 0) return undefined;
+    return poster.map((p) => p.type).join(", ");
+  }
+
+  function bilIkkeValgbarEtikett(bilId: string): string {
+    const grunn = bilUtilgjengeligGrunn(bilId);
+    if (grunn) return grunn;
+    if (planlagteKjøretøy.bilTilRute.has(bilId)) return "Planlagt";
+    if (blokkerteAvFlerdagsruter.blokkerteBiler.has(bilId)) return "Flerdagstur";
+    return "Utilgjengelig";
+  }
+
+  function hengerIkkeValgbarEtikett(hengerId: string): string {
+    const grunn = hengerUtilgjengeligGrunn(hengerId);
+    if (grunn) return grunn;
+    if (planlagteKjøretøy.hengerTilRute.has(hengerId)) return "Planlagt";
+    if (blokkerteAvFlerdagsruter.blokkerteHengere.has(hengerId)) return "Flerdagstur";
+    return "Utilgjengelig";
+  }
+
+  function bilErLedigForRute(bilId: string, rute: string): boolean {
+    return bilValgbareForRute(rute).some((b) => b.id === bilId);
+  }
+
+  function hengerErLedigForRute(hengerId: string, rute: string): boolean {
+    return hengerValgbareForRute(rute).some((h) => h.id === hengerId);
+  }
 
   /* ── Tilgjengelige ansatte ── */
 
@@ -490,11 +715,16 @@ export default function PlanPage() {
   function slotForRute(
     rute: string,
     patch: Partial<
-      Pick<PlanRuteTildeling, "bilId" | "hengerId" | "skjulBaselineSjåfør">
+      Pick<
+        PlanRuteTildeling,
+        "bilId" | "hengerId" | "skjulBaselineSjåfør" | "skjulBaselineBil" | "skjulBaselineHenger"
+      >
     > & { ansattId?: string | null },
   ): PlanRuteTildeling {
     const cur = tildelingMap.get(rute);
     const harAnsattPatch = "ansattId" in patch;
+    const harBilPatch = "bilId" in patch;
+    const harHengerPatch = "hengerId" in patch;
     return {
       id: planRuteSlotId(uke, dayNo, skift as Skift, rute),
       uke,
@@ -502,19 +732,28 @@ export default function PlanPage() {
       skift: skift as Skift,
       rute,
       ansattId: harAnsattPatch ? (patch.ansattId || undefined) : cur?.ansattId,
-      bilId: patch.bilId !== undefined ? patch.bilId || undefined : cur?.bilId,
-      hengerId: patch.hengerId !== undefined ? patch.hengerId || undefined : cur?.hengerId,
+      bilId: harBilPatch ? patch.bilId || undefined : cur?.bilId,
+      hengerId: harHengerPatch ? patch.hengerId || undefined : cur?.hengerId,
       skjulBaselineSjåfør:
-        patch.skjulBaselineSjåfør !== undefined
-          ? patch.skjulBaselineSjåfør
-          : cur?.skjulBaselineSjåfør,
+        "skjulBaselineSjåfør" in patch ? patch.skjulBaselineSjåfør : cur?.skjulBaselineSjåfør,
+      skjulBaselineBil: "skjulBaselineBil" in patch ? patch.skjulBaselineBil : cur?.skjulBaselineBil,
+      skjulBaselineHenger:
+        "skjulBaselineHenger" in patch ? patch.skjulBaselineHenger : cur?.skjulBaselineHenger,
     };
   }
 
   function lagreSlot(
     rute: string,
     patch: Partial<
-      Pick<PlanRuteTildeling, "ansattId" | "bilId" | "hengerId" | "skjulBaselineSjåfør">
+      Pick<
+        PlanRuteTildeling,
+        | "ansattId"
+        | "bilId"
+        | "hengerId"
+        | "skjulBaselineSjåfør"
+        | "skjulBaselineBil"
+        | "skjulBaselineHenger"
+      >
     >,
   ) {
     lagreTildeling(slotForRute(rute, patch));
@@ -632,54 +871,55 @@ export default function PlanPage() {
     }
   }
 
-  const ressursBruk = useMemo(() => {
-    const bilTilRute = new Map<string, string>();
-    const hengerTilRute = new Map<string, string>();
-    for (const slot of effektiveRuter) {
-      const til = tildelingMap.get(slot.rutekode);
-      const res = effektivRessursForSlot(slot, til);
-      if (res.bilId) bilTilRute.set(res.bilId, slot.rutekode);
-      if (res.hengerId) hengerTilRute.set(res.hengerId, slot.rutekode);
-    }
-    return { bilTilRute, hengerTilRute };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effektiveRuter, tildelingMap]);
-
   function oppdaterTildeling(
     rute: string,
     felt: "bilId" | "hengerId",
     verdi: string,
   ) {
-    if (verdi) {
-      const målRuterSet = new Set([rute, ...kobleteMedRute(rute)]);
-      if (felt === "bilId") {
-        const bruktPå = ressursBruk.bilTilRute.get(verdi);
-        if (bruktPå && !målRuterSet.has(bruktPå)) {
-          const kj = bilById.get(verdi)?.kjennemerke ?? verdi;
-          const ok = window.confirm(
-            `Bil ${kj} er allerede i bruk på rute ${bruktPå}. Vil du tildele den til rute ${rute} likevel?`,
-          );
-          if (!ok) return;
-        }
+    let patch: Partial<
+      Pick<PlanRuteTildeling, "bilId" | "hengerId" | "skjulBaselineBil" | "skjulBaselineHenger">
+    >;
+    if (felt === "bilId") {
+      if (!verdi || verdi === "__ingen__") {
+        patch = { bilId: undefined, skjulBaselineBil: true };
+      } else if (verdi === "__baseline__") {
+        patch = { bilId: undefined, skjulBaselineBil: false };
       } else {
-        const bruktPå = ressursBruk.hengerTilRute.get(verdi);
-        if (bruktPå && !målRuterSet.has(bruktPå)) {
-          const kj = hengerById.get(verdi)?.kjennemerke ?? verdi;
-          const ok = window.confirm(
-            `Henger ${kj} er allerede i bruk på rute ${bruktPå}. Vil du tildele den til rute ${rute} likevel?`,
-          );
-          if (!ok) return;
-        }
+        patch = { bilId: verdi, skjulBaselineBil: false };
       }
+    } else if (!verdi || verdi === "__ingen__") {
+      patch = { hengerId: undefined, skjulBaselineHenger: true };
+    } else if (verdi === "__baseline__") {
+      patch = { hengerId: undefined, skjulBaselineHenger: false };
+    } else {
+      patch = { hengerId: verdi, skjulBaselineHenger: false };
     }
-
-    const patch = felt === "bilId"
-      ? { bilId: verdi || undefined }
-      : { hengerId: verdi || undefined };
 
     const målRuter = [rute, ...kobleteMedRute(rute)];
     const items = målRuter.map((r) => slotForRute(r, patch));
     lagreFlere(items);
+  }
+
+  function bilSelectVerdi(
+    til: PlanRuteTildeling | undefined,
+    res: { bilId?: string; bilFraMaster: boolean },
+  ): string {
+    if (til?.bilId) return til.bilId;
+    if (til?.skjulBaselineBil) return "__ingen__";
+    if (res.bilId && res.bilFraMaster) return "__baseline__";
+    if (res.bilId) return res.bilId;
+    return "__ingen__";
+  }
+
+  function hengerSelectVerdi(
+    til: PlanRuteTildeling | undefined,
+    res: { hengerId?: string; hengerFraMaster: boolean },
+  ): string {
+    if (til?.hengerId) return til.hengerId;
+    if (til?.skjulBaselineHenger) return "__ingen__";
+    if (res.hengerId && res.hengerFraMaster) return "__baseline__";
+    if (res.hengerId) return res.hengerId;
+    return "__ingen__";
   }
 
   /* ── Dynamisk: fjern/legg til rute for denne dagen ── */
@@ -928,20 +1168,52 @@ export default function PlanPage() {
                   ? ansattNavnById.get(slot.standardSjåførAnsattId)
                   : undefined;
 
-                const koblet = koblingsgruppeFraRute.get(slot.rutekode);
+                const kobling = finnKoblingForRute(slot.rutekode);
+                const koblingOpphevet =
+                  kobling !== null &&
+                  erKoblingOpphevetForDag(kobling.gruppeKey, kobling.rutekoder);
+                const bilValgbare = bilValgbareForRute(slot.rutekode);
+                const hengerValgbare = hengerValgbareForRute(slot.rutekode);
+                const tilKjoretoy = tildelingKjoretoyForRute(slot.rutekode);
+                const bilSelectVal = bilSelectVerdi(tilKjoretoy, res);
+                const hengerSelectVal = hengerSelectVerdi(tilKjoretoy, res);
+                const masterplanBilId = masterplanBilIdForSlot(slot);
+                const masterplanHengerId = masterplanHengerIdForSlot(slot);
 
                 return (
-                  <tr key={slot.rutekode}>
+                  <tr key={slot.rutekode} className={styles.dataRow}>
                     <td className={styles.muted}>
                       {slot.rutekode}
-                      {koblet && (
-                        <span className={styles.linkIcon} data-tooltip={`Koblet med ${kobleteMedRute(slot.rutekode).join(", ")}`}> ⟷</span>
+                      {kobling && (
+                        <button
+                          type="button"
+                          className={`${styles.linkIconBtn} ${koblingOpphevet ? styles.linkIconBtnOpphevet : ""}`}
+                          title={
+                            koblingOpphevet
+                              ? `Kobling opphevet for ${dato}. Klikk for å koble ${kobling.rutekoder.join(" ⟷ ")} igjen.`
+                              : `Koblet med ${kobleteMedRute(slot.rutekode).join(", ") || kobling.rutekoder.filter((k) => k !== slot.rutekode).join(", ")}. Klikk for å oppheve kobling denne dagen.`
+                          }
+                          aria-label={
+                            koblingOpphevet
+                              ? `Gjenopprett kobling for ${slot.rutekode}`
+                              : `Opphev kobling for ${slot.rutekode}`
+                          }
+                          onClick={() =>
+                            koblingOpphevet
+                              ? gjenopprettKoblingForDag(slot.rutekode)
+                              : opphevKoblingForDag(slot.rutekode)
+                          }
+                        >
+                          {koblingOpphevet ? "⥀" : "⟷"}
+                        </button>
                       )}
                     </td>
                     <td>{slot.rutenavn ?? slot.rutekode}</td>
                     <td className={styles.tdTildel}>
                       <div
                         className={styles.dropCell}
+                        tabIndex={0}
+                        aria-label={`Sjåfør for rute ${slot.rutekode}`}
                         onDragOver={handleDragOverSlot}
                         onDrop={(e) => handleDropPåRute(e, slot.rutekode)}
                       >
@@ -969,58 +1241,68 @@ export default function PlanPage() {
                       </div>
                     </td>
                     <td className={styles.tdTildel}>
-                      <select
-                        className={styles.selectSm}
-                        value={til?.bilId ?? ""}
-                        onChange={(e) => oppdaterTildeling(slot.rutekode, "bilId", e.target.value)}
-                      >
-                        <option value="">
-                          {res.bilId && res.bilFraMaster
-                            ? bilById.get(res.bilId)?.kjennemerke ?? "Master"
-                            : "—"}
-                        </option>
-                        {til?.bilId && !bilerValgbare.some((b) => b.id === til.bilId) && (
-                          <option key={til.bilId} value={til.bilId}>
-                            {bilById.get(til.bilId)?.kjennemerke ?? til.bilId} (utilgjengelig)
-                          </option>
-                        )}
-                        {bilerValgbare.map((b) => {
-                          const bruktPå = ressursBruk.bilTilRute.get(b.id);
-                          const erPåDenneRuten = bruktPå === slot.rutekode;
-                          return (
-                            <option key={b.id} value={b.id}>
-                              {b.kjennemerke}{bruktPå && !erPåDenneRuten ? ` (rute ${bruktPå})` : ""}
-                            </option>
-                          );
-                        })}
-                      </select>
+                      <PlanKjoretoyVelger
+                        rute={slot.rutekode}
+                        selectValue={bilSelectVal}
+                        onSelect={(v) => oppdaterTildeling(slot.rutekode, "bilId", v)}
+                        valgbare={bilValgbare}
+                        byId={bilById}
+                        ansatte={ansatte}
+                        fastKjoretoyId={(a) => a.fastBilId}
+                        erLedig={bilErLedigForRute}
+                        statusEtikett={bilIkkeValgbarEtikett}
+                        baselineKjennemerke={
+                          masterplanBilId
+                            ? bilById.get(masterplanBilId)?.kjennemerke
+                            : undefined
+                        }
+                        fraMasterKjoretoyId={masterplanBilId}
+                        ekstraValgId={
+                          bilSelectVal !== "__ingen__" && bilSelectVal !== "__baseline__"
+                            ? bilSelectVal
+                            : undefined
+                        }
+                        ekstraValgEtikett={
+                          bilSelectVal !== "__ingen__" && bilSelectVal !== "__baseline__"
+                            ? bilById.get(bilSelectVal)?.kjennemerke ?? bilSelectVal
+                            : undefined
+                        }
+                        søkPlaceholder="Søk sjåfør eller reg.nr…"
+                        søkTomTekst="Ingen bil funnet"
+                        ariaLabel={`Søk sjåfør for bil, rute ${slot.rutekode}`}
+                      />
                     </td>
                     <td className={styles.tdTildel}>
-                      <select
-                        className={styles.selectSm}
-                        value={til?.hengerId ?? ""}
-                        onChange={(e) => oppdaterTildeling(slot.rutekode, "hengerId", e.target.value)}
-                      >
-                        <option value="">
-                          {res.hengerId && res.hengerFraMaster
-                            ? hengerById.get(res.hengerId)?.kjennemerke ?? "Master"
-                            : "—"}
-                        </option>
-                        {til?.hengerId && !hengereValgbare.some((h) => h.id === til.hengerId) && (
-                          <option key={til.hengerId} value={til.hengerId}>
-                            {hengerById.get(til.hengerId)?.kjennemerke ?? til.hengerId} (utilgjengelig)
-                          </option>
-                        )}
-                        {hengereValgbare.map((h) => {
-                          const bruktPå = ressursBruk.hengerTilRute.get(h.id);
-                          const erPåDenneRuten = bruktPå === slot.rutekode;
-                          return (
-                            <option key={h.id} value={h.id}>
-                              {h.kjennemerke}{bruktPå && !erPåDenneRuten ? ` (rute ${bruktPå})` : ""}
-                            </option>
-                          );
-                        })}
-                      </select>
+                      <PlanKjoretoyVelger
+                        rute={slot.rutekode}
+                        selectValue={hengerSelectVal}
+                        onSelect={(v) => oppdaterTildeling(slot.rutekode, "hengerId", v)}
+                        valgbare={hengerValgbare}
+                        byId={hengerById}
+                        ansatte={ansatte}
+                        fastKjoretoyId={(a) => a.fastHengerId}
+                        erLedig={hengerErLedigForRute}
+                        statusEtikett={hengerIkkeValgbarEtikett}
+                        baselineKjennemerke={
+                          masterplanHengerId
+                            ? hengerById.get(masterplanHengerId)?.kjennemerke
+                            : undefined
+                        }
+                        fraMasterKjoretoyId={masterplanHengerId}
+                        ekstraValgId={
+                          hengerSelectVal !== "__ingen__" && hengerSelectVal !== "__baseline__"
+                            ? hengerSelectVal
+                            : undefined
+                        }
+                        ekstraValgEtikett={
+                          hengerSelectVal !== "__ingen__" && hengerSelectVal !== "__baseline__"
+                            ? hengerById.get(hengerSelectVal)?.kjennemerke ?? hengerSelectVal
+                            : undefined
+                        }
+                        søkPlaceholder="Søk sjåfør eller reg.nr…"
+                        søkTomTekst="Ingen henger funnet"
+                        ariaLabel={`Søk sjåfør for henger, rute ${slot.rutekode}`}
+                      />
                     </td>
                     <td>{statusCell}</td>
                     <td>

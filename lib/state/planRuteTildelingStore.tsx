@@ -38,6 +38,10 @@ function normalizeLoaded(data: unknown): PlanRuteTildeling[] {
       const hengerId = typeof x.hengerId === "string" && x.hengerId ? x.hengerId : undefined;
       const skjulBaselineSjåfør =
         typeof x.skjulBaselineSjåfør === "boolean" ? x.skjulBaselineSjåfør : undefined;
+      const skjulBaselineBil =
+        typeof x.skjulBaselineBil === "boolean" ? x.skjulBaselineBil : undefined;
+      const skjulBaselineHenger =
+        typeof x.skjulBaselineHenger === "boolean" ? x.skjulBaselineHenger : undefined;
       if (!id || uke < 1 || uke > 4 || dag < 1 || dag > 7 || !skift || !rute) return null;
       return {
         id,
@@ -49,6 +53,8 @@ function normalizeLoaded(data: unknown): PlanRuteTildeling[] {
         bilId,
         hengerId,
         skjulBaselineSjåfør,
+        skjulBaselineBil,
+        skjulBaselineHenger,
       } as PlanRuteTildeling;
     })
     .filter(Boolean) as PlanRuteTildeling[];
@@ -89,7 +95,9 @@ export function PlanRuteTildelingStoreProvider({ children }: { children: React.R
       !item.ansattId &&
       !item.bilId &&
       !item.hengerId &&
-      !item.skjulBaselineSjåfør;
+      !item.skjulBaselineSjåfør &&
+      !item.skjulBaselineBil &&
+      !item.skjulBaselineHenger;
     const idx = prev.findIndex((t) => t.id === item.id);
     if (tom) {
       if (idx < 0) return prev;

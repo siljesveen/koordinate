@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Bil, BilUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
 import {
@@ -73,7 +72,7 @@ function toSkjema(item: BilUtilgjengelig | null, biler: Bil[]): Skjema {
   };
 }
 
-export default function BilUtilgjengeligPage() {
+export function BilPerioderTab() {
   const { biler } = useBilStore();
   const { poster, lagre, slett } = useBilUtilgjengeligStore();
   const merkTilbake = useMerkBilTilbake();
@@ -162,22 +161,8 @@ export default function BilUtilgjengeligPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <>
       <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Bil · utilgjengelighet</h1>
-          <p className={styles.helper}>
-            Registrer perioder bilen ikke kan brukes (planlagt service eller akutt havari). Samme logikk som
-            fravær hos ansatte.
-          </p>
-          <p className={styles.helper}>
-            <Link href="/kjoretoy-utilgjengelig">← Tilbake til kjøretøy</Link>
-            {" · "}
-            <Link href="/biler">Bilregister</Link>
-            {" · "}
-            <Link href="/biler/kalender">Verkstedkalender</Link>
-          </p>
-        </div>
         <div className={styles.controls}>
           <input
             className={styles.input}
@@ -414,6 +399,6 @@ export default function BilUtilgjengeligPage() {
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
