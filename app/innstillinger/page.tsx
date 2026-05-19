@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
 import { clearAllAnsatteData } from "@/lib/maintenance/clearAllAnsatte";
 import { gjenopprettStandardKjoretoy } from "@/lib/maintenance/seedKjoretoy";
 import {
@@ -9,18 +10,7 @@ import {
 import { useRef, useState } from "react";
 import styles from "./page.module.css";
 
-const STORAGE_KEYS = [
-  "bemanning.ansatte.v2",
-  "bemanning.masterplan.v1",
-  "bemanning.planRuteTildeling.v2",
-  "bemanning.dagendring.v1",
-  "bemanning.fravaer.v1",
-  "bemanning.biler.v1",
-  "bemanning.henger.v1",
-  "bemanning.bilUtilgjengelig.v1",
-  "bemanning.hengerUtilgjengelig.v1",
-  "bemanning.turnus4uker.v1",
-] as const;
+const STORAGE_KEYS = APP_DATA_KEYS;
 
 type ExportData = Record<string, unknown>;
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { Ansatt } from "@/lib/domain";
+import { useAppData } from "@/lib/hooks/useAppData";
 import { IMPORTERTE_ANSATTE_BEMANNING_2026 } from "@/lib/imported/ansatte-bemanning-2026";
 import { IMPORTERTE_RUTER } from "@/lib/imported/ruter-from-ringnes";
 
@@ -33,45 +34,18 @@ function standardAnsatte(): Ansatt[] {
   return IMPORTERTE_ANSATTE_BEMANNING_2026.map(migrateAnsatt);
 }
 
+function parseAnsatte(raw: unknown): Ansatt[] {
+  if (!Array.isArray(raw) || raw.length === 0) return standardAnsatte();
+  return raw
+    .filter((x) => x && typeof x === "object")
+    .map((x) => migrateAnsatt(x as LagretAnsatt));
+}
+
 export function AnsattStoreProvider({ children }: { children: React.ReactNode }) {
-  const [ansatte, setAnsatte] = useState<Ansatt[]>(standardAnsatte);
-  const loaded = useRef(false);
-
-  // Last fra nettleser-lagring ved oppstart (hvis finnes).
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        setAnsatte(standardAnsatte());
-        loaded.current = true;
-        return;
-      }
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        setAnsatte(standardAnsatte());
-        loaded.current = true;
-        return;
-      }
-      setAnsatte(
-        parsed
-          .filter((x) => x && typeof x === "object")
-          .map((x) => migrateAnsatt(x as LagretAnsatt)),
-      );
-    } catch {
-      setAnsatte(standardAnsatte());
-    }
-    loaded.current = true;
-  }, []);
-
-  // Lagre ved endringer.
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(ansatte));
-    } catch {
-      // Ignorer hvis lagring feiler (f.eks. privat modus / quota).
-    }
-  }, [ansatte]);
+  const { data: ansatte, setData: setAnsatte } = useAppData<Ansatt[]>(STORAGE_KEY, {
+    getDefault: standardAnsatte,
+    parse: parseAnsatte,
+  });
 
   const value = useMemo(() => ({ ansatte, setAnsatte }), [ansatte]);
 
@@ -85,4 +59,3 @@ export function useAnsattStore(): AnsattStoreValue {
   }
   return ctx;
 }
-

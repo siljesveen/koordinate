@@ -22,6 +22,9 @@ type PlanKjoretoyVelgerProps = {
   baselineKjennemerke?: string;
   /** Masterplanens kjøretøy for ruten — brukes til grønn markering (også ved eksplisitt valg av samme id). */
   fraMasterKjoretoyId?: string;
+  /** Master-kjøretøy har verksted/utilgjengelig periode denne dagen (uavhengig av disponibilitet). */
+  masterPaVerksted?: boolean;
+  masterPaVerkstedGrunn?: string;
   ekstraValgId?: string;
   ekstraValgEtikett?: string;
   søkPlaceholder?: string;
@@ -52,6 +55,8 @@ export default function PlanKjoretoyVelger({
   statusEtikett,
   baselineKjennemerke,
   fraMasterKjoretoyId,
+  masterPaVerksted,
+  masterPaVerkstedGrunn,
   ekstraValgId,
   ekstraValgEtikett,
   søkPlaceholder = "Søk sjåfør eller reg.nr…",
@@ -169,6 +174,16 @@ export default function PlanKjoretoyVelger({
     return false;
   }, [selectValue, fraMasterKjoretoyId]);
 
+  /** Gul ramme kun når valgt bil faktisk er utilgjengelig — ikke bare fordi master er på verksted. */
+  const valgtViserVerksted = useMemo(() => {
+    if (selectValue === "__ingen__") return false;
+    if (selectValue === "__baseline__") return Boolean(masterPaVerksted);
+    if (fraMasterKjoretoyId && selectValue === fraMasterKjoretoyId) {
+      return Boolean(masterPaVerksted);
+    }
+    return !erLedig(selectValue, rute);
+  }, [selectValue, masterPaVerksted, fraMasterKjoretoyId, erLedig, rute]);
+
   function erFraMasterKjoretoy(kjoretoyId: string): boolean {
     return Boolean(fraMasterKjoretoyId && kjoretoyId === fraMasterKjoretoyId);
   }
@@ -210,19 +225,37 @@ export default function PlanKjoretoyVelger({
 
   function velgFraListe(valg: ListeValg) {
     if (valg.kind === "ingen") velg("__ingen__");
-    else if (valg.kind === "baseline") velg("__baseline__");
+    else if (valg.kind === "baseline") velg("__baseline__", fraMasterKjoretoyId);
     else velg(valg.id, valg.id);
   }
+
+  const masterVerkstedTittel = useMemo(() => {
+    if (!valgtViserVerksted) return undefined;
+    if (visningFraMaster && baselineKjennemerke) {
+      return `Masterbil på verksted${masterPaVerkstedGrunn ? ` (${masterPaVerkstedGrunn})` : ""}`;
+    }
+    const id = selectValue === "__baseline__" ? fraMasterKjoretoyId : selectValue;
+    if (!id) return undefined;
+    return `Utilgjengelig: ${statusEtikett(id).toLowerCase()}`;
+  }, [
+    valgtViserVerksted,
+    visningFraMaster,
+    baselineKjennemerke,
+    masterPaVerkstedGrunn,
+    selectValue,
+    fraMasterKjoretoyId,
+    statusEtikett,
+  ]);
 
   return (
     <div className={styles.kjoretoyCombo} ref={rotRef}>
       <button
         type="button"
-        className={`${styles.kjoretoyComboTrigger} ${åpen ? styles.kjoretoyComboTriggerOpen : ""} ${visningFraMaster ? styles.kjoretoyComboTriggerMaster : ""}`}
+        className={`${styles.kjoretoyComboTrigger} ${åpen ? styles.kjoretoyComboTriggerOpen : ""} ${visningFraMaster ? styles.kjoretoyComboTriggerMaster : ""} ${valgtViserVerksted ? styles.kjoretoyComboTriggerMasterWarn : ""}`}
         aria-haspopup="listbox"
         aria-expanded={åpen}
         aria-label={ariaLabel}
-        title={visningFraMaster ? "Kjøretøy fra masterplan" : undefined}
+        title={masterVerkstedTittel ?? (visningFraMaster ? "Kjøretøy fra masterplan" : undefined)}
         onClick={() => setÅpen((o) => !o)}
       >
         <span
@@ -306,13 +339,18 @@ export default function PlanKjoretoyVelger({
                       type="button"
                       role="option"
                       aria-selected={selectValue === "__baseline__"}
-                      title="Fra masterplan"
-                      className={`${styles.kjoretoyComboItem} ${styles.kjoretoyComboItemMaster}`}
+                      title={masterVerkstedTittel ?? "Fra masterplan"}
+                      className={`${styles.kjoretoyComboItem} ${styles.kjoretoyComboItemMaster} ${masterPaVerksted ? styles.kjoretoyComboItemWarn : ""}`}
                       onClick={() => velgFraListe(valg)}
                     >
                       <span className={`${styles.kjoretoyComboReg} ${styles.kjoretoyComboRegMaster}`}>
                         {baselineKjennemerke}
                       </span>
+                      {masterPaVerksted && (
+                        <span className={styles.kjoretoyComboStatusWarn}>
+                          {masterPaVerkstedGrunn ?? "Verksted"}
+                        </span>
+                      )}
                     </button>
                   );
                 }

@@ -16,7 +16,13 @@ import {
   type PlanRuteTildeling,
   type Skift,
 } from "@/lib/domain";
-import { erBilUtilgjengeligPåDato, erHengerUtilgjengeligPåDato, overlapperUtilgjengeligPeriodeDisponibilitet } from "@/lib/kjoretoyTilgjengelighet";
+import {
+  erBilIUtilgjengeligPeriodePåDato,
+  erBilUtilgjengeligPåDato,
+  erHengerIUtilgjengeligPeriodePåDato,
+  erHengerUtilgjengeligPåDato,
+  overlapperUtilgjengeligPeriodeDisponibilitet,
+} from "@/lib/kjoretoyTilgjengelighet";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
 import {
@@ -987,10 +993,30 @@ export default function PlanPage() {
     for (const slot of effektiveRuter) {
       const til = tildelingMap.get(slot.rutekode);
       const res = effektivRessursForSlot(slot, til);
+      const tilKj = tildelingKjoretoyForRute(slot.rutekode);
+      const bilSel = bilSelectVerdi(tilKj, res);
+      const hengSel = hengerSelectVerdi(tilKj, res);
+      const mpBil = masterplanBilIdForSlot(slot);
+      const mpHeng = masterplanHengerIdForSlot(slot);
+      const masterBilV = Boolean(
+        mpBil &&
+          erBilIUtilgjengeligPeriodePåDato(mpBil, dato, bilUtilgjengelig) &&
+          (bilSel === "__ingen__" || bilSel === "__baseline__" || bilSel === mpBil),
+      );
+      const masterHengV = Boolean(
+        mpHeng &&
+          erHengerIUtilgjengeligPeriodePåDato(mpHeng, dato, hengerUtilgjengelig) &&
+          (hengSel === "__ingen__" || hengSel === "__baseline__" || hengSel === mpHeng),
+      );
       const manglerSj = !res.sjåfør;
       const manglerB = !res.bilId;
       const manglerH = !res.hengerId;
-      const utilgj = res.bilUtilgjengelig || res.hengerUtilgjengeligFlag || res.sjåførHarFravær;
+      const utilgj =
+        res.bilUtilgjengelig ||
+        res.hengerUtilgjengeligFlag ||
+        res.sjåførHarFravær ||
+        masterBilV ||
+        masterHengV;
 
       if (!manglerSj && !manglerB && !manglerH && !utilgj) ok++;
       else if (manglerSj || manglerB) rød++;
@@ -1124,10 +1150,43 @@ export default function PlanPage() {
                 const til = tildelingMap.get(slot.rutekode);
                 const res = effektivRessursForSlot(slot, til);
 
+                const masterplanBilId = masterplanBilIdForSlot(slot);
+                const masterplanHengerId = masterplanHengerIdForSlot(slot);
+                const masterBilPaVerksted = Boolean(
+                  masterplanBilId &&
+                    erBilIUtilgjengeligPeriodePåDato(masterplanBilId, dato, bilUtilgjengelig),
+                );
+                const masterHengerPaVerksted = Boolean(
+                  masterplanHengerId &&
+                    erHengerIUtilgjengeligPeriodePåDato(masterplanHengerId, dato, hengerUtilgjengelig),
+                );
+
+                const tilKjoretoy = tildelingKjoretoyForRute(slot.rutekode);
+                const bilSelectVal = bilSelectVerdi(tilKjoretoy, res);
+                const hengerSelectVal = hengerSelectVerdi(tilKjoretoy, res);
+
+                const bilValgtErMaster =
+                  bilSelectVal === "__baseline__" ||
+                  (masterplanBilId !== undefined && bilSelectVal === masterplanBilId);
+                const hengerValgtErMaster =
+                  hengerSelectVal === "__baseline__" ||
+                  (masterplanHengerId !== undefined && hengerSelectVal === masterplanHengerId);
+                const masterBilAdvarsel =
+                  masterBilPaVerksted &&
+                  (bilSelectVal === "__ingen__" || bilValgtErMaster);
+                const masterHengerAdvarsel =
+                  masterHengerPaVerksted &&
+                  (hengerSelectVal === "__ingen__" || hengerValgtErMaster);
+
                 const manglerSjåfør = !res.sjåfør;
                 const manglerBil = !res.bilId;
                 const manglerHenger = !res.hengerId;
-                const utilgjengelig = res.bilUtilgjengelig || res.hengerUtilgjengeligFlag || res.sjåførHarFravær;
+                const utilgjengelig =
+                  res.bilUtilgjengelig ||
+                  res.hengerUtilgjengeligFlag ||
+                  res.sjåførHarFravær ||
+                  masterBilAdvarsel ||
+                  masterHengerAdvarsel;
 
                 let statusCell: ReactNode;
                 if (!manglerSjåfør && !manglerBil && !manglerHenger && !utilgjengelig) {
@@ -1149,7 +1208,9 @@ export default function PlanPage() {
                   const deler: string[] = [];
                   if (res.sjåførHarFravær) deler.push("Sjåfør fravær");
                   if (res.bilUtilgjengelig) deler.push("Bil ute");
+                  else if (masterBilAdvarsel) deler.push("Masterbil verksted");
                   if (res.hengerUtilgjengeligFlag) deler.push("Henger ute");
+                  else if (masterHengerAdvarsel) deler.push("Masterhenger verksted");
                   statusCell = (
                     <span className={`${styles.pill} ${styles.pillWarn}`} title={deler.join(", ")}>
                       {deler.join(" · ")}
@@ -1174,11 +1235,6 @@ export default function PlanPage() {
                   erKoblingOpphevetForDag(kobling.gruppeKey, kobling.rutekoder);
                 const bilValgbare = bilValgbareForRute(slot.rutekode);
                 const hengerValgbare = hengerValgbareForRute(slot.rutekode);
-                const tilKjoretoy = tildelingKjoretoyForRute(slot.rutekode);
-                const bilSelectVal = bilSelectVerdi(tilKjoretoy, res);
-                const hengerSelectVal = hengerSelectVerdi(tilKjoretoy, res);
-                const masterplanBilId = masterplanBilIdForSlot(slot);
-                const masterplanHengerId = masterplanHengerIdForSlot(slot);
 
                 return (
                   <tr key={slot.rutekode} className={styles.dataRow}>
@@ -1257,6 +1313,10 @@ export default function PlanPage() {
                             : undefined
                         }
                         fraMasterKjoretoyId={masterplanBilId}
+                        masterPaVerksted={masterBilPaVerksted}
+                        masterPaVerkstedGrunn={
+                          masterplanBilId ? bilUtilgjengeligGrunn(masterplanBilId) : undefined
+                        }
                         ekstraValgId={
                           bilSelectVal !== "__ingen__" && bilSelectVal !== "__baseline__"
                             ? bilSelectVal
@@ -1289,6 +1349,10 @@ export default function PlanPage() {
                             : undefined
                         }
                         fraMasterKjoretoyId={masterplanHengerId}
+                        masterPaVerksted={masterHengerPaVerksted}
+                        masterPaVerkstedGrunn={
+                          masterplanHengerId ? hengerUtilgjengeligGrunn(masterplanHengerId) : undefined
+                        }
                         ekstraValgId={
                           hengerSelectVal !== "__ingen__" && hengerSelectVal !== "__baseline__"
                             ? hengerSelectVal

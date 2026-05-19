@@ -146,12 +146,29 @@ export function erBilUtilgjengeligPåDato(
   return poster.some((p) => p.bilId === bilId && overlapperUtilgjengeligPeriodeDisponibilitet(dato, p));
 }
 
+/** Om bil har registrert utilgjengelighetsperiode denne dagen (inkl. verksted), uavhengig av «tilbake samme dag». */
+export function erBilIUtilgjengeligPeriodePåDato(
+  bilId: string,
+  dato: string,
+  poster: BilUtilgjengelig[],
+): boolean {
+  return poster.some((p) => p.bilId === bilId && overlapperUtilgjengeligPeriode(dato, p));
+}
+
 export function erHengerUtilgjengeligPåDato(
   hengerId: string,
   dato: string,
   poster: HengerUtilgjengelig[],
 ): boolean {
   return poster.some((p) => p.hengerId === hengerId && overlapperUtilgjengeligPeriodeDisponibilitet(dato, p));
+}
+
+export function erHengerIUtilgjengeligPeriodePåDato(
+  hengerId: string,
+  dato: string,
+  poster: HengerUtilgjengelig[],
+): boolean {
+  return poster.some((p) => p.hengerId === hengerId && overlapperUtilgjengeligPeriode(dato, p));
 }
 
 export function bilPosterForDato(

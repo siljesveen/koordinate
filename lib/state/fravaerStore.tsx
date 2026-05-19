@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { Fravær } from "@/lib/domain";
+import { useAppData } from "@/lib/hooks/useAppData";
 
 type FraværStoreValue = {
   fravær: Fravær[];
@@ -17,7 +18,7 @@ function normalizeLoaded(data: unknown): Fravær[] {
   if (!Array.isArray(data)) return [];
   return data
     .filter((x) => x && typeof x === "object")
-    .map((x) => x as any)
+    .map((x) => x as Record<string, unknown>)
     .map((x) => {
       const id = String(x.id ?? "");
       const ansattId = String(x.ansattId ?? "");
@@ -38,28 +39,10 @@ function nyId(): string {
 }
 
 export function FraværStoreProvider({ children }: { children: React.ReactNode }) {
-  const [fravær, setFravær] = useState<Fravær[]>([]);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      setFravær(normalizeLoaded(JSON.parse(raw)));
-    } catch {
-      // ignorer
-    }
-    loaded.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fravær));
-    } catch {
-      // ignorer
-    }
-  }, [fravær]);
+  const { data: fravær, setData: setFravær } = useAppData<Fravær[]>(STORAGE_KEY, {
+    getDefault: () => [],
+    parse: normalizeLoaded,
+  });
 
   const lagre = (item: Fravær) => {
     setFravær((prev) => {
@@ -74,7 +57,8 @@ export function FraværStoreProvider({ children }: { children: React.ReactNode }
   };
 
   const slett = (id: string) => setFravær((prev) => prev.filter((f) => f.id !== id));
-  const slettForAnsatt = (ansattId: string) => setFravær((prev) => prev.filter((f) => f.ansattId !== ansattId));
+  const slettForAnsatt = (ansattId: string) =>
+    setFravær((prev) => prev.filter((f) => f.ansattId !== ansattId));
 
   const value = useMemo(() => ({ fravær, lagre, slett, slettForAnsatt }), [fravær]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
@@ -85,4 +69,3 @@ export function useFraværStore(): FraværStoreValue {
   if (!ctx) throw new Error("useFraværStore må brukes innenfor FraværStoreProvider");
   return ctx;
 }
-

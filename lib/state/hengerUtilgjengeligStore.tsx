@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { HengerUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { useAppData } from "@/lib/hooks/useAppData";
 
 type HengerUtilgjengeligStoreValue = {
   poster: HengerUtilgjengelig[];
@@ -50,28 +51,10 @@ function nyId(): string {
 }
 
 export function HengerUtilgjengeligStoreProvider({ children }: { children: React.ReactNode }) {
-  const [poster, setPoster] = useState<HengerUtilgjengelig[]>([]);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      setPoster(normalizeLoaded(JSON.parse(raw)));
-    } catch {
-      // ignorer
-    }
-    loaded.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(poster));
-    } catch {
-      // ignorer
-    }
-  }, [poster]);
+  const { data: poster, setData: setPoster } = useAppData<HengerUtilgjengelig[]>(STORAGE_KEY, {
+    getDefault: () => [],
+    parse: normalizeLoaded,
+  });
 
   const lagre = (item: HengerUtilgjengelig) => {
     setPoster((prev) => {
@@ -93,7 +76,6 @@ export function HengerUtilgjengeligStoreProvider({ children }: { children: React
 
 export function useHengerUtilgjengeligStore(): HengerUtilgjengeligStoreValue {
   const ctx = useContext(Ctx);
-  if (!ctx)
-    throw new Error("useHengerUtilgjengeligStore må brukes innenfor HengerUtilgjengeligStoreProvider");
+  if (!ctx) throw new Error("useHengerUtilgjengeligStore må brukes innenfor HengerUtilgjengeligStoreProvider");
   return ctx;
 }

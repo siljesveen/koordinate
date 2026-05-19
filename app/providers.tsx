@@ -1,6 +1,7 @@
 "use client";
 
 import BilTilbakeVarsler from "@/components/BilTilbakeVarsler";
+import DataReadyGate from "@/components/DataReadyGate";
 import ToastViewport from "@/components/ToastViewport";
 import { runMigrations } from "@/lib/maintenance/runMigrations";
 import { AnsattStoreProvider } from "@/lib/state/ansattStore";
@@ -16,6 +17,7 @@ import { PlanRuteTildelingStoreProvider } from "@/lib/state/planRuteTildelingSto
 
 import { Turnus4UkerStoreProvider } from "@/lib/state/turnus4ukerStore";
 import { FraværStoreProvider } from "@/lib/state/fravaerStore";
+import { AuthStoreProvider } from "@/lib/state/authStore";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   if (typeof window !== "undefined") {
@@ -23,7 +25,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ToastStoreProvider>
+    <AuthStoreProvider>
+      <ToastStoreProvider>
       <AnsattStoreProvider>
         <BilStoreProvider>
           <HengerStoreProvider>
@@ -34,9 +37,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     <PlanRuteTildelingStoreProvider>
                       <Turnus4UkerStoreProvider>
                         <FraværStoreProvider>
-                          <BilTilbakeVarsler />
-                          {children}
-                          <ToastViewport />
+                          <DataReadyGate>
+                            <BilTilbakeVarsler />
+                            {children}
+                            <ToastViewport />
+                          </DataReadyGate>
                         </FraværStoreProvider>
                       </Turnus4UkerStoreProvider>
                     </PlanRuteTildelingStoreProvider>
@@ -47,6 +52,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           </HengerStoreProvider>
         </BilStoreProvider>
       </AnsattStoreProvider>
-    </ToastStoreProvider>
+      </ToastStoreProvider>
+    </AuthStoreProvider>
   );
 }

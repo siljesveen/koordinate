@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import AppChrome from "@/components/AppChrome";
 import Providers from "./providers";
-import TopNav from "./TopNav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,8 +28,7 @@ export default function RootLayout({
     <html lang="nb" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <Providers>
-          <TopNav />
-          {children}
+          <AppChrome>{children}</AppChrome>
         </Providers>
       </body>
     </html>

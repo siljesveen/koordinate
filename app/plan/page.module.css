@@ -332,6 +332,15 @@
   background: #ecfdf5;
 }
 
+.kjoretoyComboTriggerMasterWarn {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45);
+}
+
+.kjoretoyComboTriggerMaster.kjoretoyComboTriggerMasterWarn:hover {
+  background: #fffbeb;
+}
+
 .kjoretoyComboValueMaster {
   color: #14532d;
 }
@@ -342,6 +351,14 @@
 
 .kjoretoyComboItemMaster:not(.kjoretoyComboItemWarn):hover {
   background: #dcfce7;
+}
+
+.kjoretoyComboItemMaster.kjoretoyComboItemWarn {
+  background: #fffbeb;
+}
+
+.kjoretoyComboItemMaster.kjoretoyComboItemWarn:hover {
+  background: #fef3c7;
 }
 
 .kjoretoyComboItemWarn.kjoretoyComboItemMaster:hover {

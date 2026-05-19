@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Koblingsgruppe, MasterRuteSlot, MasterRuteplan, Skift } from "@/lib/domain";
+import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
+import { useAuth } from "@/lib/state/authStore";
 import {
   RINGNES_CYCLE,
   type RingnesCycleData,
@@ -197,51 +199,60 @@ function ensureBamaAlleDager(plan: MasterRuteplan): MasterRuteplan {
 }
 
 export function MasterplanStoreProvider({ children }: { children: React.ReactNode }) {
+  const { dataReady, canEdit } = useAuth();
   const [masterplan, setMasterplan] = useState<MasterRuteplan>({ syklusLengde: 4, slots: [] });
   const loadedRef = useRef(false);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const loaded = normalizeLoaded(JSON.parse(raw));
-        if (loaded) {
-          const fixed = ensureBamaAlleDager(deduplicateSlots(loaded));
-          setMasterplan(fixed);
-          if (fixed !== loaded) {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fixed));
-          }
-          loadedRef.current = true;
-          return;
-        }
-      }
+    if (!dataReady) return;
 
-      // Migrering: konverter fra gammel baseline + aliasMap
-      const aliasMap = safeJsonParse<AliasMap>(window.localStorage.getItem(ALIAS_MAP_KEY)) ?? {};
-      const baseline = safeJsonParse<RingnesCycleData>(
-        window.localStorage.getItem(BASELINE_KEY),
-      );
-      const source = baseline ?? RINGNES_CYCLE;
-      const migrert = ensureBamaAlleDager(konverterBaselineTilMaster(source, aliasMap));
-      setMasterplan(migrert);
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrert));
-    } catch {
-      // Fallback: bruk innebygd RINGNES_CYCLE
-      const migrert = ensureBamaAlleDager(konverterBaselineTilMaster(RINGNES_CYCLE, {}));
-      setMasterplan(migrert);
-    }
-    loadedRef.current = true;
-  }, []);
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const raw = await loadAppData(STORAGE_KEY);
+        if (cancelled) return;
+
+        if (raw !== null && raw !== undefined) {
+          const loaded = normalizeLoaded(raw);
+          if (loaded) {
+            const fixed = ensureBamaAlleDager(deduplicateSlots(loaded));
+            setMasterplan(fixed);
+            loadedRef.current = true;
+            return;
+          }
+        }
+
+        const aliasMap = safeJsonParse<AliasMap>(window.localStorage.getItem(ALIAS_MAP_KEY)) ?? {};
+        const baseline = safeJsonParse<RingnesCycleData>(
+          window.localStorage.getItem(BASELINE_KEY),
+        );
+        const source = baseline ?? RINGNES_CYCLE;
+        const migrert = ensureBamaAlleDager(konverterBaselineTilMaster(source, aliasMap));
+        setMasterplan(migrert);
+      } catch {
+        const migrert = ensureBamaAlleDager(konverterBaselineTilMaster(RINGNES_CYCLE, {}));
+        if (!cancelled) setMasterplan(migrert);
+      } finally {
+        if (!cancelled) loadedRef.current = true;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dataReady]);
 
   useEffect(() => {
-    if (!loadedRef.current) return;
+    if (!loadedRef.current || !dataReady) return;
     if (masterplan.slots.length === 0) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(masterplan));
-    } catch {
-      // quota / privat modus
-    }
-  }, [masterplan]);
+
+    const timer = window.setTimeout(() => {
+      void saveAppData(STORAGE_KEY, masterplan, canEdit);
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [masterplan, dataReady, canEdit]);
 
   const lagreSlot = (slot: MasterRuteSlot) => {
     setMasterplan((prev) => {

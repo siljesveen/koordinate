@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { PlanRuteTildeling, Skift } from "@/lib/domain";
+import { useAppData } from "@/lib/hooks/useAppData";
 
 type PlanRuteTildelingStoreValue = {
   tildelinger: PlanRuteTildeling[];
@@ -60,35 +61,24 @@ function normalizeLoaded(data: unknown): PlanRuteTildeling[] {
     .filter(Boolean) as PlanRuteTildeling[];
 }
 
+function parsePlanRuteTildeling(raw: unknown): PlanRuteTildeling[] {
+  if (raw !== null && raw !== undefined) {
+    return normalizeLoaded(raw);
+  }
+  try {
+    const rawV1 = window.localStorage.getItem("bemanning.planRuteTildeling.v1");
+    if (rawV1) return normalizeLoaded(JSON.parse(rawV1));
+  } catch {
+    // ignorer
+  }
+  return [];
+}
+
 export function PlanRuteTildelingStoreProvider({ children }: { children: React.ReactNode }) {
-  const [tildelinger, setTildelinger] = useState<PlanRuteTildeling[]>([]);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    try {
-      const rawV2 = window.localStorage.getItem(STORAGE_KEY);
-      if (rawV2) {
-        setTildelinger(normalizeLoaded(JSON.parse(rawV2)));
-      } else {
-        const rawV1 = window.localStorage.getItem("bemanning.planRuteTildeling.v1");
-        if (rawV1) {
-          setTildelinger(normalizeLoaded(JSON.parse(rawV1)));
-        }
-      }
-    } catch {
-      // ignorer
-    }
-    loaded.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tildelinger));
-    } catch {
-      // ignorer
-    }
-  }, [tildelinger]);
+  const { data: tildelinger, setData: setTildelinger } = useAppData<PlanRuteTildeling[]>(STORAGE_KEY, {
+    getDefault: () => [],
+    parse: parsePlanRuteTildeling,
+  });
 
   function applyEnLagre(prev: PlanRuteTildeling[], item: PlanRuteTildeling): PlanRuteTildeling[] {
     const tom =

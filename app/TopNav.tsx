@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "@/app/login/actions";
+import { roleLabel } from "@/lib/auth/types";
+import { useAuth } from "@/lib/state/authStore";
 import styles from "./TopNav.module.css";
 
 const NAV_ITEMS: { href: string; label: string; group: "plan" | "ressurs" | "admin" }[] = [
@@ -17,6 +20,12 @@ const NAV_ITEMS: { href: string; label: string; group: "plan" | "ressurs" | "adm
 
 export default function TopNav() {
   const pathname = usePathname();
+  const { profile, configured, loading } = useAuth();
+
+  const displayName =
+    profile?.display_name?.trim() ||
+    profile?.email?.split("@")[0] ||
+    (loading ? "…" : null);
 
   return (
     <div className={styles.navWrap}>
@@ -45,6 +54,20 @@ export default function TopNav() {
         })}
 
         <div className={styles.spacer} />
+
+        {configured && profile ? (
+          <div className={styles.userBlock}>
+            <span className={styles.userName} title={profile.email ?? undefined}>
+              {displayName}
+            </span>
+            <span className={styles.roleBadge}>{roleLabel(profile.role)}</span>
+            <form action={signOut}>
+              <button className={styles.logoutBtn} type="submit">
+                Logg ut
+              </button>
+            </form>
+          </div>
+        ) : null}
       </nav>
     </div>
   );

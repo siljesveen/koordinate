@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { DagEndring, Skift } from "@/lib/domain";
+import { useAppData } from "@/lib/hooks/useAppData";
 
 const STORAGE_KEY = "bemanning.dagendring.v1";
 
@@ -63,29 +64,10 @@ type DagEndringStoreValue = {
 const Ctx = createContext<DagEndringStoreValue | null>(null);
 
 export function DagEndringStoreProvider({ children }: { children: React.ReactNode }) {
-  const [endringer, setEndringer] = useState<DagEndring[]>([]);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setEndringer(normalizeLoaded(JSON.parse(raw)));
-      }
-    } catch {
-      // ignorer
-    }
-    loaded.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(endringer));
-    } catch {
-      // ignorer
-    }
-  }, [endringer]);
+  const { data: endringer, setData: setEndringer } = useAppData<DagEndring[]>(STORAGE_KEY, {
+    getDefault: () => [],
+    parse: normalizeLoaded,
+  });
 
   const lagre = (e: DagEndring) => {
     setEndringer((prev) => {
@@ -99,9 +81,7 @@ export function DagEndringStoreProvider({ children }: { children: React.ReactNod
     });
   };
 
-  const fjern = (id: string) => {
-    setEndringer((prev) => prev.filter((x) => x.id !== id));
-  };
+  const fjern = (id: string) => setEndringer((prev) => prev.filter((x) => x.id !== id));
 
   const value = useMemo(() => ({ endringer, lagre, fjern }), [endringer]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

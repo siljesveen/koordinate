@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { BilUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
 import { resolveBilPeriodeEtterMerkeTilbake } from "@/lib/kjoretoyTilgjengelighet";
+import { useAuth } from "@/lib/state/authStore";
 import {
   abonnerBilUtilgjengelig,
   sendBilTilbakeMelding,
@@ -78,11 +80,11 @@ function normalizeLoaded(data: unknown): BilUtilgjengelig[] {
     .filter(Boolean) as BilUtilgjengelig[];
 }
 
-function lesFraLocalStorage(): BilUtilgjengelig[] {
+async function lesFraLagring(): Promise<BilUtilgjengelig[]> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return normalizeLoaded(JSON.parse(raw));
+    const raw = await loadAppData(STORAGE_KEY);
+    if (raw === null || raw === undefined) return [];
+    return normalizeLoaded(raw);
   } catch {
     return [];
   }
@@ -94,31 +96,34 @@ function nyId(): string {
 }
 
 export function BilUtilgjengeligStoreProvider({ children }: { children: React.ReactNode }) {
+  const { dataReady, canEdit } = useAuth();
   const [poster, setPoster] = useState<BilUtilgjengelig[]>([]);
   const loaded = useRef(false);
   const hopperOverLagring = useRef(false);
 
   const lastInnFraLagring = useCallback(() => {
-    setPoster(lesFraLocalStorage());
+    void lesFraLagring().then(setPoster);
   }, []);
 
   useEffect(() => {
-    lastInnFraLagring();
-    loaded.current = true;
-  }, [lastInnFraLagring]);
+    if (!dataReady) return;
+    void lesFraLagring().then((data) => {
+      setPoster(data);
+      loaded.current = true;
+    });
+  }, [dataReady]);
 
   useEffect(() => {
-    if (!loaded.current) return;
+    if (!loaded.current || !dataReady) return;
     if (hopperOverLagring.current) {
       hopperOverLagring.current = false;
       return;
     }
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(poster));
-    } catch {
-      // ignorer
-    }
-  }, [poster]);
+    const timer = window.setTimeout(() => {
+      void saveAppData(STORAGE_KEY, poster, canEdit);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [poster, dataReady, canEdit]);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -191,13 +196,8 @@ export function BilUtilgjengeligStoreProvider({ children }: { children: React.Re
       tidspunkt: new Date().toISOString(),
     };
 
-    try {
-      hopperOverLagring.current = true;
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignorer
-    }
-
+    hopperOverLagring.current = true;
+    void saveAppData(STORAGE_KEY, next, canEdit);
     setPoster(next);
     sendBilTilbakeMelding(fullMelding);
 

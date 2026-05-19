@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { Bil } from "@/lib/domain";
+import { useAppData } from "@/lib/hooks/useAppData";
 import { IMPORTERTE_BILER_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type BilStoreValue = {
@@ -41,39 +42,13 @@ function nyId(): string {
 }
 
 export function BilStoreProvider({ children }: { children: React.ReactNode }) {
-  const [biler, setBiler] = useState<Bil[]>(standardBiler);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        setBiler(standardBiler());
-        loaded.current = true;
-        return;
-      }
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        setBiler(standardBiler());
-        loaded.current = true;
-        return;
-      }
-      const normalized = normalizeLoaded(parsed);
-      setBiler(normalized.length > 0 ? normalized : standardBiler());
-    } catch {
-      setBiler(standardBiler());
-    }
-    loaded.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(biler));
-    } catch {
-      // ignorer
-    }
-  }, [biler]);
+  const { data: biler, setData: setBiler } = useAppData<Bil[]>(STORAGE_KEY, {
+    getDefault: standardBiler,
+    parse: (raw) => {
+      const normalized = normalizeLoaded(raw);
+      return normalized.length > 0 ? normalized : standardBiler();
+    },
+  });
 
   const lagre = (item: Bil) => {
     setBiler((prev) => {

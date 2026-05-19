@@ -101,3 +101,50 @@
 .spacer {
   flex: 1;
 }
+
+.userBlock {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+}
+
+.userName {
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: #334155;
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roleBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.3rem;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.logoutBtn {
+  padding: 0.28rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.35rem;
+  background: #fff;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 650;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.logoutBtn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}

@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
+import { useAppData } from "@/lib/hooks/useAppData";
 
 export type TurnusSkiftType = "Ingen" | "Dag" | "Kveld" | "Begge";
 
@@ -49,28 +50,10 @@ function normalizeLoaded(data: unknown): Turnus4Uker[] {
 }
 
 export function Turnus4UkerStoreProvider({ children }: { children: React.ReactNode }) {
-  const [turnuser, setTurnuser] = useState<Turnus4Uker[]>(() => []);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      setTurnuser(normalizeLoaded(JSON.parse(raw)));
-    } catch {
-      // ignorer
-    }
-    loaded.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(turnuser));
-    } catch {
-      // ignorer
-    }
-  }, [turnuser]);
+  const { data: turnuser, setData: setTurnuser } = useAppData<Turnus4Uker[]>(STORAGE_KEY, {
+    getDefault: () => [],
+    parse: normalizeLoaded,
+  });
 
   const hentTurnus = (ansattId: string): Turnus4Uker => {
     const existing = turnuser.find((t) => t.ansattId === ansattId);

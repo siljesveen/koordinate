@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { Henger } from "@/lib/domain";
+import { useAppData } from "@/lib/hooks/useAppData";
 import { IMPORTERTE_HENGERE_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type HengerStoreValue = {
@@ -40,39 +41,13 @@ function nyId(): string {
 }
 
 export function HengerStoreProvider({ children }: { children: React.ReactNode }) {
-  const [hengere, setHengere] = useState<Henger[]>(standardHengere);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        setHengere(standardHengere());
-        loaded.current = true;
-        return;
-      }
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        setHengere(standardHengere());
-        loaded.current = true;
-        return;
-      }
-      const normalized = normalizeLoaded(parsed);
-      setHengere(normalized.length > 0 ? normalized : standardHengere());
-    } catch {
-      setHengere(standardHengere());
-    }
-    loaded.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!loaded.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(hengere));
-    } catch {
-      // ignorer
-    }
-  }, [hengere]);
+  const { data: hengere, setData: setHengere } = useAppData<Henger[]>(STORAGE_KEY, {
+    getDefault: standardHengere,
+    parse: (raw) => {
+      const normalized = normalizeLoaded(raw);
+      return normalized.length > 0 ? normalized : standardHengere();
+    },
+  });
 
   const lagre = (item: Henger) => {
     setHengere((prev) => {
