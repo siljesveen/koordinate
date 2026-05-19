@@ -141,7 +141,10 @@ export default function PlanKjoretoyVelger({
         });
       }
     }
-    for (const item of valgbare) {
+    const valgbareSortert = [...valgbare].sort((a, b) =>
+      a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }),
+    );
+    for (const item of valgbareSortert) {
       if (visMasterReferanse && item.id === fraMasterKjoretoyId) continue;
       liste.push({
         kind: "kjoretoy",

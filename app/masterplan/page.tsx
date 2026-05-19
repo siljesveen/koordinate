@@ -5,7 +5,8 @@ import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
-import type { MasterRuteSlot, Skift } from "@/lib/domain";
+import SokbarVelger from "@/components/SokbarVelger";
+import { fullNavn, type MasterRuteSlot, type Skift } from "@/lib/domain";
 import styles from "./page.module.css";
 
 const DAGNAVN = ["", "Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
@@ -38,6 +39,36 @@ export default function MasterplanPage() {
   const aktiveAnsatte = useMemo(() => ansatte.filter((a) => a.aktiv), [ansatte]);
   const aktiveBiler = useMemo(() => biler.filter((b) => b.aktiv), [biler]);
   const aktiveHengere = useMemo(() => hengere.filter((h) => h.aktiv), [hengere]);
+
+  const sjåførVelgerValg = useMemo(
+    () =>
+      aktiveAnsatte.map((a) => ({
+        value: a.id,
+        label: fullNavn(a),
+        søkTekst: fullNavn(a),
+      })),
+    [aktiveAnsatte],
+  );
+
+  const bilVelgerValg = useMemo(
+    () =>
+      aktiveBiler.map((b) => ({
+        value: b.id,
+        label: b.kjennemerke,
+        søkTekst: [b.kjennemerke, b.merke, b.modell].filter(Boolean).join(" "),
+      })),
+    [aktiveBiler],
+  );
+
+  const hengerVelgerValg = useMemo(
+    () =>
+      aktiveHengere.map((h) => ({
+        value: h.id,
+        label: h.kjennemerke,
+        søkTekst: [h.kjennemerke, h.type].filter(Boolean).join(" "),
+      })),
+    [aktiveHengere],
+  );
 
   const filtrertSlots = useMemo(() => {
     return masterplan.slots
@@ -480,46 +511,44 @@ export default function MasterplanPage() {
                   </select>
                 </td>
                 <td>
-                  <select
+                  <SokbarVelger
+                    compact
                     className={styles.cellSelect}
                     value={slot.standardSjåførAnsattId ?? ""}
-                    onChange={(e) => oppdaterSlot(slot, { standardSjåførAnsattId: e.target.value || undefined })}
-                  >
-                    <option value="">—</option>
-                    {aktiveAnsatte.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.fornavn} {a.etternavn}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(id) =>
+                      oppdaterSlot(slot, { standardSjåførAnsattId: id || undefined })
+                    }
+                    options={sjåførVelgerValg}
+                    ariaLabel={`Fast sjåfør, rute ${slot.rutekode}`}
+                    søkPlaceholder="Søk navn…"
+                    tomTreffTekst="Ingen ansatt funnet"
+                  />
                 </td>
                 <td>
-                  <select
+                  <SokbarVelger
+                    compact
                     className={styles.cellSelect}
                     value={slot.standardBilId ?? ""}
-                    onChange={(e) => oppdaterSlot(slot, { standardBilId: e.target.value || undefined })}
-                  >
-                    <option value="">—</option>
-                    {aktiveBiler.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.kjennemerke}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(id) => oppdaterSlot(slot, { standardBilId: id || undefined })}
+                    options={bilVelgerValg}
+                    ariaLabel={`Fast bil, rute ${slot.rutekode}`}
+                    søkPlaceholder="Søk reg.nr…"
+                    tomTreffTekst="Ingen bil funnet"
+                  />
                 </td>
                 <td>
-                  <select
+                  <SokbarVelger
+                    compact
                     className={styles.cellSelect}
                     value={slot.standardHengerId ?? ""}
-                    onChange={(e) => oppdaterSlot(slot, { standardHengerId: e.target.value || undefined })}
-                  >
-                    <option value="">—</option>
-                    {aktiveHengere.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.kjennemerke}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(id) =>
+                      oppdaterSlot(slot, { standardHengerId: id || undefined })
+                    }
+                    options={hengerVelgerValg}
+                    ariaLabel={`Fast henger, rute ${slot.rutekode}`}
+                    søkPlaceholder="Søk reg.nr…"
+                    tomTreffTekst="Ingen henger funnet"
+                  />
                 </td>
                 <td>
                   <button

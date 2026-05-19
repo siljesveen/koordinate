@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import SokbarVelger from "@/components/SokbarVelger";
 import { fullNavn, type Ansatt, type Fravær, type FraværType } from "@/lib/domain";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
@@ -51,6 +52,15 @@ export default function FraværPage() {
   const { ansatte } = useAnsattStore();
   const aktiveAnsatte = useMemo(() => ansatte.filter((a) => a.aktiv), [ansatte]);
   const ansattById = useMemo(() => new Map(aktiveAnsatte.map((a) => [a.id, a] as const)), [aktiveAnsatte]);
+  const ansattVelgerValg = useMemo(
+    () =>
+      aktiveAnsatte.map((a) => ({
+        value: a.id,
+        label: fullNavn(a),
+        søkTekst: fullNavn(a),
+      })),
+    [aktiveAnsatte],
+  );
 
   const { fravær, lagre, slett } = useFraværStore();
 
@@ -237,21 +247,15 @@ export default function FraværPage() {
               <div className={styles.formGrid}>
                 <div className={styles.field}>
                   <label className={styles.label}>Ansatt *</label>
-                  <select
-                    className={styles.select}
+                  <SokbarVelger
                     value={skjema.ansattId}
-                    onChange={(e) => setSkjema((s) => ({ ...s, ansattId: e.target.value }))}
-                    required
-                  >
-                    {aktiveAnsatte
-                      .slice()
-                      .sort((a, b) => fullNavn(a).localeCompare(fullNavn(b), "nb"))
-                      .map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {fullNavn(a)}
-                        </option>
-                      ))}
-                  </select>
+                    onChange={(id) => setSkjema((s) => ({ ...s, ansattId: id }))}
+                    options={ansattVelgerValg}
+                    visTom={false}
+                    ariaLabel="Velg ansatt"
+                    søkPlaceholder="Søk navn…"
+                    tomTreffTekst="Ingen ansatt funnet"
+                  />
                 </div>
 
                 <div className={styles.field}>

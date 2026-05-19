@@ -15,6 +15,7 @@ import {
 import { useBilStore } from "@/lib/state/bilStore";
 import { useMerkBilTilbake } from "@/lib/hooks/useMerkBilTilbake";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
+import SokbarVelger from "@/components/SokbarVelger";
 import styles from "./page.module.css";
 
 const UKEDAGER = ["ma", "ti", "on", "to", "fr", "lø", "sø"] as const;
@@ -90,8 +91,22 @@ function nyttSkjema(biler: Bil[]): VerkstedSkjema {
   };
 }
 
+function bilEtikett(b: Bil): string {
+  const mm = [b.merke, b.modell].filter(Boolean).join(" ");
+  return mm ? `${b.kjennemerke} · ${mm}` : b.kjennemerke;
+}
+
 export function VerkstedKalenderTab() {
   const { biler } = useBilStore();
+  const bilVelgerValg = useMemo(
+    () =>
+      biler.map((b) => ({
+        value: b.id,
+        label: bilEtikett(b),
+        søkTekst: [b.kjennemerke, b.merke, b.modell].filter(Boolean).join(" "),
+      })),
+    [biler],
+  );
   const { poster, lagre } = useBilUtilgjengeligStore();
   const merkTilbake = useMerkBilTilbake();
 
@@ -506,19 +521,15 @@ export function VerkstedKalenderTab() {
               <div className={styles.formGrid}>
                 <div className={styles.field}>
                   <label htmlFor="vk-bil">Bil</label>
-                  <select
-                    id="vk-bil"
-                    className={styles.select}
+                  <SokbarVelger
                     value={skjema.bilId}
-                    onChange={(e) => setSkjema((s) => ({ ...s, bilId: e.target.value }))}
-                    required
-                  >
-                    {biler.map((bil) => (
-                      <option key={bil.id} value={bil.id}>
-                        {bil.kjennemerke}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(id) => setSkjema((s) => ({ ...s, bilId: id }))}
+                    options={bilVelgerValg}
+                    visTom={false}
+                    ariaLabel="Velg bil"
+                    søkPlaceholder="Søk reg.nr…"
+                    tomTreffTekst="Ingen bil funnet"
+                  />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="vk-fra">Fra dato</label>

@@ -13,6 +13,7 @@ import {
 import { useBilStore } from "@/lib/state/bilStore";
 import { useMerkBilTilbake } from "@/lib/hooks/useMerkBilTilbake";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
+import SokbarVelger from "@/components/SokbarVelger";
 import styles from "@/app/fravaer/page.module.css";
 
 const TYPER: KjøretøyUtilgjengeligType[] = [
@@ -75,6 +76,16 @@ function toSkjema(item: BilUtilgjengelig | null, biler: Bil[]): Skjema {
 
 export default function BilUtilgjengeligPage() {
   const { biler } = useBilStore();
+  const bilVelgerValg = useMemo(
+    () =>
+      biler.map((b) => ({
+        value: b.id,
+        label: bilTekst(b),
+        søkTekst: [b.kjennemerke, b.merke, b.modell].filter(Boolean).join(" "),
+        hint: b.aktiv ? undefined : "inaktiv",
+      })),
+    [biler],
+  );
   const { poster, lagre, slett } = useBilUtilgjengeligStore();
   const merkTilbake = useMerkBilTilbake();
 
@@ -304,22 +315,15 @@ export default function BilUtilgjengeligPage() {
               <div className={styles.formGrid}>
                 <div className={styles.field}>
                   <label className={styles.label}>Bil *</label>
-                  <select
-                    className={styles.select}
+                  <SokbarVelger
                     value={skjema.bilId}
-                    onChange={(e) => setSkjema((s) => ({ ...s, bilId: e.target.value }))}
-                    required
-                  >
-                    {biler
-                      .slice()
-                      .sort((a, b) => a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }))
-                      .map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {bilTekst(b)}
-                          {!b.aktiv ? " (inaktiv)" : ""}
-                        </option>
-                      ))}
-                  </select>
+                    onChange={(id) => setSkjema((s) => ({ ...s, bilId: id }))}
+                    options={bilVelgerValg}
+                    visTom={false}
+                    ariaLabel="Velg bil"
+                    søkPlaceholder="Søk reg.nr…"
+                    tomTreffTekst="Ingen bil funnet"
+                  />
                 </div>
 
                 <div className={styles.field}>

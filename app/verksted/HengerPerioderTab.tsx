@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Henger, HengerUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
+import SokbarVelger from "@/components/SokbarVelger";
 import styles from "@/app/fravaer/page.module.css";
 
 const TYPER: KjøretøyUtilgjengeligType[] = [
@@ -62,6 +63,16 @@ function toSkjema(item: HengerUtilgjengelig | null, hengere: Henger[]): Skjema {
 
 export function HengerPerioderTab() {
   const { hengere } = useHengerStore();
+  const hengerVelgerValg = useMemo(
+    () =>
+      hengere.map((h) => ({
+        value: h.id,
+        label: hengerTekst(h),
+        søkTekst: [h.kjennemerke, h.type].filter(Boolean).join(" "),
+        hint: h.aktiv ? undefined : "inaktiv",
+      })),
+    [hengere],
+  );
   const { poster, lagre, slett } = useHengerUtilgjengeligStore();
 
   const hengerById = useMemo(() => new Map(hengere.map((h) => [h.id, h] as const)), [hengere]);
@@ -249,24 +260,15 @@ export function HengerPerioderTab() {
               <div className={styles.formGrid}>
                 <div className={styles.field}>
                   <label className={styles.label}>Henger *</label>
-                  <select
-                    className={styles.select}
+                  <SokbarVelger
                     value={skjema.hengerId}
-                    onChange={(e) => setSkjema((s) => ({ ...s, hengerId: e.target.value }))}
-                    required
-                  >
-                    {hengere
-                      .slice()
-                      .sort((a, b) =>
-                        a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }),
-                      )
-                      .map((h) => (
-                        <option key={h.id} value={h.id}>
-                          {hengerTekst(h)}
-                          {!h.aktiv ? " (inaktiv)" : ""}
-                        </option>
-                      ))}
-                  </select>
+                    onChange={(id) => setSkjema((s) => ({ ...s, hengerId: id }))}
+                    options={hengerVelgerValg}
+                    visTom={false}
+                    ariaLabel="Velg henger"
+                    søkPlaceholder="Søk reg.nr…"
+                    tomTreffTekst="Ingen henger funnet"
+                  />
                 </div>
 
                 <div className={styles.field}>

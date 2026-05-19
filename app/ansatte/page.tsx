@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import SokbarVelger from "@/components/SokbarVelger";
 import { MOCK_RUTER, fullNavn, type Ansatt, type AnsattSelskap, type Bil, type Fravær, type Henger } from "@/lib/domain";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
@@ -278,19 +279,25 @@ export default function AnsattePage() {
     return map;
   }, [masterplan.slots]);
 
-  const bilerSortert = useMemo(
+  const bilVelgerValg = useMemo(
     () =>
-      [...biler].sort((a, b) =>
-        a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }),
-      ),
+      biler.map((b) => ({
+        value: b.id,
+        label: bilEtikettLang(b),
+        søkTekst: [b.kjennemerke, b.merke, b.modell].filter(Boolean).join(" "),
+        hint: b.aktiv ? undefined : "inaktiv",
+      })),
     [biler],
   );
 
-  const hengereSortert = useMemo(
+  const hengerVelgerValg = useMemo(
     () =>
-      [...hengere].sort((a, b) =>
-        a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }),
-      ),
+      hengere.map((h) => ({
+        value: h.id,
+        label: h.type ? `${h.kjennemerke} · ${h.type}` : h.kjennemerke,
+        søkTekst: [h.kjennemerke, h.type].filter(Boolean).join(" "),
+        hint: h.aktiv ? undefined : "inaktiv",
+      })),
     [hengere],
   );
 
@@ -674,37 +681,29 @@ export default function AnsattePage() {
 
                 <div className={styles.field}>
                   <label className={styles.label}>Fast bil</label>
-                  <select
-                    className={styles.select}
+                  <SokbarVelger
                     value={skjema.fastBilId}
-                    onChange={(e) => setSkjema((s) => ({ ...s, fastBilId: e.target.value }))}
-                  >
-                    <option value="">Ingen</option>
-                    {bilerSortert.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {bilEtikettLang(b)}
-                        {!b.aktiv ? " (inaktiv)" : ""}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(id) => setSkjema((s) => ({ ...s, fastBilId: id }))}
+                    options={bilVelgerValg}
+                    tomLabel="Ingen"
+                    ariaLabel="Fast bil"
+                    søkPlaceholder="Søk reg.nr…"
+                    tomTreffTekst="Ingen bil funnet"
+                  />
                   <div className={styles.helper}>Registrer nye biler under menyen Biler.</div>
                 </div>
 
                 <div className={styles.field}>
                   <label className={styles.label}>Fast henger</label>
-                  <select
-                    className={styles.select}
+                  <SokbarVelger
                     value={skjema.fastHengerId}
-                    onChange={(e) => setSkjema((s) => ({ ...s, fastHengerId: e.target.value }))}
-                  >
-                    <option value="">Ingen</option>
-                    {hengereSortert.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.type ? `${h.kjennemerke} · ${h.type}` : h.kjennemerke}
-                        {!h.aktiv ? " (inaktiv)" : ""}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(id) => setSkjema((s) => ({ ...s, fastHengerId: id }))}
+                    options={hengerVelgerValg}
+                    tomLabel="Ingen"
+                    ariaLabel="Fast henger"
+                    søkPlaceholder="Søk reg.nr…"
+                    tomTreffTekst="Ingen henger funnet"
+                  />
                   <div className={styles.helper}>Registrer nye hengere under menyen Henger.</div>
                 </div>
 
