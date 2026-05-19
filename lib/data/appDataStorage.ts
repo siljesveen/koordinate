@@ -92,29 +92,31 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<voi
 
   const supabase = createClient();
 
-  for (const key of APP_DATA_KEYS) {
-    const local = lesLocal(key);
-    if (local === null) continue;
+  await Promise.allSettled(
+    APP_DATA_KEYS.map(async (key) => {
+      const local = lesLocal(key);
+      if (local === null) return;
 
-    const { data: existing } = await supabase
-      .from("app_data")
-      .select("key")
-      .eq("key", key)
-      .maybeSingle();
+      const { data: existing } = await supabase
+        .from("app_data")
+        .select("key")
+        .eq("key", key)
+        .maybeSingle();
 
-    if (existing) continue;
+      if (existing) return;
 
-    const { error } = await supabase.from("app_data").upsert({
-      key,
-      value: local,
-      updated_at: new Date().toISOString(),
-      updated_by: userId,
-    });
+      const { error } = await supabase.from("app_data").upsert({
+        key,
+        value: local,
+        updated_at: new Date().toISOString(),
+        updated_by: userId,
+      });
 
-    if (error) {
-      console.warn("[app_data] migrering feilet:", key, error.message);
-    }
-  }
+      if (error) {
+        console.warn("[app_data] migrering feilet:", key, error.message);
+      }
+    }),
+  );
 
   merkSyncedTilSupabase();
 }

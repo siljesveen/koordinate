@@ -105,18 +105,32 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       setDataReady(true);
       return;
     }
-    if (loading || !profile) {
+    if (loading) {
       setDataReady(false);
+      return;
+    }
+    // Ikke innlogget: vis login uten å vente på data-migrering
+    if (!profile) {
+      setDataReady(true);
       return;
     }
 
     let cancelled = false;
+    setDataReady(false);
+
+    const timeoutMs = 12_000;
+    const timeoutId = window.setTimeout(() => {
+      if (!cancelled) setDataReady(true);
+    }, timeoutMs);
+
     void migrateLocalStorageToSupabase(profile.id).finally(() => {
+      window.clearTimeout(timeoutId);
       if (!cancelled) setDataReady(true);
     });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
     };
   }, [configured, loading, profile]);
 
