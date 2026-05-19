@@ -13,13 +13,13 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
   const { dataReady, canEdit } = useAuth();
   const [data, setData] = useState<T>(options.getDefault);
   const [loaded, setLoaded] = useState(false);
-  const skipSave = useRef(true);
+  const hoppOverNesteLagring = useRef(true);
 
   useEffect(() => {
     if (!dataReady) return;
 
     let cancelled = false;
-    skipSave.current = true;
+    hoppOverNesteLagring.current = true;
 
     void (async () => {
       try {
@@ -31,7 +31,6 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
       } finally {
         if (!cancelled) {
           setLoaded(true);
-          skipSave.current = false;
         }
       }
     })();
@@ -42,7 +41,11 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
   }, [key, dataReady]);
 
   useEffect(() => {
-    if (!loaded || !dataReady || skipSave.current) return;
+    if (!loaded || !dataReady) return;
+    if (hoppOverNesteLagring.current) {
+      hoppOverNesteLagring.current = false;
+      return;
+    }
 
     const timer = window.setTimeout(() => {
       void saveAppData(key, data, canEdit);

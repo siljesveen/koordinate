@@ -202,6 +202,8 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   const { dataReady, canEdit } = useAuth();
   const [masterplan, setMasterplan] = useState<MasterRuteplan>({ syklusLengde: 4, slots: [] });
   const loadedRef = useRef(false);
+  /** Unngår at innlasting overskriver sky med tom/eldre masterplan (f.eks. uten koblingsgrupper). */
+  const brukerHarEndret = useRef(false);
 
   useEffect(() => {
     if (!dataReady) return;
@@ -244,7 +246,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   }, [dataReady]);
 
   useEffect(() => {
-    if (!loadedRef.current || !dataReady) return;
+    if (!loadedRef.current || !dataReady || !brukerHarEndret.current) return;
     if (masterplan.slots.length === 0) return;
 
     const timer = window.setTimeout(() => {
@@ -255,6 +257,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   }, [masterplan, dataReady, canEdit]);
 
   const lagreSlot = (slot: MasterRuteSlot) => {
+    brukerHarEndret.current = true;
     setMasterplan((prev) => {
       const idx = prev.slots.findIndex((s) => s.id === slot.id);
       const nyeSlots = [...prev.slots];
@@ -268,6 +271,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   };
 
   const slettSlot = (id: string) => {
+    brukerHarEndret.current = true;
     setMasterplan((prev) => ({
       ...prev,
       slots: prev.slots.filter((s) => s.id !== id),
@@ -275,10 +279,12 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   };
 
   const lagreHel = (plan: MasterRuteplan) => {
+    brukerHarEndret.current = true;
     setMasterplan(plan);
   };
 
   const koblRuter = (gruppenavn: string, rutekoder: string[], opts?: { skift?: Skift; dag?: 1|2|3|4|5|6|7 }) => {
+    brukerHarEndret.current = true;
     setMasterplan((prev) => {
       const nyGruppe: Koblingsgruppe = { rutekoder, dag: opts?.dag, skift: opts?.skift };
       const grupper = { ...(prev.koblingsgrupper ?? {}), [gruppenavn]: nyGruppe };
@@ -293,6 +299,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   };
 
   const fjernKobling = (gruppenavn: string) => {
+    brukerHarEndret.current = true;
     setMasterplan((prev) => {
       const grupper = { ...(prev.koblingsgrupper ?? {}) };
       delete grupper[gruppenavn];

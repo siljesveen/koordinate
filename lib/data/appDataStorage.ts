@@ -97,17 +97,39 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<voi
       const local = lesLocal(key);
       if (local === null) return;
 
-      const { data: existing } = await supabase
+      const { data: existingRow } = await supabase
         .from("app_data")
-        .select("key")
+        .select("value")
         .eq("key", key)
         .maybeSingle();
 
-      if (existing) return;
+      let valueToWrite = local;
+
+      // Masterplan: ikke overskriv sky med versjon uten koblingsgrupper hvis local har flere
+      if (key === "bemanning.masterplan.v1" && existingRow?.value && typeof existingRow.value === "object") {
+        const remote = existingRow.value as Record<string, unknown>;
+        const localPlan = local as Record<string, unknown>;
+        const remoteGrupper =
+          remote.koblingsgrupper && typeof remote.koblingsgrupper === "object"
+            ? Object.keys(remote.koblingsgrupper as object).length
+            : 0;
+        const localGrupper =
+          localPlan.koblingsgrupper && typeof localPlan.koblingsgrupper === "object"
+            ? Object.keys(localPlan.koblingsgrupper as object).length
+            : 0;
+        if (remoteGrupper > localGrupper) {
+          return;
+        }
+        if (localGrupper > remoteGrupper) {
+          valueToWrite = { ...remote, ...localPlan, koblingsgrupper: localPlan.koblingsgrupper };
+        }
+      } else if (existingRow) {
+        return;
+      }
 
       const { error } = await supabase.from("app_data").upsert({
         key,
-        value: local,
+        value: valueToWrite,
         updated_at: new Date().toISOString(),
         updated_by: userId,
       });
