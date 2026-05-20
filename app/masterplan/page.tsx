@@ -6,8 +6,35 @@ import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import SokbarVelger from "@/components/SokbarVelger";
-import { fullNavn, type MasterRuteSlot, type Skift } from "@/lib/domain";
+import { fullNavn, type Ansatt, type MasterRuteSlot, type Skift } from "@/lib/domain";
+import { compareNb } from "@/lib/utils/sort";
+import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import styles from "./page.module.css";
+
+function sjåførFraMasterSlots(
+  slots: MasterRuteSlot[],
+  ansattById: Map<string, Ansatt>,
+  kjoretoyFelt: "standardBilId" | "standardHengerId",
+): Map<string, string> {
+  const rå = new Map<string, string[]>();
+  for (const slot of slots) {
+    const kjId = slot[kjoretoyFelt];
+    const sjId = slot.standardSjåførAnsattId;
+    if (!kjId || !sjId) continue;
+    const a = ansattById.get(sjId);
+    if (!a || a.aktiv === false) continue;
+    const navn = fullNavn(a);
+    const liste = rå.get(kjId) ?? [];
+    if (!liste.includes(navn)) liste.push(navn);
+    rå.set(kjId, liste);
+  }
+  const vis = new Map<string, string>();
+  for (const [id, navn] of rå) {
+    navn.sort((x, y) => compareNb(x, y));
+    vis.set(id, navn.join(", "));
+  }
+  return vis;
+}
 
 const DAGNAVN = ["", "Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
 
@@ -37,8 +64,42 @@ export default function MasterplanPage() {
   const [nyRuteSkift, setNyRuteSkift] = useState<Skift | "">("Dag");
 
   const aktiveAnsatte = useMemo(() => ansatte.filter((a) => a.aktiv), [ansatte]);
-  const aktiveBiler = useMemo(() => biler.filter((b) => b.aktiv), [biler]);
-  const aktiveHengere = useMemo(() => hengere.filter((h) => h.aktiv), [hengere]);
+  const ansattById = useMemo(
+    () => new Map(ansatte.map((a) => [a.id, a] as const)),
+    [ansatte],
+  );
+
+  const bilIdsIBruk = useMemo(() => {
+    const ids = new Set<string>();
+    for (const a of ansatte) {
+      if (a.fastBilId) ids.add(a.fastBilId);
+    }
+    for (const slot of masterplan.slots) {
+      if (slot.standardBilId) ids.add(slot.standardBilId);
+    }
+    return ids;
+  }, [ansatte, masterplan.slots]);
+
+  const hengerIdsIBruk = useMemo(() => {
+    const ids = new Set<string>();
+    for (const a of ansatte) {
+      if (a.fastHengerId) ids.add(a.fastHengerId);
+    }
+    for (const slot of masterplan.slots) {
+      if (slot.standardHengerId) ids.add(slot.standardHengerId);
+    }
+    return ids;
+  }, [ansatte, masterplan.slots]);
+
+  const sjåførPerBilFraMaster = useMemo(
+    () => sjåførFraMasterSlots(masterplan.slots, ansattById, "standardBilId"),
+    [masterplan.slots, ansattById],
+  );
+
+  const sjåførPerHengerFraMaster = useMemo(
+    () => sjåførFraMasterSlots(masterplan.slots, ansattById, "standardHengerId"),
+    [masterplan.slots, ansattById],
+  );
 
   const sjåførVelgerValg = useMemo(
     () =>
@@ -52,23 +113,32 @@ export default function MasterplanPage() {
 
   const bilVelgerValg = useMemo(
     () =>
-      aktiveBiler.map((b) => ({
-        value: b.id,
-        label: b.kjennemerke,
-        søkTekst: [b.kjennemerke, b.merke, b.modell].filter(Boolean).join(" "),
-      })),
-    [aktiveBiler],
+      biler
+        .filter((b) => b.aktiv || bilIdsIBruk.has(b.id))
+        .map((b) => ({
+          value: b.id,
+          label: b.kjennemerke,
+          søkTekst: [b.kjennemerke, b.merke, b.modell].filter(Boolean).join(" "),
+          hint: b.aktiv ? undefined : "inaktiv",
+        })),
+    [biler, bilIdsIBruk],
   );
 
   const hengerVelgerValg = useMemo(
     () =>
-      aktiveHengere.map((h) => ({
-        value: h.id,
-        label: h.kjennemerke,
-        søkTekst: [h.kjennemerke, h.type].filter(Boolean).join(" "),
-      })),
-    [aktiveHengere],
+      hengere
+        .filter((h) => h.aktiv || hengerIdsIBruk.has(h.id))
+        .map((h) => ({
+          value: h.id,
+          label: h.kjennemerke,
+          søkTekst: [h.kjennemerke, h.type].filter(Boolean).join(" "),
+          hint: h.aktiv ? undefined : "inaktiv",
+        })),
+    [hengere, hengerIdsIBruk],
   );
+
+  const kjoretoySøkBil = useKjoretoySøkBil(ansatte, biler, sjåførPerBilFraMaster);
+  const kjoretoySøkHenger = useKjoretoySøkHenger(ansatte, hengere, sjåførPerHengerFraMaster);
 
   const filtrertSlots = useMemo(() => {
     return masterplan.slots
@@ -532,8 +602,8 @@ export default function MasterplanPage() {
                     onChange={(id) => oppdaterSlot(slot, { standardBilId: id || undefined })}
                     options={bilVelgerValg}
                     ariaLabel={`Fast bil, rute ${slot.rutekode}`}
-                    søkPlaceholder="Søk reg.nr…"
                     tomTreffTekst="Ingen bil funnet"
+                    kjoretoySøkMedAnsatte={kjoretoySøkBil}
                   />
                 </td>
                 <td>
@@ -546,8 +616,8 @@ export default function MasterplanPage() {
                     }
                     options={hengerVelgerValg}
                     ariaLabel={`Fast henger, rute ${slot.rutekode}`}
-                    søkPlaceholder="Søk reg.nr…"
                     tomTreffTekst="Ingen henger funnet"
+                    kjoretoySøkMedAnsatte={kjoretoySøkHenger}
                   />
                 </td>
                 <td>

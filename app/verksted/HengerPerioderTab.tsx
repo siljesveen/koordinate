@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { Henger, HengerUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
+import { useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import SokbarVelger from "@/components/SokbarVelger";
 import styles from "@/app/fravaer/page.module.css";
 
@@ -62,7 +64,9 @@ function toSkjema(item: HengerUtilgjengelig | null, hengere: Henger[]): Skjema {
 }
 
 export function HengerPerioderTab() {
+  const { ansatte } = useAnsattStore();
   const { hengere } = useHengerStore();
+  const kjoretoySøkHenger = useKjoretoySøkHenger(ansatte, hengere);
   const hengerVelgerValg = useMemo(
     () =>
       hengere.map((h) => ({
@@ -266,8 +270,8 @@ export function HengerPerioderTab() {
                     options={hengerVelgerValg}
                     visTom={false}
                     ariaLabel="Velg henger"
-                    søkPlaceholder="Søk reg.nr…"
                     tomTreffTekst="Ingen henger funnet"
+                    kjoretoySøkMedAnsatte={kjoretoySøkHenger}
                   />
                 </div>
 

@@ -9,9 +9,11 @@ import {
   formatUtilgjengeligPeriode,
   utilgjengeligPeriodeSorterKey,
 } from "@/lib/kjoretoyTilgjengelighet";
+import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useMerkBilTilbake } from "@/lib/hooks/useMerkBilTilbake";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
+import { useKjoretoySøkBil } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import SokbarVelger from "@/components/SokbarVelger";
 import styles from "@/app/fravaer/page.module.css";
 
@@ -74,7 +76,9 @@ function toSkjema(item: BilUtilgjengelig | null, biler: Bil[]): Skjema {
 }
 
 export function BilPerioderTab() {
+  const { ansatte } = useAnsattStore();
   const { biler } = useBilStore();
+  const kjoretoySøkBil = useKjoretoySøkBil(ansatte, biler);
   const bilVelgerValg = useMemo(
     () =>
       biler.map((b) => ({
@@ -306,8 +310,8 @@ export function BilPerioderTab() {
                     options={bilVelgerValg}
                     visTom={false}
                     ariaLabel="Velg bil"
-                    søkPlaceholder="Søk reg.nr…"
                     tomTreffTekst="Ingen bil funnet"
+                    kjoretoySøkMedAnsatte={kjoretoySøkBil}
                   />
                 </div>
 

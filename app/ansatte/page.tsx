@@ -11,6 +11,7 @@ import { useHengerStore } from "@/lib/state/hengerStore";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
 import { useTurnus4UkerStore, type TurnusSkiftType } from "@/lib/state/turnus4ukerStore";
+import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import styles from "./page.module.css";
 
 const TURNUS_REKKEFØLGE: TurnusSkiftType[] = ["Ingen", "Dag", "Kveld", "Begge"];
@@ -303,7 +304,8 @@ export default function AnsattePage() {
 
   const bilById = useMemo(() => new Map(biler.map((b) => [b.id, b] as const)), [biler]);
   const hengerById = useMemo(() => new Map(hengere.map((h) => [h.id, h] as const)), [hengere]);
-
+  const kjoretoySøkBil = useKjoretoySøkBil(ansatte, biler);
+  const kjoretoySøkHenger = useKjoretoySøkHenger(ansatte, hengere);
 
   const synlige = useMemo(() => {
     const q = søk.trim().toLowerCase();
@@ -687,8 +689,8 @@ export default function AnsattePage() {
                     options={bilVelgerValg}
                     tomLabel="Ingen"
                     ariaLabel="Fast bil"
-                    søkPlaceholder="Søk reg.nr…"
                     tomTreffTekst="Ingen bil funnet"
+                    kjoretoySøkMedAnsatte={kjoretoySøkBil}
                   />
                   <div className={styles.helper}>Registrer nye biler under menyen Biler.</div>
                 </div>
@@ -701,8 +703,8 @@ export default function AnsattePage() {
                     options={hengerVelgerValg}
                     tomLabel="Ingen"
                     ariaLabel="Fast henger"
-                    søkPlaceholder="Søk reg.nr…"
                     tomTreffTekst="Ingen henger funnet"
+                    kjoretoySøkMedAnsatte={kjoretoySøkHenger}
                   />
                   <div className={styles.helper}>Registrer nye hengere under menyen Henger.</div>
                 </div>
