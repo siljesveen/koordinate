@@ -684,6 +684,7 @@ export default function AnsattePage() {
                     <option value="Bring">Bring</option>
                     <option value="TF">TF</option>
                     <option value="GDF">GDF</option>
+                    <option value="Kjørekontor">Kjørekontor</option>
                   </select>
                   <div className={styles.helper}>Kun Asko-ansatte vises som tilgjengelige i daglig planlegging.</div>
                 </div>

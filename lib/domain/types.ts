@@ -9,7 +9,7 @@ export type Skift = "Dag" | "Kveld";
 
 export type FraværType = "Syk" | "Ferie" | "Fri" | "Permisjon" | "Annet";
 
-export type AnsattSelskap = "Asko" | "Bring" | "TF" | "GDF";
+export type AnsattSelskap = "Asko" | "Bring" | "TF" | "GDF" | "Kjørekontor";
 
 export type Ansatt = {
   id: string;
