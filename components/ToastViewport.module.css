@@ -16,7 +16,7 @@
   gap: 0.5rem;
   padding: 0.75rem 0.85rem;
   border-radius: 0.6rem;
-  background: #0f172a;
+  background: var(--surface);
   color: #f8fafc;
   font-size: 0.9rem;
   line-height: 1.4;

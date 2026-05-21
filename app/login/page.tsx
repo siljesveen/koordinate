@@ -1,4 +1,5 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import KoordinateLogo from "@/components/KoordinateLogo";
 import { LoginForm } from "./LoginForm";
 import styles from "./page.module.css";
 
@@ -17,8 +18,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className={styles.page}>
       <div className={styles.card}>
         <div className={styles.brand}>
-          <span className={styles.brandIcon}>KO</span>
-          <span className={styles.title}>KOordinate</span>
+          <KoordinateLogo size={36} />
+          <div>
+            <div className={styles.brandText}>
+              <span className={styles.brandKo}>KO</span>
+              <span className={styles.brandOrdinate}>ordinate</span>
+            </div>
+            <p className={styles.tagline}>Kommandosentral for bemanning og ruteplanlegging</p>
+          </div>
         </div>
 
         <p className={styles.sub}>Logg inn for å bruke planleggingsverktøyet.</p>

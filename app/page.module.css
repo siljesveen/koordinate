@@ -3,7 +3,7 @@
   max-width: 64rem;
   margin: 0 auto;
   padding: 1.25rem 1rem 2rem;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
 .header {
@@ -18,14 +18,14 @@
   font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--foreground);
   line-height: 1.15;
 }
 
 .subtitle {
   margin-top: 0.25rem;
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--brand-muted);
 }
 
 .filterBtn {
@@ -33,8 +33,8 @@
   font-size: 0.85rem;
   font-weight: 700;
   border-radius: 0.45rem;
-  border: 1px solid #0f172a;
-  background: #0f172a;
+  border: 1px solid var(--brand-primary);
+  background: var(--brand-primary);
   color: #ffffff;
   cursor: pointer;
   text-decoration: none;
@@ -42,7 +42,7 @@
 }
 
 .filterBtn:hover {
-  background: #1e293b;
+  background: var(--brand-primary-hover);
 }
 
 /* ── Sammendrag-kort ── */
@@ -55,30 +55,30 @@
 }
 
 .card {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.6rem;
-  background: #ffffff;
+  background: var(--surface);
   padding: 0.85rem 1rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow);
 }
 
-.cardGreen { border-left: 4px solid #22c55e; }
-.cardRed { border-left: 4px solid #ef4444; background: #fef2f2; }
-.cardYellow { border-left: 4px solid #eab308; background: #fefce8; }
-.cardOrange { border-left: 4px solid #f97316; background: #fff7ed; }
-.cardNeutral { border-left: 4px solid #e2e8f0; }
+.cardGreen { border-left: 4px solid var(--status-ok); }
+.cardRed { border-left: 4px solid var(--status-error); background: var(--status-error-bg); }
+.cardYellow { border-left: 4px solid var(--status-warn); background: var(--status-warn-bg); }
+.cardOrange { border-left: 4px solid var(--status-warn); background: var(--status-warn-bg); }
+.cardNeutral { border-left: 4px solid var(--border); }
 
 .cardValue {
   font-size: 1.6rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--foreground);
   line-height: 1.1;
 }
 
 .cardLabel {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--brand-muted);
   margin-top: 0.15rem;
 }
 
@@ -90,7 +90,7 @@
   gap: 0.5rem;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--brand-muted);
   margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
@@ -99,7 +99,7 @@
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: var(--surface-hover);
   flex-shrink: 0;
 }
 
@@ -112,16 +112,16 @@
 .alertTitle {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--foreground);
   margin-bottom: 0.5rem;
 }
 
 .alertList {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.6rem;
-  background: #ffffff;
+  background: var(--surface);
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow);
 }
 
 .alertRow {
@@ -129,7 +129,7 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.55rem 0.85rem;
-  border-bottom: 1px solid #f1f5f9;
+  border: 1px solid var(--border);
   font-size: 0.85rem;
 }
 
@@ -139,13 +139,13 @@
 
 .alertRute {
   font-weight: 800;
-  color: #0f172a;
+  color: var(--foreground);
   min-width: 4rem;
 }
 
 .alertNavn {
   flex: 1;
-  color: #475569;
+  color: var(--brand-muted);
   font-weight: 600;
 }
 
@@ -161,7 +161,7 @@
 .allGood {
   padding: 1rem 1.25rem;
   border-radius: 0.6rem;
-  background: #f0fdf4;
+  background: var(--status-ok-bg);
   border: 1px solid #bbf7d0;
   color: #166534;
   font-weight: 700;
@@ -171,9 +171,9 @@
 .emptyState {
   padding: 1rem 1.25rem;
   border-radius: 0.6rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--brand-muted);
   font-size: 0.9rem;
 }
 

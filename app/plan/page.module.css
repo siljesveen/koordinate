@@ -2,11 +2,11 @@
 
 .page {
   width: 100vw;
-  height: calc(100vh - 3rem);
+  height: calc(100vh - 3.25rem);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
 /* ── Topplinje: kontroller ── */
@@ -16,8 +16,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.4rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   flex-shrink: 0;
   gap: 0.5rem;
 }
@@ -25,7 +25,7 @@
 .title {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--foreground);
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
@@ -44,9 +44,9 @@
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 0.35rem;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
@@ -55,35 +55,35 @@
 }
 
 .dayNavBtn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: var(--background-subtle);
+  border-color: var(--foreground-muted);
 }
 
 .dayShortcut {
   padding: 0.25rem 0.5rem;
   font-size: 0.72rem;
   font-weight: 700;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.35rem;
-  background: #fff;
-  color: #475569;
+  background: var(--surface);
+  color: var(--brand-muted);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .dayShortcut:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: var(--background-subtle);
+  border-color: var(--foreground-muted);
 }
 
 .dayShortcutActive {
-  background: #0f172a;
+  background: var(--brand-primary);
   color: #fff;
-  border-color: #0f172a;
+  border-color: var(--foreground);
 }
 
 .dayShortcutActive:hover {
-  background: #1e293b;
+  background: var(--surface-hover);
 }
 
 .select,
@@ -91,9 +91,9 @@
 .input {
   padding: 0.35rem 0.5rem;
   border-radius: 0.45rem;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
   font-weight: 700;
   font-size: 0.82rem;
 }
@@ -104,13 +104,13 @@
 
 .btn:hover,
 .select:hover {
-  background: #f8fafc;
+  background: var(--surface-raised);
 }
 
 .ukeBadge {
   padding: 0.35rem 0.55rem;
   border-radius: 0.45rem;
-  background: #0f172a;
+  background: var(--brand-primary);
   color: #fff;
   font-size: 0.82rem;
   font-weight: 800;
@@ -119,24 +119,24 @@
 
 .tabs {
   display: inline-flex;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.45rem;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface);
 }
 
 .tabBtn {
   padding: 0.35rem 0.6rem;
   border: 0;
   background: transparent;
-  color: #0f172a;
+  color: var(--foreground);
   font-weight: 800;
   font-size: 0.82rem;
   cursor: pointer;
 }
 
 .tabBtnActive {
-  background: #0f172a;
+  background: var(--brand-primary);
   color: #fff;
 }
 
@@ -146,17 +146,17 @@
   display: flex;
   gap: 0.75rem;
   padding: 0.3rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
   flex-shrink: 0;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--brand-muted);
 }
 
-.summaryBad { color: #b91c1c; }
+.summaryBad { color: var(--status-error); }
 .summaryWarn { color: #a16207; }
-.summaryOk { color: #15803d; }
+.summaryOk { color: var(--status-ok); }
 
 /* ── Hovedområde: tabell + sidebar ── */
 
@@ -185,7 +185,7 @@
 .table td {
   padding: 0.3rem 0.5rem;
   text-align: left;
-  border-bottom: 1px solid #f1f5f9;
+  border: 1px solid var(--border);
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -195,16 +195,16 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #64748b;
-  background: #fff;
+  color: var(--brand-muted);
+  background: var(--surface);
   position: sticky;
   top: 0;
   z-index: 2;
-  border-bottom: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
 }
 
 .table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--surface-raised);
 }
 
 .table tbody tr.dataRow:focus-within {
@@ -246,15 +246,15 @@
 }
 
 .pillWarn {
-  background: #fef9c3;
+  background: var(--status-warn-bg);
   color: #854d0e;
-  border: 1px solid #fde047;
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .pillBad {
-  background: #fee2e2;
+  background: var(--status-error-bg);
   color: #7f1d1d;
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .pillInfo {
@@ -266,7 +266,7 @@
 /* ── Celler ── */
 
 .muted {
-  color: #475569;
+  color: var(--brand-muted);
 }
 
 .tdTildel {
@@ -279,9 +279,9 @@
   width: 100%;
   padding: 0.25rem 0.3rem;
   border-radius: 0.35rem;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 0.78rem;
   font-weight: 650;
 }
@@ -304,9 +304,9 @@
   width: 100%;
   padding: 0.25rem 0.3rem;
   border-radius: 0.35rem;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 0.78rem;
   font-weight: 650;
   cursor: pointer;
@@ -315,30 +315,30 @@
 }
 
 .kjoretoyComboTrigger:hover {
-  background: #f8fafc;
+  background: var(--surface-raised);
 }
 
 .kjoretoyComboTriggerOpen {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  border-color: var(--brand-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .kjoretoyComboTriggerMaster {
   border-color: #86efac;
-  background: #f0fdf4;
+  background: var(--status-ok-bg);
 }
 
 .kjoretoyComboTriggerMaster:hover {
-  background: #ecfdf5;
+  background: var(--status-ok-bg);
 }
 
 .kjoretoyComboTriggerMasterWarn {
-  border-color: #f59e0b;
+  border-color: var(--status-warn);
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45);
 }
 
 .kjoretoyComboTriggerMaster.kjoretoyComboTriggerMasterWarn:hover {
-  background: #fffbeb;
+  background: var(--status-warn-bg);
 }
 
 .kjoretoyComboValueMaster {
@@ -346,7 +346,7 @@
 }
 
 .kjoretoyComboItemMaster:not(.kjoretoyComboItemWarn) {
-  background: #f0fdf4;
+  background: var(--status-ok-bg);
 }
 
 .kjoretoyComboItemMaster:not(.kjoretoyComboItemWarn):hover {
@@ -354,7 +354,7 @@
 }
 
 .kjoretoyComboItemMaster.kjoretoyComboItemWarn {
-  background: #fffbeb;
+  background: var(--status-warn-bg);
 }
 
 .kjoretoyComboItemMaster.kjoretoyComboItemWarn:hover {
@@ -366,12 +366,12 @@
 }
 
 .kjoretoyComboRegMaster {
-  color: #15803d;
+  color: var(--status-ok);
   font-weight: 700;
 }
 
 .kjoretoyComboTriggerMaster.kjoretoyComboTriggerOpen {
-  background: #ecfdf5;
+  background: var(--status-ok-bg);
 }
 
 .kjoretoyComboValue {
@@ -385,7 +385,7 @@
 .kjoretoyComboChevron {
   flex-shrink: 0;
   font-size: 0.65rem;
-  color: #64748b;
+  color: var(--brand-muted);
 }
 
 .kjoretoyComboPanel {
@@ -395,26 +395,26 @@
   right: 0;
   z-index: 30;
   min-width: 10rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.4rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 
 .kjoretoyComboSøkWrap {
   padding: 0.3rem;
-  border-bottom: 1px solid #f1f5f9;
-  background: #f8fafc;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
 }
 
 .kjoretoyComboSøk {
   width: 100%;
   padding: 0.28rem 0.35rem;
   border-radius: 0.3rem;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 0.72rem;
   font-weight: 600;
   box-sizing: border-box;
@@ -422,13 +422,13 @@
 }
 
 .kjoretoyComboSøk::placeholder {
-  color: #94a3b8;
+  color: var(--foreground-muted);
 }
 
 .kjoretoyComboSøk:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+  border-color: var(--brand-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .kjoretoyComboListe {
@@ -444,9 +444,9 @@
   width: 100%;
   padding: 0.3rem 0.45rem;
   border: 0;
-  border-bottom: 1px solid #f8fafc;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 0.75rem;
   font-weight: 650;
   cursor: pointer;
@@ -459,11 +459,11 @@
 }
 
 .kjoretoyComboItem:hover {
-  background: #eff6ff;
+  background: var(--status-info-bg);
 }
 
 .kjoretoyComboItemWarn {
-  background: #fffbeb;
+  background: var(--status-warn-bg);
 }
 
 .kjoretoyComboItemWarn:hover {
@@ -480,7 +480,7 @@
   flex-shrink: 0;
   font-size: 0.65rem;
   font-weight: 700;
-  color: #15803d;
+  color: var(--status-ok);
 }
 
 .kjoretoyComboStatusWarn {
@@ -498,13 +498,13 @@
 .kjoretoyComboTom {
   padding: 0.45rem 0.5rem;
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--foreground-muted);
   font-style: italic;
 }
 
 .baselineHint {
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--foreground-muted);
   line-height: 1.2;
 }
 
@@ -512,8 +512,8 @@
   min-height: 1.6rem;
   padding: 0.2rem 0.3rem;
   border-radius: 0.35rem;
-  border: 1px dashed #cbd5e1;
-  background: #f8fafc;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-raised);
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -523,7 +523,7 @@
 .dropPlaceholder {
   font-size: 0.72rem;
   font-weight: 650;
-  color: #94a3b8;
+  color: var(--foreground-muted);
 }
 
 .dragChip {
@@ -546,8 +546,8 @@
 /* ── Sidebar (høyre) ── */
 
 .sidebar {
-  border-left: 1px solid #e2e8f0;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -569,7 +569,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #64748b;
+  color: var(--brand-muted);
   margin-bottom: 0.15rem;
 }
 
@@ -579,8 +579,8 @@
   gap: 0.2rem;
   padding: 0.3rem;
   border-radius: 0.4rem;
-  border: 1px dashed #cbd5e1;
-  background: #fafafa;
+  border: 1px dashed var(--border-strong);
+  background: var(--background-subtle);
   min-height: 1.8rem;
 }
 
@@ -599,8 +599,8 @@
 }
 
 .tilgjengeligDragOver {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--brand-primary);
+  background: var(--status-info-bg);
 }
 
 .fraværSection {
@@ -611,34 +611,34 @@
 }
 
 .fraværDragOver {
-  border-color: #f59e0b;
-  background: #fffbeb;
+  border-color: var(--status-warn);
+  background: var(--status-warn-bg);
 }
 
 .sidebarSøk {
   padding: 0.25rem 0.4rem;
   border-radius: 0.35rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   font-size: 0.75rem;
   font-weight: 600;
-  color: #0f172a;
-  background: #fff;
+  color: var(--foreground);
+  background: var(--surface);
   outline: none;
   width: 100%;
   box-sizing: border-box;
 }
 
 .sidebarSøk:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  border-color: var(--brand-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .driverList {
   flex: 1;
   overflow-y: auto;
   border-radius: 0.4rem;
-  border: 1px solid #e2e8f0;
-  background: #fafafa;
+  border: 1px solid var(--border);
+  background: var(--background-subtle);
   min-height: 2rem;
 }
 
@@ -648,7 +648,7 @@
   padding: 0.2rem 0.4rem;
   cursor: grab;
   user-select: none;
-  border-bottom: 1px solid #f1f5f9;
+  border: 1px solid var(--border);
   transition: background 0.1s;
 }
 
@@ -668,7 +668,7 @@
 .driverName {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -681,19 +681,19 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #94a3b8;
+  color: var(--foreground-muted);
   padding: 0.3rem 0.4rem 0.1rem;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
 }
 
 .driverRowUnavail {
   opacity: 0.7;
-  background: #fef2f2;
+  background: var(--status-error-bg);
 }
 
 .driverRowUnavail:hover {
-  background: #fecaca;
+  background: var(--status-error-bg);
 }
 
 .driverGrunn {
@@ -707,28 +707,28 @@
 
 .dropPoolMuted {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--foreground-muted);
   padding: 0.3rem;
   border-radius: 0.4rem;
-  border: 1px dashed #e2e8f0;
-  background: #fafafa;
+  border: 1px dashed var(--border);
+  background: var(--background-subtle);
   line-height: 1.3;
   text-align: center;
 }
 
 .tag {
   display: inline-block;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.1rem 0.4rem;
   font-size: 0.72rem;
   font-weight: 700;
   width: fit-content;
-  background: #fff;
+  background: var(--surface);
 }
 
 .note {
-  color: #94a3b8;
+  color: var(--foreground-muted);
   font-size: 0.7rem;
   padding: 0.15rem 0;
 }
@@ -746,7 +746,7 @@
 
 .divider {
   border: 0;
-  border-top: 1px solid #f1f5f9;
+  border: 1px solid var(--border);
   margin: 0.1rem 0;
 }
 
@@ -772,18 +772,18 @@
 }
 
 .linkIconBtnOpphevet {
-  color: #94a3b8;
+  color: var(--foreground-muted);
 }
 
 .linkIconBtnOpphevet:hover {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--background-subtle);
+  color: var(--brand-muted);
 }
 
 .removeBtn {
   border: none;
   background: none;
-  color: #94a3b8;
+  color: var(--foreground-muted);
   font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
@@ -793,8 +793,8 @@
 }
 
 .removeBtn:hover {
-  color: #dc2626;
-  background: #fee2e2;
+  color: var(--status-error);
+  background: var(--status-error-bg);
 }
 
 /* ── Legg til rute ── */
@@ -803,14 +803,14 @@
   display: flex;
   gap: 0.3rem;
   padding: 0.3rem 0.5rem;
-  border-top: 1px solid #f1f5f9;
-  background: #f8fafc;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
   align-items: center;
 }
 
 .addRouteInput {
   padding: 0.25rem 0.4rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.35rem;
   font-size: 0.78rem;
   width: 10rem;
@@ -823,9 +823,9 @@
 
 .addRouteBtn {
   padding: 0.25rem 0.5rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.35rem;
-  background: #fff;
+  background: var(--surface);
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
@@ -833,7 +833,7 @@
 }
 
 .addRouteBtn:hover:not(:disabled) {
-  background: #f1f5f9;
+  background: var(--background-subtle);
 }
 
 .addRouteBtn:disabled {
@@ -854,7 +854,7 @@
 .removedRouteName {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--brand-muted);
   text-decoration: line-through;
 }
 
@@ -870,7 +870,7 @@
 }
 
 .undoBtn:hover {
-  background: #eff6ff;
+  background: var(--status-info-bg);
 }
 
 /* ── Koblingsgrupper ── */
@@ -882,7 +882,7 @@
   gap: 0.3rem;
   padding: 0.2rem 0.4rem;
   margin: 0.15rem 0;
-  background: #f0f9ff;
+  background: var(--status-info-bg);
   border-radius: 0.25rem;
   border: 1px solid #bae6fd;
 }
@@ -890,7 +890,7 @@
 .koblingsNavn {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #0369a1;
+  color: var(--brand-sky);
 }
 
 .koblingsForm {
@@ -901,6 +901,6 @@
 
 .note {
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--foreground-muted);
   font-style: italic;
 }

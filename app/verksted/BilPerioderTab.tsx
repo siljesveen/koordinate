@@ -153,6 +153,15 @@ export function BilPerioderTab() {
     setRedigererId(null);
   }
 
+  function slettPeriode() {
+    if (!redigererId) return;
+    const b = bilById.get(skjema.bilId);
+    const navn = b ? bilTekst(b) : skjema.bilId;
+    if (typeof window !== "undefined" && !window.confirm(`Slette utilgjengelighetsperioden for ${navn}?`)) return;
+    slett(redigererId);
+    lukk();
+  }
+
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
     if (!skjema.bilId || !skjema.fraDato) return;
@@ -178,12 +187,13 @@ export function BilPerioderTab() {
     lukk();
   }
 
-  function bekreftOgMerkTilbake(p: BilUtilgjengelig) {
-    if (!bilPeriodeKanMerkesTilbake(p)) return;
-    const b = bilById.get(p.bilId);
-    const navn = b ? bilTekst(b) : p.bilId;
-    if (window.confirm(bilMerkeTilbakeBekreftMelding(p, navn))) {
-      void merkTilbake(p.id, { kjennemerke: navn });
+  function bekreftOgMerkTilbake() {
+    if (!redigerer) return;
+    if (!bilPeriodeKanMerkesTilbake(redigerer)) return;
+    const b = bilById.get(redigerer.bilId);
+    const navn = b ? bilTekst(b) : redigerer.bilId;
+    if (window.confirm(bilMerkeTilbakeBekreftMelding(redigerer, navn))) {
+      void merkTilbake(redigerer.id, { kjennemerke: navn }).then(() => lukk());
     }
   }
 
@@ -226,15 +236,27 @@ export function BilPerioderTab() {
               <th scope="col">Periode</th>
               <th scope="col">Planlagt</th>
               <th scope="col">Kommentar</th>
-              <th scope="col">Handlinger</th>
             </tr>
           </thead>
           <tbody>
             {synlige.map((p) => {
               const b = bilById.get(p.bilId);
               return (
-                <tr key={p.id}>
-                  <td>{b ? bilTekst(b) : p.bilId}</td>
+                <tr
+                  key={p.id}
+                  className={styles.row}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Rediger periode for ${b ? bilTekst(b) : p.bilId}`}
+                  onClick={() => åpneRedigering(p)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      åpneRedigering(p);
+                    }
+                  }}
+                >
+                  <td className={styles.cellPrimary}>{b ? bilTekst(b) : p.bilId}</td>
                   <td className={styles.muted}>{p.type}</td>
                   <td className={styles.muted}>
                     {formatUtilgjengeligPeriode(p.fraDato, p.tilDato)}
@@ -247,41 +269,12 @@ export function BilPerioderTab() {
                     </span>
                   </td>
                   <td className={styles.muted}>{p.kommentar ?? "—"}</td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button
-                        type="button"
-                        className={styles.primaryBtn}
-                        disabled={!bilPeriodeKanMerkesTilbake(p)}
-                        title={
-                          bilPeriodeKanMerkesTilbake(p)
-                            ? erUtilgjengeligPeriodeÅpen(p)
-                              ? undefined
-                              : "Forkort nedetiden til i dag – bil kan brukes i plan fra nå av"
-                            : "Ikke aktiv for plan lengre"
-                        }
-                        onClick={() => bekreftOgMerkTilbake(p)}
-                      >
-                        Tilbake
-                      </button>
-                      <button type="button" className={styles.secondaryBtn} onClick={() => åpneRedigering(p)}>
-                        Rediger
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
-                        onClick={() => slett(p.id)}
-                      >
-                        Slett
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               );
             })}
             {synlige.length === 0 ? (
               <tr>
-                <td colSpan={6} className={styles.helper}>
+                <td colSpan={5} className={styles.empty}>
                   Ingen perioder registrert.
                 </td>
               </tr>
@@ -408,12 +401,34 @@ export function BilPerioderTab() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" className={styles.secondaryBtn} onClick={lukk}>
-                  Avbryt
-                </button>
-                <button type="submit" className={styles.primaryBtn}>
-                  Lagre
-                </button>
+                {redigerer ? (
+                  <div className={styles.formActionsLeft}>
+                    {bilPeriodeKanMerkesTilbake(redigerer) ? (
+                      <button
+                        type="button"
+                        className={styles.primaryBtn}
+                        onClick={bekreftOgMerkTilbake}
+                      >
+                        Merk tilbake
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
+                      onClick={slettPeriode}
+                    >
+                      Slett periode
+                    </button>
+                  </div>
+                ) : null}
+                <div className={styles.formActionsMain}>
+                  <button type="button" className={styles.secondaryBtn} onClick={lukk}>
+                    Avbryt
+                  </button>
+                  <button type="submit" className={styles.primaryBtn}>
+                    Lagre
+                  </button>
+                </div>
               </div>
             </form>
           </div>

@@ -115,6 +115,15 @@ export default function FraværPage() {
     setRedigererId(null);
   }
 
+  function slettFravær() {
+    if (!redigererId) return;
+    const a = ansattById.get(skjema.ansattId);
+    const navn = a ? fullNavn(a) : "fraværet";
+    if (typeof window !== "undefined" && !window.confirm(`Slette fravær for ${navn}?`)) return;
+    slett(redigererId);
+    lukk();
+  }
+
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
     if (!skjema.ansattId) return;
@@ -180,15 +189,27 @@ export default function FraværPage() {
               <th scope="col">Periode</th>
               <th scope="col">Planlagt</th>
               <th scope="col">Kommentar</th>
-              <th scope="col">Handlinger</th>
             </tr>
           </thead>
           <tbody>
             {synlige.map((f) => {
               const a = ansattById.get(f.ansattId);
               return (
-                <tr key={f.id}>
-                  <td>{a ? fullNavn(a) : f.ansattId}</td>
+                <tr
+                  key={f.id}
+                  className={styles.row}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Rediger fravær for ${a ? fullNavn(a) : f.ansattId}`}
+                  onClick={() => åpneRedigering(f)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      åpneRedigering(f);
+                    }
+                  }}
+                >
+                  <td className={styles.cellPrimary}>{a ? fullNavn(a) : f.ansattId}</td>
                   <td className={styles.muted}>{f.type}</td>
                   <td className={styles.muted}>
                     {f.fraDato} → {f.tilDato}
@@ -201,26 +222,12 @@ export default function FraværPage() {
                     </span>
                   </td>
                   <td className={styles.muted}>{f.kommentar ?? "—"}</td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button type="button" className={styles.secondaryBtn} onClick={() => åpneRedigering(f)}>
-                        Rediger
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
-                        onClick={() => slett(f.id)}
-                      >
-                        Slett
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               );
             })}
             {synlige.length === 0 ? (
               <tr>
-                <td colSpan={6} className={styles.helper}>
+                <td colSpan={5} className={styles.empty}>
                   Ingen fravær registrert.
                 </td>
               </tr>
@@ -325,12 +332,23 @@ export default function FraværPage() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" className={styles.secondaryBtn} onClick={lukk}>
-                  Avbryt
-                </button>
-                <button type="submit" className={styles.primaryBtn}>
-                  Lagre
-                </button>
+                {redigerer ? (
+                  <button
+                    type="button"
+                    className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
+                    onClick={slettFravær}
+                  >
+                    Slett fravær
+                  </button>
+                ) : null}
+                <div className={styles.formActionsMain}>
+                  <button type="button" className={styles.secondaryBtn} onClick={lukk}>
+                    Avbryt
+                  </button>
+                  <button type="submit" className={styles.primaryBtn}>
+                    Lagre
+                  </button>
+                </div>
               </div>
             </form>
           </div>

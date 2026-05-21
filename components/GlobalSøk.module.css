@@ -6,25 +6,38 @@
 
 .input {
   width: 11rem;
-  padding: 0.28rem 0.55rem;
-  border: 1px solid #e2e8f0;
+  padding: 0.32rem 0.6rem;
+  border: 1px solid var(--border-strong);
   border-radius: 0.4rem;
-  background: #f8fafc;
-  color: #0f172a;
-  font-size: 0.75rem;
+  background: var(--background-subtle);
+  color: var(--foreground);
+  font-size: 0.8125rem;
   font-family: inherit;
-  transition: width 0.15s, border-color 0.12s, background 0.12s;
+  transition: width 0.15s, border-color 0.12s, background 0.12s, box-shadow 0.12s;
 }
 
 .input:focus {
   outline: none;
   width: 14rem;
-  border-color: #94a3b8;
-  background: #fff;
+  border-color: var(--brand-primary);
+  background: var(--surface);
+  box-shadow: var(--focus-ring);
 }
 
 .input::placeholder {
-  color: #94a3b8;
+  color: var(--brand-muted);
+}
+
+.panelPortal {
+  min-width: 18rem;
+  max-width: 24rem;
+  max-height: min(20rem, calc(100vh - 5rem));
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem 0;
 }
 
 .panel {
@@ -36,32 +49,32 @@
   max-width: 24rem;
   max-height: 20rem;
   overflow-y: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
   padding: 0.35rem 0;
 }
 
 .tom {
   padding: 0.65rem 0.85rem;
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: 0.8125rem;
+  color: var(--brand-muted);
 }
 
 .gruppe + .gruppe {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border);
   margin-top: 0.2rem;
   padding-top: 0.2rem;
 }
 
 .gruppeTittel {
   padding: 0.25rem 0.85rem 0.15rem;
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #94a3b8;
+  color: var(--brand-muted);
 }
 
 .treff {
@@ -80,18 +93,18 @@
 
 .treff:hover,
 .treffMarkert {
-  background: #f1f5f9;
+  background: var(--status-info-bg);
 }
 
 .treffLabel {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 650;
-  color: #0f172a;
+  color: var(--foreground);
 }
 
 .treffSub {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--brand-muted);
   line-height: 1.3;
 }
 

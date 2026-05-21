@@ -490,49 +490,35 @@ export default function AnsattePage() {
                 <th scope="col">Selskap</th>
                 <th scope="col">Telefon</th>
                 <th scope="col">Aktiv</th>
-                <th scope="col">Handlinger</th>
               </tr>
             </thead>
             <tbody>
               {synlige.map((a) => (
-                <tr key={a.id}>
-                  <td>
-                    <button
-                      type="button"
-                      className={`${styles.nameCell} ${styles.visNavnBtn}`}
-                      onClick={() => åpneVisning(a)}
-                    >
-                      {fullNavn(a)}
-                    </button>
-                  </td>
+                <tr
+                  key={a.id}
+                  className={styles.row}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Vis ${fullNavn(a)}`}
+                  onClick={() => åpneVisning(a)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      åpneVisning(a);
+                    }
+                  }}
+                >
+                  <td className={styles.nameCell}>{fullNavn(a)}</td>
                   <td className={styles.muted}>{a.selskap || "Asko"}</td>
                   <td className={styles.muted}>{a.telefon}</td>
                   <td>
                     <span className={badgeClass(a.aktiv)}>{a.aktiv ? "Aktiv" : "Inaktiv"}</span>
                   </td>
-                  <td>
-                    <div className={styles.rowActions}>
-                      <button
-                        type="button"
-                        className={styles.secondaryBtn}
-                        onClick={() => åpneVisning(a)}
-                      >
-                        Vis
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.secondaryBtn}
-                        onClick={() => åpneRedigering(a)}
-                      >
-                        Rediger
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               ))}
               {synlige.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className={styles.muted}>
+                  <td colSpan={4} className={styles.empty}>
                     Ingen treff.
                   </td>
                 </tr>
@@ -545,16 +531,23 @@ export default function AnsattePage() {
       <div className={styles.mobileOnly}>
         <div className={styles.mobileList}>
           {synlige.map((a) => (
-            <div key={a.id} className={styles.card}>
+            <div
+              key={a.id}
+              className={`${styles.card} ${styles.cardClickable}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Vis ${fullNavn(a)}`}
+              onClick={() => åpneVisning(a)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  åpneVisning(a);
+                }
+              }}
+            >
               <div className={styles.cardHeader}>
                 <div>
-                  <button
-                    type="button"
-                    className={`${styles.cardTitle} ${styles.visNavnBtn}`}
-                    onClick={() => åpneVisning(a)}
-                  >
-                    {fullNavn(a)}
-                  </button>
+                  <div className={styles.cardTitle}>{fullNavn(a)}</div>
                   <div className={styles.cardMeta}>
                     {a.rolle} · {a.avdeling}
                     <br />
@@ -562,22 +555,6 @@ export default function AnsattePage() {
                   </div>
                 </div>
                 <span className={badgeClass(a.aktiv)}>{a.aktiv ? "Aktiv" : "Inaktiv"}</span>
-              </div>
-              <div className={styles.cardActions}>
-                <button
-                  type="button"
-                  className={styles.secondaryBtn}
-                  onClick={() => åpneVisning(a)}
-                >
-                  Vis
-                </button>
-                <button
-                  type="button"
-                  className={styles.secondaryBtn}
-                  onClick={() => åpneRedigering(a)}
-                >
-                  Rediger
-                </button>
               </div>
             </div>
           ))}

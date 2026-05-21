@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import AppChrome from "@/components/AppChrome";
 import Providers from "./providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "KOordinate",
-  description: "Planlegging og disponering av sjåfører og kjøretøy",
+  description: "Kommandosentral for bemanning og ruteplanlegging",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nb" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="nb" className={`${inter.variable} ${geistMono.variable}`}>
       <body>
         <Providers>
           <AppChrome>{children}</AppChrome>

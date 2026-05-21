@@ -12,9 +12,9 @@
   width: 100%;
   padding: 0.35rem 0.45rem;
   border-radius: 0.4rem;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -23,12 +23,12 @@
 }
 
 .trigger:hover {
-  background: #f8fafc;
+  background: var(--surface-raised);
 }
 
 .triggerOpen {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  border-color: var(--brand-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .triggerCompact {
@@ -47,7 +47,7 @@
 .chevron {
   flex-shrink: 0;
   font-size: 0.65rem;
-  color: #64748b;
+  color: var(--brand-muted);
 }
 
 .panel {
@@ -57,36 +57,36 @@
   right: 0;
   z-index: 40;
   min-width: 10rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.4rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 
 /** Portal til document.body — unngår klipping i tabeller med overflow. */
 .panelPortal {
   min-width: 10rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.4rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 
 .søkWrap {
   padding: 0.3rem;
-  border-bottom: 1px solid #f1f5f9;
-  background: #f8fafc;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
 }
 
 .søk {
   width: 100%;
   padding: 0.28rem 0.35rem;
   border-radius: 0.3rem;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 0.75rem;
   font-weight: 600;
   box-sizing: border-box;
@@ -95,8 +95,8 @@
 
 .søk:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+  border-color: var(--brand-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .liste {
@@ -112,9 +112,9 @@
   width: 100%;
   padding: 0.35rem 0.5rem;
   border: 0;
-  border-bottom: 1px solid #f8fafc;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -127,11 +127,11 @@
 }
 
 .item:hover {
-  background: #eff6ff;
+  background: var(--status-info-bg);
 }
 
 .itemSelected {
-  background: #f1f5f9;
+  background: var(--background-subtle);
 }
 
 .label {
@@ -144,12 +144,12 @@
   flex-shrink: 0;
   font-size: 0.65rem;
   font-weight: 650;
-  color: #94a3b8;
+  color: var(--foreground-muted);
 }
 
 .tom {
   padding: 0.45rem 0.5rem;
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--foreground-muted);
   font-style: italic;
 }

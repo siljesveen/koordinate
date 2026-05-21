@@ -1,21 +1,24 @@
 .navWrap {
   width: 100%;
-  height: 3rem;
+  height: 3.25rem;
   flex-shrink: 0;
-  border-bottom: 1px solid #e2e8f0;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  position: relative;
+  z-index: 50;
 }
 
 .nav {
   height: 100%;
   margin: 0 auto;
-  padding: 0 0.75rem;
+  padding: 0 0.85rem;
   display: flex;
   gap: 0.25rem;
   align-items: center;
   flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: visible;
 }
 
 /* ── Brand ── */
@@ -23,32 +26,32 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   text-decoration: none;
-  margin-right: 0.25rem;
+  margin-right: 0.35rem;
   flex-shrink: 0;
 }
 
-.brandIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.8rem;
-  height: 1.6rem;
-  border-radius: 0.4rem;
-  background: #0f172a;
-  color: #ffffff;
-  font-weight: 900;
-  font-size: 0.7rem;
-  letter-spacing: -0.03em;
+.brandLogo {
+  flex-shrink: 0;
 }
 
 .brandText {
-  font-weight: 850;
-  font-size: 0.9rem;
+  display: flex;
+  align-items: baseline;
+  font-size: 0.95rem;
   letter-spacing: -0.02em;
-  color: #0f172a;
   white-space: nowrap;
+}
+
+.brandKo {
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.brandOrdinate {
+  font-weight: 500;
+  color: var(--foreground);
 }
 
 /* ── Divider ── */
@@ -56,7 +59,7 @@
 .divider {
   width: 1px;
   height: 1.4rem;
-  background: #e2e8f0;
+  background: var(--border);
   margin: 0 0.35rem;
   flex-shrink: 0;
 }
@@ -67,13 +70,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.3rem 0.55rem;
-  border-radius: 0.4rem;
+  padding: 0.32rem 0.6rem;
+  border-radius: 0.45rem;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--brand-muted);
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
@@ -81,18 +84,18 @@
 }
 
 .linkBtn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--surface-hover);
+  color: var(--foreground);
 }
 
 .linkBtnActive {
-  background: #0f172a;
+  background: var(--brand-primary);
   color: #ffffff;
   font-weight: 700;
 }
 
 .linkBtnActive:hover {
-  background: #1e293b;
+  background: var(--brand-primary-hover);
   color: #ffffff;
 }
 
@@ -111,9 +114,9 @@
 }
 
 .userName {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 650;
-  color: #334155;
+  color: var(--foreground);
   max-width: 8rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -127,24 +130,25 @@
   letter-spacing: 0.03em;
   padding: 0.15rem 0.35rem;
   border-radius: 0.3rem;
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--status-info-bg);
+  color: var(--brand-primary);
 }
 
 .logoutBtn {
-  padding: 0.28rem 0.5rem;
-  border: 1px solid #e2e8f0;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--border-strong);
   border-radius: 0.35rem;
-  background: #fff;
-  color: #64748b;
-  font-size: 0.72rem;
+  background: var(--surface);
+  color: var(--brand-muted);
+  font-size: 0.75rem;
   font-weight: 650;
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
 .logoutBtn:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--surface-hover);
+  color: var(--foreground);
+  border-color: var(--brand-muted);
 }

@@ -1,7 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import { createPortal } from "react-dom";
 import { fullNavn, type Ansatt, type Bil, type Henger } from "@/lib/domain";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
@@ -149,7 +158,26 @@ export default function GlobalSøk() {
   const [søk, setSøk] = useState("");
   const [markert, setMarkert] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [panelRect, setPanelRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+
+  const visPanel = åpen && søk.trim().length > 0;
+
+  function oppdaterPanelPos() {
+    const el = wrapRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setPanelRect({
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: Math.max(rect.width, 18 * 16),
+    });
+  }
 
   const ansattById = useMemo(
     () => new Map(ansatte.map((a) => [a.id, a] as const)),
@@ -193,6 +221,27 @@ export default function GlobalSøk() {
     [router],
   );
 
+  useLayoutEffect(() => {
+    if (!visPanel) {
+      setPanelRect(null);
+      return;
+    }
+    oppdaterPanelPos();
+  }, [visPanel, søk]);
+
+  useEffect(() => {
+    if (!visPanel) return;
+    function påScroll() {
+      oppdaterPanelPos();
+    }
+    window.addEventListener("scroll", påScroll, true);
+    window.addEventListener("resize", påScroll);
+    return () => {
+      window.removeEventListener("scroll", påScroll, true);
+      window.removeEventListener("resize", påScroll);
+    };
+  }, [visPanel]);
+
   useEffect(() => {
     setMarkert(0);
   }, [søk]);
@@ -211,15 +260,16 @@ export default function GlobalSøk() {
   }, []);
 
   useEffect(() => {
-    if (!åpen) return;
+    if (!visPanel) return;
     function onClick(e: MouseEvent) {
       const t = e.target as Node;
-      if (panelRef.current?.contains(t) || inputRef.current?.contains(t)) return;
+      if (wrapRef.current?.contains(t)) return;
+      if (panelRef.current?.contains(t)) return;
       setÅpen(false);
     }
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, [åpen]);
+  }, [visPanel]);
 
   function onInputKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
@@ -236,15 +286,82 @@ export default function GlobalSøk() {
 
   let flatIdx = 0;
 
+  const panelStyle = useMemo((): CSSProperties | undefined => {
+    if (!visPanel) return undefined;
+    if (panelRect) {
+      return {
+        position: "fixed",
+        top: panelRect.top,
+        left: panelRect.left,
+        width: panelRect.width,
+        zIndex: 10000,
+      };
+    }
+    const el = wrapRef.current;
+    if (!el) return { position: "fixed", visibility: "hidden", zIndex: 10000 };
+    const rect = el.getBoundingClientRect();
+    return {
+      position: "fixed",
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: Math.max(rect.width, 18 * 16),
+      zIndex: 10000,
+    };
+  }, [visPanel, panelRect]);
+
+  const panelInnhold = (
+    <div
+      id="global-sok-panel"
+      ref={panelRef}
+      className={styles.panelPortal}
+      style={panelStyle}
+      role="listbox"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      {flatListe.length === 0 ? (
+        <div className={styles.tom}>Ingen treff på «{søk.trim()}»</div>
+      ) : (
+        (["rute", "ansatt", "bil", "henger"] as SøkKind[]).map((kind) => {
+          const liste = grupperte[kind];
+          if (!liste?.length) return null;
+          return (
+            <div key={kind} className={styles.gruppe}>
+              <div className={styles.gruppeTittel}>{KIND_LABEL[kind]}</div>
+              {liste.map((t) => {
+                const idx = flatIdx++;
+                return (
+                  <button
+                    key={`${t.kind}-${t.id}`}
+                    type="button"
+                    role="option"
+                    aria-selected={idx === markert}
+                    className={`${styles.treff} ${idx === markert ? styles.treffMarkert : ""}`}
+                    onMouseEnter={() => setMarkert(idx)}
+                    onClick={() => velg(t)}
+                  >
+                    <span className={styles.treffLabel}>{t.label}</span>
+                    {t.sublabel ? (
+                      <span className={styles.treffSub}>{t.sublabel}</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+
   return (
-    <div className={styles.wrap} ref={panelRef}>
+    <div className={styles.wrap} ref={wrapRef}>
       <input
         ref={inputRef}
         type="search"
         className={styles.input}
         placeholder="Søk rute, navn, bil, henger…"
         aria-label="Globalt søk"
-        aria-expanded={åpen && søk.trim().length > 0}
+        aria-expanded={visPanel}
         aria-controls="global-sok-panel"
         value={søk}
         onChange={(e) => {
@@ -254,42 +371,9 @@ export default function GlobalSøk() {
         onFocus={() => setÅpen(true)}
         onKeyDown={onInputKeyDown}
       />
-      {åpen && søk.trim().length > 0 && (
-        <div id="global-sok-panel" className={styles.panel} role="listbox">
-          {flatListe.length === 0 ? (
-            <div className={styles.tom}>Ingen treff på «{søk.trim()}»</div>
-          ) : (
-            (["rute", "ansatt", "bil", "henger"] as SøkKind[]).map((kind) => {
-              const liste = grupperte[kind];
-              if (!liste?.length) return null;
-              return (
-                <div key={kind} className={styles.gruppe}>
-                  <div className={styles.gruppeTittel}>{KIND_LABEL[kind]}</div>
-                  {liste.map((t) => {
-                    const idx = flatIdx++;
-                    return (
-                      <button
-                        key={`${t.kind}-${t.id}`}
-                        type="button"
-                        role="option"
-                        aria-selected={idx === markert}
-                        className={`${styles.treff} ${idx === markert ? styles.treffMarkert : ""}`}
-                        onMouseEnter={() => setMarkert(idx)}
-                        onClick={() => velg(t)}
-                      >
-                        <span className={styles.treffLabel}>{t.label}</span>
-                        {t.sublabel ? (
-                          <span className={styles.treffSub}>{t.sublabel}</span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+      {visPanel && typeof document !== "undefined"
+        ? createPortal(panelInnhold, document.body)
+        : null}
     </div>
   );
 }

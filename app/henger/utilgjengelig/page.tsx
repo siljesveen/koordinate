@@ -126,6 +126,15 @@ export default function HengerUtilgjengeligPage() {
     setRedigererId(null);
   }
 
+  function slettPeriode() {
+    if (!redigererId) return;
+    const h = hengerById.get(skjema.hengerId);
+    const navn = h ? hengerTekst(h) : skjema.hengerId;
+    if (typeof window !== "undefined" && !window.confirm(`Slette utilgjengelighetsperioden for ${navn}?`)) return;
+    slett(redigererId);
+    lukk();
+  }
+
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
     if (!skjema.hengerId || !skjema.fraDato || !skjema.tilDato) return;
@@ -200,15 +209,27 @@ export default function HengerUtilgjengeligPage() {
               <th scope="col">Periode</th>
               <th scope="col">Planlagt</th>
               <th scope="col">Kommentar</th>
-              <th scope="col">Handlinger</th>
             </tr>
           </thead>
           <tbody>
             {synlige.map((p) => {
               const h = hengerById.get(p.hengerId);
               return (
-                <tr key={p.id}>
-                  <td>{h ? hengerTekst(h) : p.hengerId}</td>
+                <tr
+                  key={p.id}
+                  className={styles.row}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Rediger periode for ${h ? hengerTekst(h) : p.hengerId}`}
+                  onClick={() => åpneRedigering(p)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      åpneRedigering(p);
+                    }
+                  }}
+                >
+                  <td className={styles.cellPrimary}>{h ? hengerTekst(h) : p.hengerId}</td>
                   <td className={styles.muted}>{p.type}</td>
                   <td className={styles.muted}>
                     {p.fraDato} → {p.tilDato}
@@ -221,26 +242,12 @@ export default function HengerUtilgjengeligPage() {
                     </span>
                   </td>
                   <td className={styles.muted}>{p.kommentar ?? "—"}</td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button type="button" className={styles.secondaryBtn} onClick={() => åpneRedigering(p)}>
-                        Rediger
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
-                        onClick={() => slett(p.id)}
-                      >
-                        Slett
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               );
             })}
             {synlige.length === 0 ? (
               <tr>
-                <td colSpan={6} className={styles.helper}>
+                <td colSpan={5} className={styles.empty}>
                   Ingen perioder registrert.
                 </td>
               </tr>
@@ -349,12 +356,23 @@ export default function HengerUtilgjengeligPage() {
               </div>
 
               <div className={styles.formActions}>
-                <button type="button" className={styles.secondaryBtn} onClick={lukk}>
-                  Avbryt
-                </button>
-                <button type="submit" className={styles.primaryBtn}>
-                  Lagre
-                </button>
+                {redigerer ? (
+                  <button
+                    type="button"
+                    className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
+                    onClick={slettPeriode}
+                  >
+                    Slett periode
+                  </button>
+                ) : null}
+                <div className={styles.formActionsMain}>
+                  <button type="button" className={styles.secondaryBtn} onClick={lukk}>
+                    Avbryt
+                  </button>
+                  <button type="submit" className={styles.primaryBtn}>
+                    Lagre
+                  </button>
+                </div>
               </div>
             </form>
           </div>

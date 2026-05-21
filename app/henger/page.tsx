@@ -95,12 +95,17 @@ export default function HengerPage() {
     setRedigererId(null);
   }
 
-  function slettHenger(id: string) {
+  function slettHenger() {
+    if (!redigererId) return;
+    if (typeof window !== "undefined" && !window.confirm(`Slette hengeren ${skjema.kjennemerke || redigerer?.kjennemerke}?`)) {
+      return;
+    }
     setAnsatte((prev) =>
-      prev.map((a) => (a.fastHengerId === id ? { ...a, fastHengerId: undefined } : a)),
+      prev.map((a) => (a.fastHengerId === redigererId ? { ...a, fastHengerId: undefined } : a)),
     );
-    fjernTildelingRef("hengerId", id);
-    slett(id);
+    fjernTildelingRef("hengerId", redigererId);
+    slett(redigererId);
+    lukk();
   }
 
   function lagreSkjema(e: React.FormEvent) {
@@ -155,7 +160,6 @@ export default function HengerPage() {
               <th scope="col">Kjennemerke</th>
               <th scope="col">Fast sjåfør</th>
               <th scope="col">I dag</th>
-              <th scope="col">Handlinger</th>
             </tr>
           </thead>
           <tbody>
@@ -163,48 +167,43 @@ export default function HengerPage() {
               const sjåfører = ansatteMedFastHenger.get(h.id) ?? [];
               const utilgjengeligIDag = erHengerUtilgjengeligPåDato(h.id, iDag, hengerUtilgjengelig);
               return (
-                <tr key={h.id}>
-                  <td className={styles.muted}>{h.kjennemerke}</td>
-                  <td className={styles.muted}>
+                <tr
+                  key={h.id}
+                  className={styles.row}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Rediger ${h.kjennemerke}`}
+                  onClick={() => åpneRedigering(h)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      åpneRedigering(h);
+                    }
+                  }}
+                >
+                  <td className={styles.kjennemerke}>{h.kjennemerke}</td>
+                  <td className={styles.sjåfør}>
                     {sjåfører.length
                       ? sjåfører.map((a) => fullNavn(a)).join(", ")
                       : "—"}
                   </td>
                   <td>
                     <span
-                      className={styles.badge}
-                      style={
+                      className={
                         utilgjengeligIDag
-                          ? { background: "#fef3c7", borderColor: "#fcd34d", color: "#92400e" }
-                          : { background: "#dcfce7", borderColor: "#86efac", color: "#14532d" }
+                          ? `${styles.badge} ${styles.badgeUtilgjengelig}`
+                          : `${styles.badge} ${styles.badgeDisponibel}`
                       }
                     >
                       {utilgjengeligIDag ? "Utilgjengelig" : "Disponibel"}
                     </span>
-                  </td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button type="button" className={styles.secondaryBtn} onClick={() => åpneRedigering(h)}>
-                        Rediger
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
-                        onClick={() => {
-                          if (typeof window !== "undefined" && !window.confirm("Slette denne hengeren?")) return;
-                          slettHenger(h.id);
-                        }}
-                      >
-                        Slett
-                      </button>
-                    </div>
                   </td>
                 </tr>
               );
             })}
             {synlige.length === 0 ? (
               <tr>
-                <td colSpan={4} className={styles.helper}>
+                <td colSpan={3} className={styles.empty}>
                   Ingen hengere registrert.
                 </td>
               </tr>
@@ -274,12 +273,23 @@ export default function HengerPage() {
                 </div>
               </div>
               <div className={styles.formActions}>
-                <button type="button" className={styles.secondaryBtn} onClick={lukk}>
-                  Avbryt
-                </button>
-                <button type="submit" className={styles.primaryBtn}>
-                  Lagre
-                </button>
+                {redigerer ? (
+                  <button
+                    type="button"
+                    className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
+                    onClick={slettHenger}
+                  >
+                    Slett henger
+                  </button>
+                ) : null}
+                <div className={styles.formActionsMain}>
+                  <button type="button" className={styles.secondaryBtn} onClick={lukk}>
+                    Avbryt
+                  </button>
+                  <button type="submit" className={styles.primaryBtn}>
+                    Lagre
+                  </button>
+                </div>
               </div>
             </form>
           </div>

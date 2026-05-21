@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { roleLabel } from "@/lib/auth/types";
+import KoordinateLogo from "@/components/KoordinateLogo";
 import GlobalSøk from "@/components/GlobalSøk";
 import { useAuth } from "@/lib/state/authStore";
 import styles from "./TopNav.module.css";
@@ -32,8 +33,11 @@ export default function TopNav() {
     <div className={styles.navWrap}>
       <nav className={styles.nav} aria-label="Hovedmeny">
         <Link href="/" className={styles.brand}>
-          <span className={styles.brandIcon}>KO</span>
-          <span className={styles.brandText}>KOordinate</span>
+          <KoordinateLogo size={30} className={styles.brandLogo} />
+          <span className={styles.brandText}>
+            <span className={styles.brandKo}>KO</span>
+            <span className={styles.brandOrdinate}>ordinate</span>
+          </span>
         </Link>
 
         <div className={styles.divider} />

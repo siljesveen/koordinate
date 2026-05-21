@@ -98,12 +98,17 @@ export default function BilerPage() {
     setRedigererId(null);
   }
 
-  function slettBil(id: string) {
+  function slettBil() {
+    if (!redigererId) return;
+    if (typeof window !== "undefined" && !window.confirm(`Slette bilen ${skjema.kjennemerke || redigerer?.kjennemerke}?`)) {
+      return;
+    }
     setAnsatte((prev) =>
-      prev.map((a) => (a.fastBilId === id ? { ...a, fastBilId: undefined } : a)),
+      prev.map((a) => (a.fastBilId === redigererId ? { ...a, fastBilId: undefined } : a)),
     );
-    fjernTildelingRef("bilId", id);
-    slett(id);
+    fjernTildelingRef("bilId", redigererId);
+    slett(redigererId);
+    lukk();
   }
 
   function lagreSkjema(e: React.FormEvent) {
@@ -162,7 +167,6 @@ export default function BilerPage() {
               <th scope="col">Kjennemerke</th>
               <th scope="col">Fast sjåfør</th>
               <th scope="col">I dag</th>
-              <th scope="col">Handlinger</th>
             </tr>
           </thead>
           <tbody>
@@ -170,48 +174,41 @@ export default function BilerPage() {
               const sjåfører = ansatteMedFastBil.get(b.id) ?? [];
               const utilgjengeligIDag = erBilUtilgjengeligPåDato(b.id, iDag, bilUtilgjengelig);
               return (
-                <tr key={b.id}>
-                  <td className={styles.muted}>{b.kjennemerke}</td>
-                  <td className={styles.muted}>
+                <tr
+                  key={b.id}
+                  className={styles.row}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Rediger ${b.kjennemerke}`}
+                  onClick={() => åpneRedigering(b)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      åpneRedigering(b);
+                    }
+                  }}
+                >
+                  <td className={styles.kjennemerke}>{b.kjennemerke}</td>
+                  <td className={styles.sjåfør}>
                     {sjåfører.length
                       ? sjåfører.map((a) => fullNavn(a)).join(", ")
                       : "—"}
                   </td>
                   <td>
                     <span
-                      className={styles.badge}
-                      style={
-                        utilgjengeligIDag
-                          ? { background: "#fef3c7", borderColor: "#fcd34d", color: "#92400e" }
-                          : { background: "#dcfce7", borderColor: "#86efac", color: "#14532d" }
+                      className={
+                        utilgjengeligIDag ? `${styles.badge} ${styles.badgeUtilgjengelig}` : `${styles.badge} ${styles.badgeDisponibel}`
                       }
                     >
                       {utilgjengeligIDag ? "Utilgjengelig" : "Disponibel"}
                     </span>
-                  </td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button type="button" className={styles.secondaryBtn} onClick={() => åpneRedigering(b)}>
-                        Rediger
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
-                        onClick={() => {
-                          if (typeof window !== "undefined" && !window.confirm("Slette denne bilen?")) return;
-                          slettBil(b.id);
-                        }}
-                      >
-                        Slett
-                      </button>
-                    </div>
                   </td>
                 </tr>
               );
             })}
             {synlige.length === 0 ? (
               <tr>
-                <td colSpan={4} className={styles.helper}>
+                <td colSpan={3} className={styles.empty}>
                   Ingen biler registrert.
                 </td>
               </tr>
@@ -289,12 +286,23 @@ export default function BilerPage() {
                 </div>
               </div>
               <div className={styles.formActions}>
-                <button type="button" className={styles.secondaryBtn} onClick={lukk}>
-                  Avbryt
-                </button>
-                <button type="submit" className={styles.primaryBtn}>
-                  Lagre
-                </button>
+                {redigerer ? (
+                  <button
+                    type="button"
+                    className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
+                    onClick={slettBil}
+                  >
+                    Slett bil
+                  </button>
+                ) : null}
+                <div className={styles.formActionsMain}>
+                  <button type="button" className={styles.secondaryBtn} onClick={lukk}>
+                    Avbryt
+                  </button>
+                  <button type="submit" className={styles.primaryBtn}>
+                    Lagre
+                  </button>
+                </div>
               </div>
             </form>
           </div>

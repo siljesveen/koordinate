@@ -3,7 +3,7 @@
   max-width: 72rem;
   margin: 0 auto;
   padding: 1rem 1rem 2rem;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
 .header {
@@ -25,7 +25,7 @@
   font-size: clamp(1.5rem, 4.5vw, 2rem);
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--foreground);
   line-height: 1.15;
 }
 
@@ -47,10 +47,10 @@
 .select {
   width: 100%;
   padding: 0.7rem 0.85rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 1rem;
 }
 
@@ -63,9 +63,9 @@
 .primaryBtn {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #0f172a;
+  border: 1px solid var(--brand-primary);
   border-radius: 0.6rem;
-  background: #0f172a;
+  background: var(--brand-primary);
   color: #ffffff;
   font-weight: 800;
   font-size: 1rem;
@@ -80,13 +80,13 @@
 }
 
 .primaryBtn:hover {
-  background: #111827;
+  background: var(--brand-primary-hover);
 }
 
 .tableWrap {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
-  background: #ffffff;
+  background: var(--surface);
   box-shadow: 0 1px 2px rgb(15 23 42 / 6%);
   overflow-x: auto;
 }
@@ -94,46 +94,82 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 52rem;
 }
 
 .table th,
 .table td {
-  padding: 0.85rem 1rem;
+  padding: 0.6rem 1.25rem;
   text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  border: none;
+  border-bottom: 1px solid var(--border);
 }
 
 .table th {
-  font-size: 0.8rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
-  background: #f8fafc;
+  letter-spacing: 0.06em;
+  color: var(--brand-muted);
+  background: transparent;
+  border-bottom: 1px solid var(--border-strong);
 }
 
-.muted {
-  color: #475569;
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: var(--surface-raised);
+  outline: none;
+}
+
+.row:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--brand-primary);
+}
+
+.kjennemerke {
+  font-weight: 600;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.sjåfør {
+  color: var(--foreground-muted);
+  font-size: 0.9375rem;
 }
 
 .badge {
   display: inline-block;
-  padding: 0.25rem 0.55rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 900;
+  font-size: 0.8125rem;
+  font-weight: 600;
   white-space: nowrap;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
 }
 
-.actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.badgeDisponibel {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.badgeUtilgjengelig {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.empty {
+  padding: 2rem 1.25rem !important;
+  text-align: center;
+  color: var(--brand-muted);
+  font-size: 0.9375rem;
 }
 
 .secondaryBtn {
@@ -141,9 +177,9 @@
   align-items: center;
   padding: 0.45rem 0.7rem;
   border-radius: 0.5rem;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
@@ -152,17 +188,17 @@
 }
 
 .secondaryBtn:hover {
-  background: #f8fafc;
+  background: var(--surface-raised);
 }
 
 .dangerBtn {
-  border-color: #fecaca;
-  background: #fff1f2;
+  border: 1px solid #fecaca;
+  background: var(--status-error-bg);
   color: #9f1239;
 }
 
 .dangerBtn:hover {
-  background: #ffe4e6;
+  background: #fee2e2;
 }
 
 .modalOverlay {
@@ -185,15 +221,15 @@
   width: 100%;
   max-width: 44rem;
   border-radius: 0.9rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
   overflow: hidden;
 }
 
 .modalHeader {
   padding: 1rem 1rem 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
+  border: 1px solid var(--border);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -203,13 +239,13 @@
 .modalTitle {
   font-size: 1.2rem;
   font-weight: 900;
-  color: #0f172a;
+  color: var(--foreground);
 }
 
 .closeBtn {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
   border-radius: 0.6rem;
   padding: 0.45rem 0.6rem;
   cursor: pointer;
@@ -241,16 +277,16 @@
 .label {
   font-size: 0.9rem;
   font-weight: 800;
-  color: #334155;
+  color: var(--foreground-muted);
 }
 
 .textarea {
   width: 100%;
   padding: 0.7rem 0.85rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--surface);
+  color: var(--foreground);
   font-size: 1rem;
   min-height: 90px;
   resize: vertical;
@@ -260,11 +296,19 @@
   margin-top: 1rem;
   display: flex;
   gap: 0.75rem;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.formActionsMain {
+  display: flex;
+  gap: 0.75rem;
+  margin-left: auto;
   flex-wrap: wrap;
 }
 
 .helper {
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--brand-muted);
 }
