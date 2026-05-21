@@ -36,6 +36,11 @@
   --status-error-bg: #fef2f2;
   --status-info-bg: #eff6ff;
 
+  /* ── Disabled buttons (lesbar kontrast, ikke bare opacity) ── */
+  --btn-disabled-bg: #e2e8f0;
+  --btn-disabled-text: #475569;
+  --btn-disabled-border: #cbd5e1;
+
   /* ── Shadows ── */
   --shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.1);

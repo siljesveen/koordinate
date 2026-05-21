@@ -112,7 +112,10 @@
 }
 
 .submit:disabled {
-  opacity: 0.65;
+  opacity: 1;
+  background: var(--btn-disabled-bg);
+  color: var(--btn-disabled-text);
+  border: 1px solid var(--btn-disabled-border);
   cursor: wait;
 }
 

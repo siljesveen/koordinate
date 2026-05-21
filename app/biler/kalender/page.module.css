@@ -194,8 +194,13 @@
 }
 
 .primaryBtn:disabled {
-  opacity: 0.45;
+  opacity: 1;
+  background: var(--btn-disabled-bg);
+  color: var(--btn-disabled-text);
+  border: 1px solid var(--btn-disabled-border);
+  box-shadow: none;
   cursor: not-allowed;
+  filter: none;
 }
 
 .secondaryBtn {
@@ -359,22 +364,26 @@
 .cardBtnPrimary {
   width: 100%;
   margin-top: 0.45rem;
-  padding: 0.4rem 0.6rem;
-  border: none;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--brand-primary);
   border-radius: 0.4rem;
-  background: var(--surface);
-  color: #fff;
-  font-size: 0.78rem;
+  background: var(--brand-primary);
+  color: #ffffff;
+  font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
 }
 
-.cardBtnPrimary:hover {
-  background: var(--surface-hover);
+.cardBtnPrimary:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
 }
 
 .cardBtnPrimary:disabled {
-  opacity: 0.42;
+  opacity: 1;
+  background: var(--btn-disabled-bg);
+  color: var(--btn-disabled-text);
+  border: 1px solid var(--btn-disabled-border);
   cursor: not-allowed;
 }
 

@@ -1396,11 +1396,12 @@ export default function PlanPage() {
                       />
                     </td>
                     <td>{statusCell}</td>
-                    <td>
+                    <td className={styles.removeCell}>
                       <button
                         type="button"
                         className={styles.removeBtn}
                         title={`Fjern rute ${slot.rutekode} for denne dagen`}
+                        aria-label={`Fjern rute ${slot.rutekode} for denne dagen`}
                         onClick={() => fjernRuteFraDag(slot.rutekode, slot.rutenavn)}
                       >
                         ×

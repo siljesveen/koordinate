@@ -640,7 +640,7 @@ export default function MasterplanPage() {
                     kjoretoySøkMedAnsatte={kjoretoySøkHenger}
                   />
                 </td>
-                <td>
+                <td className={styles.deleteCell}>
                   <button
                     type="button"
                     className={styles.deleteRowBtn}
