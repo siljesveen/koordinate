@@ -8,6 +8,8 @@ import { erHengerUtilgjengeligPåDato } from "@/lib/kjoretoyTilgjengelighet";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
+import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
+import { hengerMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
 import styles from "./page.module.css";
 
@@ -45,7 +47,7 @@ export default function HengerPage() {
   const { fjernReferanser: fjernTildelingRef } = usePlanRuteTildelingStore();
   const iDag = useMemo(() => iDagISO(), []);
 
-  const [søk, setSøk] = useState("");
+  const [søk, setSøk] = useModulSøkFraUrl();
   const [modalÅpen, setModalÅpen] = useState(false);
   const [redigererId, setRedigererId] = useState<string | null>(null);
   const [skjema, setSkjema] = useState<HengerSkjema>(() => toSkjema(null));
@@ -67,15 +69,14 @@ export default function HengerPage() {
   );
 
   const synlige = useMemo(() => {
-    const q = søk.trim().toLowerCase();
+    const q = søk.trim();
     return hengere
       .filter((h) => {
-        if (!q) return true;
-        const t = `${h.kjennemerke} ${h.type ?? ""}`.toLowerCase();
-        return t.includes(q);
+        const sjåfører = (ansatteMedFastHenger.get(h.id) ?? []).map((a) => fullNavn(a));
+        return hengerMatcherModulSøk(h, q, sjåfører);
       })
       .sort((a, b) => a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }));
-  }, [hengere, søk]);
+  }, [hengere, søk, ansatteMedFastHenger]);
 
   function åpneNy() {
     setRedigererId(null);
@@ -138,8 +139,8 @@ export default function HengerPage() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk kjennemerke"
-            aria-label="Søk"
+            placeholder="Søk reg.nr, sjåfør, type…"
+            aria-label="Søk hengere"
           />
           <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
             Ny henger

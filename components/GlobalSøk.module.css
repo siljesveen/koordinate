@@ -1,0 +1,106 @@
+.wrap {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+}
+
+.input {
+  width: 11rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.4rem;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-family: inherit;
+  transition: width 0.15s, border-color 0.12s, background 0.12s;
+}
+
+.input:focus {
+  outline: none;
+  width: 14rem;
+  border-color: #94a3b8;
+  background: #fff;
+}
+
+.input::placeholder {
+  color: #94a3b8;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 200;
+  min-width: 18rem;
+  max-width: 24rem;
+  max-height: 20rem;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  padding: 0.35rem 0;
+}
+
+.tom {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.gruppe + .gruppe {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 0.2rem;
+  padding-top: 0.2rem;
+}
+
+.gruppeTittel {
+  padding: 0.25rem 0.85rem 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.treff {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  width: 100%;
+  padding: 0.4rem 0.85rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.treff:hover,
+.treffMarkert {
+  background: #f1f5f9;
+}
+
+.treffLabel {
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: #0f172a;
+}
+
+.treffSub {
+  font-size: 0.7rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+@media (max-width: 900px) {
+  .input {
+    width: 8rem;
+  }
+
+  .input:focus {
+    width: 10rem;
+  }
+}

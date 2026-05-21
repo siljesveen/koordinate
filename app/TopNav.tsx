@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { roleLabel } from "@/lib/auth/types";
+import GlobalSøk from "@/components/GlobalSøk";
 import { useAuth } from "@/lib/state/authStore";
 import styles from "./TopNav.module.css";
 
@@ -52,6 +53,8 @@ export default function TopNav() {
             </Link>
           );
         })}
+
+        <GlobalSøk />
 
         <div className={styles.spacer} />
 

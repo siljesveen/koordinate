@@ -8,6 +8,8 @@ import { erBilUtilgjengeligPåDato } from "@/lib/kjoretoyTilgjengelighet";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
+import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
+import { bilMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
 import styles from "./page.module.css";
 
@@ -48,7 +50,7 @@ export default function BilerPage() {
   const { fjernReferanser: fjernTildelingRef } = usePlanRuteTildelingStore();
   const iDag = useMemo(() => iDagISO(), []);
 
-  const [søk, setSøk] = useState("");
+  const [søk, setSøk] = useModulSøkFraUrl();
   const [modalÅpen, setModalÅpen] = useState(false);
   const [redigererId, setRedigererId] = useState<string | null>(null);
   const [skjema, setSkjema] = useState<BilSkjema>(() => toSkjema(null));
@@ -70,15 +72,14 @@ export default function BilerPage() {
   );
 
   const synlige = useMemo(() => {
-    const q = søk.trim().toLowerCase();
+    const q = søk.trim();
     return biler
       .filter((b) => {
-        if (!q) return true;
-        const h = `${b.kjennemerke} ${b.merke ?? ""} ${b.modell ?? ""}`.toLowerCase();
-        return h.includes(q);
+        const sjåfører = (ansatteMedFastBil.get(b.id) ?? []).map((a) => fullNavn(a));
+        return bilMatcherModulSøk(b, q, sjåfører);
       })
       .sort((a, b) => a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }));
-  }, [biler, søk]);
+  }, [biler, søk, ansatteMedFastBil]);
 
   function åpneNy() {
     setRedigererId(null);
@@ -142,8 +143,8 @@ export default function BilerPage() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk kjennemerke"
-            aria-label="Søk"
+            placeholder="Søk reg.nr, sjåfør, merke…"
+            aria-label="Søk biler"
           />
           <Link href="/verksted" className={styles.secondaryBtn}>
             Verksted

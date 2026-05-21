@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Bil, BilUtilgjengelig } from "@/lib/domain";
+import { fullNavn, type Bil, type BilUtilgjengelig } from "@/lib/domain";
+import { bilMatcherModulSøk } from "@/lib/utils/søkMatch";
 import {
   bilMerkeTilbakeBekreftMelding,
   bilPeriodeKanMerkesTilbake,
@@ -127,6 +128,17 @@ export function VerkstedKalenderTab() {
 
   const bilById = useMemo(() => new Map(biler.map((b) => [b.id, b] as const)), [biler]);
 
+  const sjåførNavnPerBil = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const a of ansatte) {
+      if (!a.fastBilId) continue;
+      const liste = m.get(a.fastBilId) ?? [];
+      liste.push(fullNavn(a));
+      m.set(a.fastBilId, liste);
+    }
+    return m;
+  }, [ansatte]);
+
   const år = visMåned.getFullYear();
   const måned = visMåned.getMonth();
   const antallDager = dagerIMåned(år, måned);
@@ -191,19 +203,16 @@ export function VerkstedKalenderTab() {
   const iDagKolonne = useMemo(() => dagListe.findIndex((d) => d.erIDag) + 1, [dagListe]);
 
   const synligeBiler = useMemo(() => {
-    const q = søk.trim().toLowerCase();
+    const q = søk.trim();
     return biler
-      .filter((b) => {
-        if (!q) return true;
-        return `${b.kjennemerke} ${b.merke ?? ""} ${b.modell ?? ""}`.toLowerCase().includes(q);
-      })
+      .filter((b) => bilMatcherModulSøk(b, q, sjåførNavnPerBil.get(b.id) ?? []))
       .filter((b) => {
         if (!kunMedAktivitet) return true;
         const list = posterForBil.get(b.id) ?? [];
         return list.some((p) => overlapperMåned(p, månedFørste, månedSiste));
       })
       .sort((a, b) => a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }));
-  }, [biler, søk, kunMedAktivitet, posterForBil, månedFørste, månedSiste]);
+  }, [biler, søk, kunMedAktivitet, posterForBil, månedFørste, månedSiste, sjåførNavnPerBil]);
 
   const gridCols = `5.75rem repeat(${antallDager}, minmax(1.65rem, 1fr))`;
 
@@ -289,8 +298,8 @@ export function VerkstedKalenderTab() {
               className={styles.input}
               value={søk}
               onChange={(e) => setSøk(e.target.value)}
-              placeholder="Søk reg.nr …"
-              aria-label="Søk bil"
+              placeholder="Søk reg.nr, sjåfør…"
+              aria-label="Søk bil i kalender"
             />
           </div>
           <div className={styles.monthNav}>

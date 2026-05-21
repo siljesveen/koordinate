@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type DragEvent, type ReactNode } from "react";
 import { ukedag1til7FraDato } from "@/lib/imported/ringnesCycle";
+import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import {
   fullNavn,
@@ -39,6 +40,7 @@ import {
   usePlanRuteTildelingStore,
 } from "@/lib/state/planRuteTildelingStore";
 import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
+import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import styles from "./page.module.css";
 
 const DRAG_MIME = "application/x-bemanning-plan-ansatt";
@@ -107,6 +109,7 @@ export default function PlanPage() {
   const { masterplan } = useMasterplanStore();
   const { endringer: dagEndringer, lagre: lagreDagEndring, fjern: fjernDagEndring } = useDagEndringStore();
   const [leggTilRuteInput, setLeggTilRuteInput] = useState("");
+  const [modulSøk, setModulSøk] = useModulSøkFraUrl();
   const [sjåførSøk, setSjåførSøk] = useState("");
   const [draOverTilgjengelig, setDraOverTilgjengelig] = useState(false);
   const [draOverFravær, setDraOverFravær] = useState(false);
@@ -308,6 +311,18 @@ export default function PlanPage() {
 
   const bilById = useMemo(() => new Map(biler.map((b) => [b.id, b] as const)), [biler]);
   const hengerById = useMemo(() => new Map(hengere.map((h) => [h.id, h] as const)), [hengere]);
+
+  const synligeRuter = useMemo(() => {
+    const q = modulSøk.trim();
+    if (!q) return effektiveRuter;
+    const ctx = { ansattById, bilById, hengerById };
+    return effektiveRuter.filter((slot) =>
+      slotMatcherModulSøk(slot, q, {
+        ...ctx,
+        tildeling: tildelingMap.get(slot.rutekode),
+      }),
+    );
+  }, [effektiveRuter, modulSøk, ansattById, bilById, hengerById, tildelingMap]);
 
   const bilPosterPåDato = useMemo(
     () => bilUtilgjengelig.filter((p) => overlapperUtilgjengeligPeriodeDisponibilitet(dato, p)),
@@ -1109,12 +1124,24 @@ export default function PlanPage() {
               Kveld
             </button>
           </div>
+          <input
+            className={styles.input}
+            type="search"
+            value={modulSøk}
+            onChange={(e) => setModulSøk(e.target.value)}
+            placeholder="Søk rute, navn, bil, henger…"
+            aria-label="Søk i ruter"
+          />
         </div>
       </header>
 
       {/* ── Sammendrag ── */}
       <div className={styles.summary}>
-        <span>{effektiveRuter.length} ruter</span>
+        <span>
+          {modulSøk.trim()
+            ? `${synligeRuter.length} av ${effektiveRuter.length} ruter`
+            : `${effektiveRuter.length} ruter`}
+        </span>
         <span className={styles.summaryOk}>{sammendrag.ok} OK</span>
         {sammendrag.rød > 0 && (
           <span className={styles.summaryBad}>{sammendrag.rød} mangler sjåfør/bil</span>
@@ -1146,7 +1173,7 @@ export default function PlanPage() {
               </tr>
             </thead>
             <tbody>
-              {effektiveRuter.map((slot) => {
+              {synligeRuter.map((slot) => {
                 const til = tildelingMap.get(slot.rutekode);
                 const res = effektivRessursForSlot(slot, til);
 
@@ -1382,9 +1409,13 @@ export default function PlanPage() {
                   </tr>
                 );
               })}
-              {effektiveRuter.length === 0 && (
+              {synligeRuter.length === 0 && (
                 <tr>
-                  <td colSpan={7} className={styles.note}>Ingen ruter for valgt uke/dag/skift.</td>
+                  <td colSpan={7} className={styles.note}>
+                    {modulSøk.trim()
+                      ? `Ingen treff på «${modulSøk.trim()}».`
+                      : "Ingen ruter for valgt uke/dag/skift."}
+                  </td>
                 </tr>
               )}
             </tbody>

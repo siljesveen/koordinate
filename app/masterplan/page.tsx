@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
@@ -9,6 +10,7 @@ import SokbarVelger from "@/components/SokbarVelger";
 import { fullNavn, type Ansatt, type MasterRuteSlot, type Skift } from "@/lib/domain";
 import { compareNb } from "@/lib/utils/sort";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
+import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import styles from "./page.module.css";
 
 function sjåførFraMasterSlots(
@@ -51,6 +53,7 @@ export default function MasterplanPage() {
   const [filterUke, setFilterUke] = useState<1 | 2 | 3 | 4>(1);
   const [filterDag, setFilterDag] = useState<number>(0); // 0 = alle
   const [filterSkift, setFilterSkift] = useState<Skift | "">("Dag");
+  const [modulSøk, setModulSøk] = useModulSøkFraUrl();
   const [nyKoblingInput, setNyKoblingInput] = useState("");
   const [nyKoblingDag, setNyKoblingDag] = useState<number>(0); // 0 = alle dager
   const [nyKoblingSkift, setNyKoblingSkift] = useState<Skift | "">("");
@@ -140,17 +143,26 @@ export default function MasterplanPage() {
   const kjoretoySøkBil = useKjoretoySøkBil(ansatte, biler, sjåførPerBilFraMaster);
   const kjoretoySøkHenger = useKjoretoySøkHenger(ansatte, hengere, sjåførPerHengerFraMaster);
 
+  const bilById = useMemo(() => new Map(biler.map((b) => [b.id, b] as const)), [biler]);
+  const hengerById = useMemo(
+    () => new Map(hengere.map((h) => [h.id, h] as const)),
+    [hengere],
+  );
+
   const filtrertSlots = useMemo(() => {
+    const q = modulSøk.trim();
+    const ctx = { ansattById, bilById, hengerById };
     return masterplan.slots
       .filter((s) => s.uke === filterUke)
       .filter((s) => filterDag === 0 || s.dag === filterDag)
       .filter((s) => !filterSkift || s.skift === filterSkift)
+      .filter((s) => !q || slotMatcherModulSøk(s, q, ctx))
       .sort((a, b) => {
         if (a.dag !== b.dag) return a.dag - b.dag;
         if (a.skift !== b.skift) return a.skift === "Dag" ? -1 : 1;
         return a.rutekode.localeCompare(b.rutekode, "nb");
       });
-  }, [masterplan.slots, filterUke, filterDag, filterSkift]);
+  }, [masterplan.slots, filterUke, filterDag, filterSkift, modulSøk, ansattById, bilById, hengerById]);
 
   const grupper = masterplan.koblingsgrupper ?? {};
 
@@ -402,6 +414,14 @@ export default function MasterplanPage() {
             <option value="Kveld">Kveld</option>
           </select>
         </label>
+        <input
+          className={styles.input}
+          type="search"
+          value={modulSøk}
+          onChange={(e) => setModulSøk(e.target.value)}
+          placeholder="Søk rute, navn, bil, henger…"
+          aria-label="Søk i ruter"
+        />
         <span className={styles.slotCount}>{filtrertSlots.length} ruter</span>
       </div>
 

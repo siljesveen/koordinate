@@ -5,6 +5,8 @@ import SokbarVelger from "@/components/SokbarVelger";
 import { fullNavn, type Ansatt, type Fravær, type FraværType } from "@/lib/domain";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
+import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
+import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
 import styles from "./page.module.css";
 
 type FraværSkjema = {
@@ -64,7 +66,7 @@ export default function FraværPage() {
 
   const { fravær, lagre, slett } = useFraværStore();
 
-  const [søk, setSøk] = useState("");
+  const [søk, setSøk] = useModulSøkFraUrl();
   const [typeFilter, setTypeFilter] = useState<"" | FraværType>("");
 
   const [modalÅpen, setModalÅpen] = useState(false);
@@ -77,17 +79,21 @@ export default function FraværPage() {
   );
 
   const synlige = useMemo(() => {
-    const q = søk.trim().toLowerCase();
     return fravær
       .filter((f) => {
         if (typeFilter && f.type !== typeFilter) return false;
         return true;
       })
       .filter((f) => {
+        const q = søk.trim();
         if (!q) return true;
         const a = ansattById.get(f.ansattId);
         if (!a) return false;
-        return fullNavn(a).toLowerCase().includes(q);
+        return (
+          ansattMatcherModulSøk(a, q) ||
+          f.type.toLowerCase().includes(q.toLowerCase()) ||
+          (f.kommentar?.toLowerCase().includes(q.toLowerCase()) ?? false)
+        );
       })
       .sort((a, b) => (b.fraDato + b.tilDato).localeCompare(a.fraDato + a.tilDato));
   }, [ansattById, fravær, søk, typeFilter]);
@@ -143,8 +149,8 @@ export default function FraværPage() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk på ansatt"
-            aria-label="Søk på ansatt"
+            placeholder="Søk navn, type…"
+            aria-label="Søk fravær"
           />
           <select
             className={styles.select}

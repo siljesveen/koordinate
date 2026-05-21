@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Henger, HengerUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { fullNavn, type Henger, type HengerUtilgjengelig, type KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { hengerMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
@@ -81,6 +82,17 @@ export function HengerPerioderTab() {
 
   const hengerById = useMemo(() => new Map(hengere.map((h) => [h.id, h] as const)), [hengere]);
 
+  const sjåførNavnPerHenger = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const a of ansatte) {
+      if (!a.fastHengerId) continue;
+      const liste = m.get(a.fastHengerId) ?? [];
+      liste.push(fullNavn(a));
+      m.set(a.fastHengerId, liste);
+    }
+    return m;
+  }, [ansatte]);
+
   const [søk, setSøk] = useState("");
   const [typeFilter, setTypeFilter] = useState<"" | KjøretøyUtilgjengeligType>("");
 
@@ -94,20 +106,20 @@ export function HengerPerioderTab() {
   );
 
   const synlige = useMemo(() => {
-    const q = søk.trim().toLowerCase();
     return poster
       .filter((p) => {
         if (typeFilter && p.type !== typeFilter) return false;
         return true;
       })
       .filter((p) => {
+        const q = søk.trim();
         if (!q) return true;
         const h = hengerById.get(p.hengerId);
-        if (!h) return p.hengerId.toLowerCase().includes(q);
-        return hengerTekst(h).toLowerCase().includes(q);
+        if (!h) return p.hengerId.toLowerCase().includes(q.toLowerCase());
+        return hengerMatcherModulSøk(h, q, sjåførNavnPerHenger.get(h.id) ?? []);
       })
       .sort((a, b) => (b.fraDato + b.tilDato).localeCompare(a.fraDato + a.tilDato));
-  }, [hengerById, poster, søk, typeFilter]);
+  }, [hengerById, poster, søk, typeFilter, sjåførNavnPerHenger]);
 
   function åpneNy() {
     setRedigererId(null);
@@ -158,8 +170,8 @@ export function HengerPerioderTab() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk henger"
-            aria-label="Søk"
+            placeholder="Søk reg.nr, sjåfør…"
+            aria-label="Søk hengerperioder"
           />
           <select
             className={styles.select}

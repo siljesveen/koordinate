@@ -12,6 +12,8 @@ import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
 import { useTurnus4UkerStore, type TurnusSkiftType } from "@/lib/state/turnus4ukerStore";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
+import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
+import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
 import styles from "./page.module.css";
 
 const TURNUS_REKKEFØLGE: TurnusSkiftType[] = ["Ingen", "Dag", "Kveld", "Begge"];
@@ -223,7 +225,7 @@ export default function AnsattePage() {
   const { fjernReferanser: fjernTildelingRef } = usePlanRuteTildelingStore();
   const { hentTurnus, setDag: setTurnusDag } = useTurnus4UkerStore();
   const [turnusUke, setTurnusUke] = useState<0 | 1 | 2 | 3>(0);
-  const [søk, setSøk] = useState("");
+  const [søk, setSøk] = useModulSøkFraUrl();
   const [filter, setFilter] = useState<AktivFilter>("aktiv");
 
   const [modalÅpen, setModalÅpen] = useState(false);
@@ -307,20 +309,35 @@ export default function AnsattePage() {
   const kjoretoySøkBil = useKjoretoySøkBil(ansatte, biler);
   const kjoretoySøkHenger = useKjoretoySøkHenger(ansatte, hengere);
 
+  const rutekoderPerAnsatt = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const slot of masterplan.slots) {
+      const id = slot.standardSjåførAnsattId;
+      if (!id) continue;
+      const liste = m.get(id) ?? [];
+      if (!liste.includes(slot.rutekode)) liste.push(slot.rutekode);
+      m.set(id, liste);
+    }
+    return m;
+  }, [masterplan.slots]);
+
   const synlige = useMemo(() => {
-    const q = søk.trim().toLowerCase();
+    const q = søk.trim();
     return ansatte
       .filter((a) => {
         if (filter === "aktiv") return a.aktiv;
         if (filter === "inaktiv") return !a.aktiv;
         return true;
       })
-      .filter((a) => {
-        if (!q) return true;
-        return fullNavn(a).toLowerCase().includes(q);
-      })
+      .filter((a) =>
+        ansattMatcherModulSøk(a, q, {
+          bilById,
+          hengerById,
+          rutekoder: rutekoderPerAnsatt.get(a.id),
+        }),
+      )
       .sort((a, b) => fullNavn(a).localeCompare(fullNavn(b), "nb"));
-  }, [ansatte, filter, søk]);
+  }, [ansatte, filter, søk, bilById, hengerById, rutekoderPerAnsatt]);
 
 
   function åpneNy() {
@@ -445,8 +462,8 @@ export default function AnsattePage() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk på navn"
-            aria-label="Søk på navn"
+            placeholder="Søk navn, bil, henger, rute…"
+            aria-label="Søk ansatte"
           />
           <select
             className={styles.select}

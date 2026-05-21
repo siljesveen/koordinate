@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Bil, BilUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { fullNavn, type Bil, type BilUtilgjengelig, type KjøretøyUtilgjengeligType } from "@/lib/domain";
+import { bilMatcherModulSøk } from "@/lib/utils/søkMatch";
 import {
   bilMerkeTilbakeBekreftMelding,
   bilPeriodeKanMerkesTilbake,
@@ -94,6 +95,17 @@ export function BilPerioderTab() {
 
   const bilById = useMemo(() => new Map(biler.map((b) => [b.id, b] as const)), [biler]);
 
+  const sjåførNavnPerBil = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const a of ansatte) {
+      if (!a.fastBilId) continue;
+      const liste = m.get(a.fastBilId) ?? [];
+      liste.push(fullNavn(a));
+      m.set(a.fastBilId, liste);
+    }
+    return m;
+  }, [ansatte]);
+
   const [søk, setSøk] = useState("");
   const [typeFilter, setTypeFilter] = useState<"" | KjøretøyUtilgjengeligType>("");
 
@@ -107,22 +119,22 @@ export function BilPerioderTab() {
   );
 
   const synlige = useMemo(() => {
-    const q = søk.trim().toLowerCase();
     return poster
       .filter((p) => {
         if (typeFilter && p.type !== typeFilter) return false;
         return true;
       })
       .filter((p) => {
+        const q = søk.trim();
         if (!q) return true;
         const b = bilById.get(p.bilId);
-        if (!b) return p.bilId.toLowerCase().includes(q);
-        return bilTekst(b).toLowerCase().includes(q);
+        if (!b) return p.bilId.toLowerCase().includes(q.toLowerCase());
+        return bilMatcherModulSøk(b, q, sjåførNavnPerBil.get(b.id) ?? []);
       })
       .sort((a, b) =>
         utilgjengeligPeriodeSorterKey(b).localeCompare(utilgjengeligPeriodeSorterKey(a)),
       );
-  }, [bilById, poster, søk, typeFilter]);
+  }, [bilById, poster, søk, typeFilter, sjåførNavnPerBil]);
 
   function åpneNy() {
     setRedigererId(null);
@@ -183,8 +195,8 @@ export function BilPerioderTab() {
             className={styles.input}
             value={søk}
             onChange={(e) => setSøk(e.target.value)}
-            placeholder="Søk bil"
-            aria-label="Søk"
+            placeholder="Søk reg.nr, sjåfør…"
+            aria-label="Søk bilperioder"
           />
           <select
             className={styles.select}
