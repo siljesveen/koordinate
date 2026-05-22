@@ -799,7 +799,9 @@ export default function AnsattePage() {
                       );
                     })}
                   </div>
-                  <div className={styles.turnusHint}>Klikk på en dag for å bytte: Ingen → Dag → Kveld → Begge</div>
+                  <div className={styles.turnusHint}>
+                    Følger masterplan automatisk. Klikk en dag og velg «Ingen» for manuell fri.
+                  </div>
                 </div>
               )}
 

@@ -1,18 +1,32 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
 import { useAppData } from "@/lib/hooks/useAppData";
+import type { MasterRuteSlot } from "@/lib/domain";
+import {
+  byggTurnusPlan,
+  friDagerFraLegacyPlan,
+  turnusCelleNøkkel,
+} from "@/lib/turnusMasterplanSync";
+import { useMasterplanStore } from "@/lib/state/masterplanStore";
 
 export type TurnusSkiftType = "Ingen" | "Dag" | "Kveld" | "Begge";
 
+/** Lagret per ansatt – kun manuelle fridager; resten avledes fra masterplan. */
+export type TurnusLagret = {
+  ansattId: string;
+  friDager: string[];
+  /** @deprecated – migreres til friDager ved innlasting */
+  plan?: TurnusSkiftType[][];
+};
+
+/** Returneres til UI – full plan avledet live. */
 export type Turnus4Uker = {
   ansattId: string;
-  /** 4 uker × 7 dager (Man–Søn). */
   plan: TurnusSkiftType[][];
 };
 
 type Turnus4UkerStoreValue = {
-  turnuser: Turnus4Uker[];
   hentTurnus: (ansattId: string) => Turnus4Uker;
   setDag: (args: { ansattId: string; ukeIndex: number; dagIndex: number; skift: TurnusSkiftType }) => void;
 };
@@ -20,45 +34,41 @@ type Turnus4UkerStoreValue = {
 const STORAGE_KEY = "bemanning.turnus4uker.v1";
 const Ctx = createContext<Turnus4UkerStoreValue | null>(null);
 
-function defaultTurnus(ansattId: string): Turnus4Uker {
-  return {
-    ansattId,
-    plan: Array.from({ length: 4 }, () => Array.from({ length: 7 }, () => "Ingen" as const)),
-  };
-}
-
-function normalizeLoaded(data: unknown): Turnus4Uker[] {
+function normalizeLoaded(data: unknown): TurnusLagret[] {
   if (!Array.isArray(data)) return [];
   return data
     .filter((x) => x && typeof x === "object")
-    .map((x) => x)
     .map((x) => {
-      const t = x as any;
+      const t = x as TurnusLagret & { plan?: TurnusSkiftType[][] };
       const ansattId = String(t.ansattId ?? "");
-      const plan = Array.isArray(t.plan) ? t.plan : [];
-      const normalized: TurnusSkiftType[][] = Array.from({ length: 4 }, (_, w) => {
-        const row = Array.isArray(plan[w]) ? plan[w] : [];
-        return Array.from({ length: 7 }, (_, d) => {
-          const v = String(row[d] ?? "Ingen");
-          if (v === "Dag" || v === "Kveld" || v === "Begge" || v === "Ingen") return v;
-          return "Ingen";
-        });
-      });
-      return { ansattId, plan: normalized } satisfies Turnus4Uker;
+      const legacyFri = friDagerFraLegacyPlan(t.plan);
+      const eksisterendeFri = Array.isArray(t.friDager) ? t.friDager.map(String) : [];
+      const friDager = [...new Set([...eksisterendeFri, ...legacyFri])];
+      return { ansattId, friDager } satisfies TurnusLagret;
     })
     .filter((t) => t.ansattId);
 }
 
 export function Turnus4UkerStoreProvider({ children }: { children: React.ReactNode }) {
-  const { data: turnuser, setData: setTurnuser } = useAppData<Turnus4Uker[]>(STORAGE_KEY, {
+  const { masterplan } = useMasterplanStore();
+  const { data: turnuser, setData: setTurnuser } = useAppData<TurnusLagret[]>(STORAGE_KEY, {
     getDefault: () => [],
     parse: normalizeLoaded,
   });
 
-  const hentTurnus = (ansattId: string): Turnus4Uker => {
-    const existing = turnuser.find((t) => t.ansattId === ansattId);
-    return existing ?? defaultTurnus(ansattId);
-  };
+  const slots = masterplan.slots;
+
+  const hentTurnus = useCallback(
+    (ansattId: string): Turnus4Uker => {
+      const lagret = turnuser.find((t) => t.ansattId === ansattId);
+      const friDager = new Set(lagret?.friDager ?? []);
+      return {
+        ansattId,
+        plan: byggTurnusPlan(slots, ansattId, friDager),
+      };
+    },
+    [turnuser, slots],
+  );
 
   const setDag = ({
     ansattId,
@@ -71,19 +81,27 @@ export function Turnus4UkerStoreProvider({ children }: { children: React.ReactNo
     dagIndex: number;
     skift: TurnusSkiftType;
   }) => {
+    const nøkkel = turnusCelleNøkkel(ukeIndex, dagIndex);
     setTurnuser((prev) => {
       const found = prev.find((t) => t.ansattId === ansattId);
-      const base = found ?? defaultTurnus(ansattId);
-      const plan = base.plan.map((row) => [...row]);
-      plan[ukeIndex] = [...plan[ukeIndex]];
-      plan[ukeIndex][dagIndex] = skift;
-      const next = { ...base, plan };
-      const without = prev.filter((t) => t.ansattId !== ansattId);
-      return [next, ...without];
+      const friSet = new Set(found?.friDager ?? []);
+
+      if (skift === "Ingen") {
+        friSet.add(nøkkel);
+      } else {
+        friSet.delete(nøkkel);
+      }
+
+      const next: TurnusLagret = {
+        ansattId,
+        friDager: [...friSet],
+      };
+      return [next, ...prev.filter((t) => t.ansattId !== ansattId)];
     });
   };
 
-  const value = useMemo(() => ({ turnuser, hentTurnus, setDag }), [turnuser]);
+  const value = useMemo(() => ({ hentTurnus, setDag }), [hentTurnus]);
+
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
@@ -93,3 +111,14 @@ export function useTurnus4UkerStore(): Turnus4UkerStoreValue {
   return ctx;
 }
 
+/** Hjelpefunksjon for tester – unngår React-context. */
+export function byggTurnusForAnsatt(
+  slots: MasterRuteSlot[],
+  ansattId: string,
+  friDager: string[] = [],
+): Turnus4Uker {
+  return {
+    ansattId,
+    plan: byggTurnusPlan(slots, ansattId, new Set(friDager)),
+  };
+}
