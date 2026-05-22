@@ -1,0 +1,225 @@
+"use client";
+
+import {
+  fetchSkyOverviewAction,
+  importAppDataBatchAction,
+  testSkyTilkoblingAction,
+} from "@/app/actions/skyData";
+import { useAuth } from "@/lib/state/authStore";
+import { useAppDataReload } from "@/lib/state/appDataReload";
+import { useCallback, useEffect, useState } from "react";
+import styles from "./DevDataStatus.module.css";
+
+type SkyStatus = "idle" | "sjekker" | "ok" | "feil";
+
+const VERCEL_EKSPORT_SCRIPT = `copy(JSON.stringify(Object.fromEntries(
+  ${JSON.stringify([
+    "bemanning.ansatte.v2",
+    "bemanning.biler.v1",
+    "bemanning.henger.v1",
+    "bemanning.masterplan.v1",
+    "bemanning.fravaer.v1",
+    "bemanning.turnus4uker.v1",
+    "bemanning.planRuteTildeling.v2",
+    "bemanning.dagendring.v1",
+    "bemanning.bilUtilgjengelig.v1",
+    "bemanning.hengerUtilgjengelig.v1",
+  ])}.map(k => [k, JSON.parse(localStorage.getItem(k) || "null")]).filter(([,v]) => v !== null)
+)))`;
+
+export default function DevDataStatus() {
+  if (process.env.NODE_ENV !== "development") return null;
+
+  const { configured, profile, loading, dataReady } = useAuth();
+  const { reloadFromCloud, reloadTick } = useAppDataReload();
+  const [skyStatus, setSkyStatus] = useState<SkyStatus>("idle");
+  const [skyFeil, setSkyFeil] = useState<string | null>(null);
+  const [henter, setHenter] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [skyOverview, setSkyOverview] = useState<{ key: string; summary: string }[]>([]);
+  const [visImport, setVisImport] = useState(false);
+  const [importJson, setImportJson] = useState("");
+  const [importerer, setImporterer] = useState(false);
+
+  const lastOppSky = useCallback(async () => {
+    if (!configured || !profile) {
+      setSkyOverview([]);
+      return;
+    }
+    const result = await fetchSkyOverviewAction();
+    if (!result.error) {
+      setSkyOverview(result.rows);
+    }
+  }, [configured, profile]);
+
+  const testSky = useCallback(async () => {
+    if (!configured || !profile) {
+      setSkyStatus("idle");
+      setSkyFeil(null);
+      return;
+    }
+
+    setSkyStatus("sjekker");
+    setSkyFeil(null);
+
+    try {
+      const result = await testSkyTilkoblingAction();
+      if (!result.ok) {
+        setSkyStatus("feil");
+        setSkyFeil(result.error ?? "Ukjent feil");
+        return;
+      }
+      setSkyStatus("ok");
+      await lastOppSky();
+    } catch (err) {
+      setSkyStatus("feil");
+      setSkyFeil(err instanceof Error ? err.message : "Ukjent feil");
+    }
+  }, [configured, profile, lastOppSky]);
+
+  useEffect(() => {
+    void testSky();
+  }, [testSky, reloadTick]);
+
+  const skyOk = configured && !!profile;
+  const kanHente = skyOk && dataReady && !loading && skyStatus !== "sjekker";
+
+  const handleHent = async () => {
+    setHenter(true);
+    setSyncMsg(null);
+    try {
+      const result = await reloadFromCloud();
+      if (result.error) {
+        setSyncMsg(`Feil ved henting: ${result.error}`);
+      } else if (result.updated === 0) {
+        setSyncMsg(
+          "Sky er tom. Data på Vercel ligger sannsynligvis kun i nettleseren der — bruk «Importer fra Vercel» under.",
+        );
+      } else {
+        const ansatte =
+          result.ansatteCount != null ? `, ${result.ansatteCount} ansatte` : "";
+        setSyncMsg(`Hentet ${result.updated} datasett fra sky${ansatte}. Siden viser nå Supabase-data.`);
+      }
+      await lastOppSky();
+    } finally {
+      setHenter(false);
+    }
+  };
+
+  const handleImport = async () => {
+    setImporterer(true);
+    setSyncMsg(null);
+    try {
+      const payload = JSON.parse(importJson) as Record<string, unknown>;
+      const result = await importAppDataBatchAction(payload);
+      if (result.error) {
+        setSyncMsg(`Import feilet: ${result.error}`);
+        return;
+      }
+      setSyncMsg(`Importerte ${result.imported} datasett til Supabase. Klikk «Hent data fra sky».`);
+      setImportJson("");
+      await reloadFromCloud();
+      await lastOppSky();
+    } catch {
+      setSyncMsg("Ugyldig JSON. Kopier output fra Vercel-konsollen.");
+    } finally {
+      setImporterer(false);
+    }
+  };
+
+  const ansatteISky = skyOverview.find((r) => r.key === "bemanning.ansatte.v2")?.summary;
+
+  return (
+    <div className={styles.bar} role="status" aria-live="polite">
+      <span className={styles.label}>Lokal utvikling</span>
+      <span className={configured ? styles.ok : styles.err}>
+        Supabase: {configured ? "tilkoblet" : "mangler .env.local"}
+      </span>
+      <span className={profile ? styles.ok : configured ? styles.warn : styles.err}>
+        Innlogging: {loading ? "…" : profile ? profile.email ?? "ok" : "ikke innlogget"}
+      </span>
+      {profile ? (
+        <span
+          className={
+            skyStatus === "ok" ? styles.ok : skyStatus === "feil" ? styles.err : styles.warn
+          }
+        >
+          Sky:{" "}
+          {skyStatus === "sjekker"
+            ? "sjekker …"
+            : skyStatus === "ok"
+              ? ansatteISky
+                ? `ansatte ${ansatteISky}`
+                : skyOverview.length > 0
+                  ? `${skyOverview.length} nøkler`
+                  : "tom"
+              : skyStatus === "feil"
+                ? "feil"
+                : "…"}
+        </span>
+      ) : null}
+      <button
+        type="button"
+        className={styles.btn}
+        disabled={!kanHente}
+        onClick={handleHent}
+        title="Last inn data på nytt fra Supabase"
+      >
+        {henter ? "Henter …" : "Hent data fra sky"}
+      </button>
+      {profile && skyStatus === "ok" ? (
+        <button
+          type="button"
+          className={styles.btnSecondary}
+          onClick={() => setVisImport((v) => !v)}
+        >
+          {visImport ? "Skjul import" : "Importer fra Vercel"}
+        </button>
+      ) : null}
+      {!configured ? (
+        <p className={styles.hint}>
+          Opprett <code>.env.local</code> med Supabase-nøkler, start <code>npm run dev</code> på nytt,
+          og logg inn med samme bruker som på Vercel.
+        </p>
+      ) : !profile ? (
+        <p className={styles.hint}>
+          Logg inn på localhost for å lese samme Supabase-data som produksjon.
+        </p>
+      ) : skyStatus === "feil" ? (
+        <p className={styles.hint}>
+          Klarte ikke lese Supabase ({skyFeil}). Kjør <code>003_grants.sql</code> i Supabase SQL Editor.
+        </p>
+      ) : null}
+      {syncMsg ? <p className={styles.hint}>{syncMsg}</p> : null}
+      {profile && skyOverview.length > 0 ? (
+        <p className={styles.hint}>
+          I Supabase nå: {skyOverview.map((r) => `${r.key.replace("bemanning.", "")} (${r.summary})`).join(", ")}
+        </p>
+      ) : null}
+      {visImport && profile ? (
+        <div className={styles.importBox}>
+          <p className={styles.hint}>
+            <strong>Synk Vercel → Supabase (engangs):</strong> Åpne Vercel-siden, trykk F12 → Console, lim inn og
+            kjør scriptet. Deretter kopier resultatet (JSON) og lim inn under.
+          </p>
+          <pre className={styles.script}>{VERCEL_EKSPORT_SCRIPT}</pre>
+          <textarea
+            className={styles.textarea}
+            rows={4}
+            placeholder='Lim inn JSON fra Vercel-konsollen …'
+            value={importJson}
+            onChange={(e) => setImportJson(e.target.value)}
+          />
+          <button
+            type="button"
+            className={styles.btn}
+            disabled={!importJson.trim() || importerer}
+            onClick={handleImport}
+          >
+            {importerer ? "Importerer …" : "Last opp til Supabase"}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}

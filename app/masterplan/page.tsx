@@ -13,6 +13,23 @@ import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoret
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import styles from "./page.module.css";
 
+function slotMedSjåførOgKjoretoy(
+  slot: MasterRuteSlot,
+  ansattId: string | undefined,
+  ansattById: Map<string, Ansatt>,
+): MasterRuteSlot {
+  if (!ansattId) {
+    return { ...slot, standardSjåførAnsattId: undefined };
+  }
+  const ansatt = ansattById.get(ansattId);
+  return {
+    ...slot,
+    standardSjåførAnsattId: ansattId,
+    standardBilId: ansatt?.fastBilId,
+    standardHengerId: ansatt?.fastHengerId,
+  };
+}
+
 function sjåførFraMasterSlots(
   slots: MasterRuteSlot[],
   ansattById: Map<string, Ansatt>,
@@ -606,7 +623,7 @@ export default function MasterplanPage() {
                     className={styles.cellSelect}
                     value={slot.standardSjåførAnsattId ?? ""}
                     onChange={(id) =>
-                      oppdaterSlot(slot, { standardSjåførAnsattId: id || undefined })
+                      lagreSlot(slotMedSjåførOgKjoretoy(slot, id || undefined, ansattById))
                     }
                     options={sjåførVelgerValg}
                     ariaLabel={`Fast sjåfør, rute ${slot.rutekode}`}

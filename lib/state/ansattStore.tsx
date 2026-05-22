@@ -35,7 +35,7 @@ function standardAnsatte(): Ansatt[] {
 }
 
 function parseAnsatte(raw: unknown): Ansatt[] {
-  if (!Array.isArray(raw) || raw.length === 0) return standardAnsatte();
+  if (!Array.isArray(raw)) return [];
   return raw
     .filter((x) => x && typeof x === "object")
     .map((x) => migrateAnsatt(x as LagretAnsatt));
@@ -43,7 +43,7 @@ function parseAnsatte(raw: unknown): Ansatt[] {
 
 export function AnsattStoreProvider({ children }: { children: React.ReactNode }) {
   const { data: ansatte, setData: setAnsatte } = useAppData<Ansatt[]>(STORAGE_KEY, {
-    getDefault: standardAnsatte,
+    getDefault: () => [],
     parse: parseAnsatte,
   });
 

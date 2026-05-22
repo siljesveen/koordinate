@@ -1,6 +1,31 @@
-import { APP_DATA_KEYS, merkSyncedTilSupabase } from "@/lib/data/storageKeys";
-import { createClient } from "@/lib/supabase/client";
+import { reportSkySave } from "@/lib/data/skySaveNotify";
+import {
+  fetchAllAppDataFromSkyAction,
+  importAppDataBatchAction,
+  loadAppDataFromSkyAction,
+  saveAppDataToSkyAction,
+} from "@/app/actions/skyData";
+import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+
+export type SaveAppDataResult = {
+  savedToSky: boolean;
+  error?: string;
+};
+
+function feilmelding(error: string): string {
+  if (error === "not_authenticated") return "Ikke innlogget";
+  if (error === "forbidden") return "Mangler rettigheter (admin/planlegger)";
+  return error;
+}
+
+export type SkySyncResult = {
+  updated: number;
+  missing: string[];
+  ansatteCount?: number;
+  error?: string;
+  uploaded?: boolean;
+};
 
 function lesLocal(key: string): unknown | null {
   if (typeof window === "undefined") return null;
@@ -22,123 +47,166 @@ function skrivLocal(key: string, value: unknown): void {
   }
 }
 
-/** Les data: Supabase når konfigurert og innlogget, ellers localStorage. */
-export async function loadAppData(key: string): Promise<unknown | null> {
+/** Hent alt fra sky og oppdater localStorage. */
+export async function syncLocalCacheFromSky(removeMissing = true): Promise<SkySyncResult> {
+  if (!isSupabaseConfigured() || typeof window === "undefined") {
+    return { updated: 0, missing: [...APP_DATA_KEYS] };
+  }
+
+  const { rows, error } = await fetchAllAppDataFromSkyAction();
+  if (error) {
+    return { updated: 0, missing: [...APP_DATA_KEYS], error };
+  }
+
+  const rowMap = new Map(rows.map((row) => [row.key, row.value]));
+  let updated = 0;
+  const missing: string[] = [];
+
+  for (const key of APP_DATA_KEYS) {
+    if (rowMap.has(key)) {
+      skrivLocal(key, rowMap.get(key));
+      updated++;
+    } else if (removeMissing) {
+      window.localStorage.removeItem(key);
+      missing.push(key);
+    } else {
+      missing.push(key);
+    }
+  }
+
+  let ansatteCount: number | undefined;
+  const ansatte = rowMap.get("bemanning.ansatte.v2");
+  if (Array.isArray(ansatte)) {
+    ansatteCount = ansatte.length;
+  }
+
+  return { updated, missing, ansatteCount };
+}
+
+/** Les data: Supabase er eneste kilde når innlogget. localStorage kun uten innlogging. */
+export async function loadAppData(key: string, innlogget = false): Promise<unknown | null> {
   if (!isSupabaseConfigured()) {
     return lesLocal(key);
   }
 
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await loadAppDataFromSkyAction(key);
 
-  if (!user) {
+  if (error === "not_authenticated") {
     return lesLocal(key);
   }
-
-  const { data, error } = await supabase
-    .from("app_data")
-    .select("value")
-    .eq("key", key)
-    .maybeSingle();
 
   if (error) {
-    console.warn("[app_data] load feilet:", key, error.message);
-    return lesLocal(key);
+    console.warn("[app_data] load feilet:", key, error);
+    return innlogget ? null : lesLocal(key);
   }
 
-  if (data?.value !== undefined && data?.value !== null) {
-    return data.value;
+  if (data !== undefined && data !== null) {
+    skrivLocal(key, data);
+    return data;
+  }
+
+  if (innlogget) {
+    window.localStorage?.removeItem(key);
+    return null;
   }
 
   return lesLocal(key);
 }
 
-/** Lagre data: alltid local cache + Supabase når innlogget og kan redigere. */
+/** Lagre data: local cache + Supabase når innlogget og kan redigere. */
 export async function saveAppData(
   key: string,
   value: unknown,
   canEdit: boolean,
-): Promise<void> {
+): Promise<SaveAppDataResult> {
   skrivLocal(key, value);
 
-  if (!isSupabaseConfigured() || !canEdit) return;
+  if (!isSupabaseConfigured()) {
+    const result = { savedToSky: false, error: "Supabase er ikke konfigurert" };
+    reportSkySave({ key, ...result });
+    return result;
+  }
 
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!canEdit) {
+    const result = { savedToSky: false, error: "forbidden" };
+    reportSkySave({ key, ...result, error: feilmelding("forbidden") });
+    return result;
+  }
 
-  const { error } = await supabase.from("app_data").upsert({
-    key,
-    value,
-    updated_at: new Date().toISOString(),
-    updated_by: user.id,
-  });
+  const { error } = await saveAppDataToSkyAction(key, value);
 
   if (error) {
-    console.warn("[app_data] save feilet:", key, error.message);
+    const msg = feilmelding(error);
+    console.error("[app_data] save feilet:", key, msg);
+    const result = { savedToSky: false, error: msg };
+    reportSkySave({ key, ...result });
+    return result;
   }
+
+  const result = { savedToSky: true };
+  reportSkySave({ key, ...result });
+  return result;
+}
+
+function lesLocalPayload(): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  for (const key of APP_DATA_KEYS) {
+    const local = lesLocal(key);
+    if (local !== null) payload[key] = local;
+  }
+  return payload;
+}
+
+/** Last opp all localStorage til Supabase (nød-/synk-knapp). */
+export async function uploadLocalStorageToSky(): Promise<{ imported: number; error?: string }> {
+  if (!isSupabaseConfigured() || typeof window === "undefined") {
+    return { imported: 0, error: "Supabase er ikke konfigurert" };
+  }
+  const payload = lesLocalPayload();
+  if (Object.keys(payload).length === 0) {
+    return { imported: 0, error: "Ingen data i nettleseren å laste opp" };
+  }
+  return importAppDataBatchAction(payload);
 }
 
 /**
- * Første gang etter innlogging: last opp localStorage til Supabase
- * hvis skyen ikke har data for nøkkelen ennå.
+ * Etter innlogging: sky er sannheten. Hvis sky er tom men nettleser har data,
+ * lastes det opp automatisk (redning av Vercel-data som aldri nådde sky).
  */
-export async function migrateLocalStorageToSupabase(userId: string): Promise<void> {
-  if (!isSupabaseConfigured() || typeof window === "undefined") return;
+export async function syncOnLogin(): Promise<SkySyncResult> {
+  if (!isSupabaseConfigured() || typeof window === "undefined") {
+    return { updated: 0, missing: [...APP_DATA_KEYS] };
+  }
 
-  const supabase = createClient();
+  const { rows, error } = await fetchAllAppDataFromSkyAction();
+  if (error && error !== "not_authenticated") {
+    return { updated: 0, missing: [...APP_DATA_KEYS], error };
+  }
 
-  await Promise.allSettled(
-    APP_DATA_KEYS.map(async (key) => {
-      const local = lesLocal(key);
-      if (local === null) return;
+  if (rows.length > 0) {
+    return syncLocalCacheFromSky(false);
+  }
 
-      const { data: existingRow } = await supabase
-        .from("app_data")
-        .select("value")
-        .eq("key", key)
-        .maybeSingle();
+  const payload = lesLocalPayload();
+  if (Object.keys(payload).length === 0) {
+    return { updated: 0, missing: [...APP_DATA_KEYS] };
+  }
 
-      let valueToWrite = local;
+  const upload = await importAppDataBatchAction(payload);
+  if (upload.error) {
+    return { updated: 0, missing: [...APP_DATA_KEYS], error: upload.error };
+  }
 
-      // Masterplan: ikke overskriv sky med versjon uten koblingsgrupper hvis local har flere
-      if (key === "bemanning.masterplan.v1" && existingRow?.value && typeof existingRow.value === "object") {
-        const remote = existingRow.value as Record<string, unknown>;
-        const localPlan = local as Record<string, unknown>;
-        const remoteGrupper =
-          remote.koblingsgrupper && typeof remote.koblingsgrupper === "object"
-            ? Object.keys(remote.koblingsgrupper as object).length
-            : 0;
-        const localGrupper =
-          localPlan.koblingsgrupper && typeof localPlan.koblingsgrupper === "object"
-            ? Object.keys(localPlan.koblingsgrupper as object).length
-            : 0;
-        if (remoteGrupper > localGrupper) {
-          return;
-        }
-        if (localGrupper > remoteGrupper) {
-          valueToWrite = { ...remote, ...localPlan, koblingsgrupper: localPlan.koblingsgrupper };
-        }
-      } else if (existingRow) {
-        return;
-      }
+  let ansatteCount: number | undefined;
+  const ansatte = payload["bemanning.ansatte.v2"];
+  if (Array.isArray(ansatte)) {
+    ansatteCount = ansatte.length;
+  }
 
-      const { error } = await supabase.from("app_data").upsert({
-        key,
-        value: valueToWrite,
-        updated_at: new Date().toISOString(),
-        updated_by: userId,
-      });
-
-      if (error) {
-        console.warn("[app_data] migrering feilet:", key, error.message);
-      }
-    }),
-  );
-
-  merkSyncedTilSupabase();
+  return {
+    updated: upload.imported,
+    missing: APP_DATA_KEYS.filter((k) => !(k in payload)),
+    ansatteCount,
+    uploaded: true,
+  };
 }

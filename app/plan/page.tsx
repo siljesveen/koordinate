@@ -405,16 +405,18 @@ export default function PlanPage() {
     }
 
     const tilKj = tildelingKjoretoyForRute(slot.rutekode);
+    const planSjåførOverstyrt = Boolean(til?.ansattId);
 
     // Bil
     let bilId = tilKj?.bilId;
     let bilFraMaster = false;
     if (!(tilKj?.skjulBaselineBil && !tilKj?.bilId)) {
-      if (!bilId && slot.standardBilId) {
+      if (!bilId && slot.standardBilId && !planSjåførOverstyrt) {
         bilId = slot.standardBilId;
         bilFraMaster = true;
       }
-      if (!bilId && sjåfør?.fastBilId) {
+      // Ikke arv fast bil fra manuelt innsatt sjåfør i Plan — bil velges eksplisitt der.
+      if (!bilId && sjåfør?.fastBilId && !planSjåførOverstyrt) {
         bilId = sjåfør.fastBilId;
         bilFraMaster = true;
       }
@@ -438,11 +440,11 @@ export default function PlanPage() {
     let hengerId = tilKj?.hengerId;
     let hengerFraMaster = false;
     if (!(tilKj?.skjulBaselineHenger && !tilKj?.hengerId)) {
-      if (!hengerId && slot.standardHengerId) {
+      if (!hengerId && slot.standardHengerId && !planSjåførOverstyrt) {
         hengerId = slot.standardHengerId;
         hengerFraMaster = true;
       }
-      if (!hengerId && sjåfør?.fastHengerId) {
+      if (!hengerId && sjåfør?.fastHengerId && !planSjåførOverstyrt) {
         hengerId = sjåfør.fastHengerId;
         hengerFraMaster = true;
       }
@@ -943,6 +945,29 @@ export default function PlanPage() {
     return "__ingen__";
   }
 
+  /** Status i Plan: bil/henger må være eksplisitt valgt — ikke implisitt via sjåførens fast kjøretøy. */
+  function planHarBilTildelt(
+    tilKj: PlanRuteTildeling | undefined,
+    slot: MasterRuteSlot,
+    res: { bilId?: string; bilFraMaster: boolean },
+  ): boolean {
+    const sel = bilSelectVerdi(tilKj, res);
+    if (sel === "__ingen__") return false;
+    if (sel === "__baseline__") return Boolean(masterplanBilIdForSlot(slot));
+    return true;
+  }
+
+  function planHarHengerTildelt(
+    tilKj: PlanRuteTildeling | undefined,
+    slot: MasterRuteSlot,
+    res: { hengerId?: string; hengerFraMaster: boolean },
+  ): boolean {
+    const sel = hengerSelectVerdi(tilKj, res);
+    if (sel === "__ingen__") return false;
+    if (sel === "__baseline__") return Boolean(masterplanHengerIdForSlot(slot));
+    return true;
+  }
+
   /* ── Dynamisk: fjern/legg til rute for denne dagen ── */
 
   const fjernedeRuterForDag = useMemo(
@@ -1024,8 +1049,8 @@ export default function PlanPage() {
           (hengSel === "__ingen__" || hengSel === "__baseline__" || hengSel === mpHeng),
       );
       const manglerSj = !res.sjåfør;
-      const manglerB = !res.bilId;
-      const manglerH = !res.hengerId;
+      const manglerB = !planHarBilTildelt(tilKj, slot, res);
+      const manglerH = !planHarHengerTildelt(tilKj, slot, res);
       const utilgj =
         res.bilUtilgjengelig ||
         res.hengerUtilgjengeligFlag ||
@@ -1206,8 +1231,8 @@ export default function PlanPage() {
                   (hengerSelectVal === "__ingen__" || hengerValgtErMaster);
 
                 const manglerSjåfør = !res.sjåfør;
-                const manglerBil = !res.bilId;
-                const manglerHenger = !res.hengerId;
+                const manglerBil = !planHarBilTildelt(tilKjoretoy, slot, res);
+                const manglerHenger = !planHarHengerTildelt(tilKjoretoy, slot, res);
                 const utilgjengelig =
                   res.bilUtilgjengelig ||
                   res.hengerUtilgjengeligFlag ||

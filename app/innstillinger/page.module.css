@@ -123,3 +123,25 @@
   flex-direction: column;
   gap: 0.5rem;
 }
+
+.alertBox {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 0.5rem;
+}
+
+.alertTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #9a3412;
+  margin-bottom: 0.35rem;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}

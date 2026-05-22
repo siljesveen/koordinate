@@ -2,6 +2,7 @@
 
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
 import { useAuth } from "@/lib/state/authStore";
+import { useAppDataReload } from "@/lib/state/appDataReload";
 import { useEffect, useRef, useState } from "react";
 
 type UseAppDataOptions<T> = {
@@ -10,7 +11,9 @@ type UseAppDataOptions<T> = {
 };
 
 export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
-  const { dataReady, canEdit } = useAuth();
+  const { dataReady, canEdit, configured, profile } = useAuth();
+  const { reloadTick } = useAppDataReload();
+  const innlogget = configured && !!profile;
   const [data, setData] = useState<T>(options.getDefault);
   const [loaded, setLoaded] = useState(false);
   const hoppOverNesteLagring = useRef(true);
@@ -23,7 +26,7 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
 
     void (async () => {
       try {
-        const raw = await loadAppData(key);
+        const raw = await loadAppData(key, innlogget);
         if (cancelled) return;
         setData(options.parse(raw));
       } catch {
@@ -38,7 +41,7 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
     return () => {
       cancelled = true;
     };
-  }, [key, dataReady]);
+  }, [key, dataReady, reloadTick, innlogget]);
 
   useEffect(() => {
     if (!loaded || !dataReady) return;

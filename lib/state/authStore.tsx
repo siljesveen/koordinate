@@ -8,8 +8,9 @@ import {
   useMemo,
   useState,
 } from "react";
-import { canEditData, type AppRole, type UserProfile } from "@/lib/auth/types";
-import { migrateLocalStorageToSupabase } from "@/lib/data/appDataStorage";
+import { canEditData, type UserProfile } from "@/lib/auth/types";
+import { fetchProfileAction } from "@/app/actions/skyData";
+import { syncOnLogin } from "@/lib/data/appDataStorage";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -23,20 +24,6 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function mapProfile(row: {
-  id: string;
-  email: string | null;
-  display_name: string | null;
-  role: AppRole;
-}): UserProfile {
-  return {
-    id: row.id,
-    email: row.email,
-    display_name: row.display_name,
-    role: row.role,
-  };
-}
 
 export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
   const configured = isSupabaseConfigured();
@@ -53,6 +40,12 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
     try {
+      const serverProfile = await fetchProfileAction();
+      if (serverProfile) {
+        setProfile(serverProfile);
+        return;
+      }
+
       const supabase = createClient();
       const {
         data: { user },
@@ -63,23 +56,12 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, display_name, role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error || !data) {
-        setProfile({
-          id: user.id,
-          email: user.email ?? null,
-          display_name: null,
-          role: "visning",
-        });
-        return;
-      }
-
-      setProfile(mapProfile(data as Parameters<typeof mapProfile>[0]));
+      setProfile({
+        id: user.id,
+        email: user.email ?? null,
+        display_name: null,
+        role: "visning",
+      });
     } finally {
       setLoading(false);
     }
@@ -123,7 +105,7 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       if (!cancelled) setDataReady(true);
     }, timeoutMs);
 
-    void migrateLocalStorageToSupabase(profile.id).finally(() => {
+    void syncOnLogin().finally(() => {
       window.clearTimeout(timeoutId);
       if (!cancelled) setDataReady(true);
     });

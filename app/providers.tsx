@@ -18,6 +18,8 @@ import { PlanRuteTildelingStoreProvider } from "@/lib/state/planRuteTildelingSto
 import { Turnus4UkerStoreProvider } from "@/lib/state/turnus4ukerStore";
 import { FraværStoreProvider } from "@/lib/state/fravaerStore";
 import { AuthStoreProvider } from "@/lib/state/authStore";
+import { AppDataReloadProvider } from "@/lib/state/appDataReload";
+import { SkySaveStoreProvider } from "@/lib/state/skySaveStore";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   if (typeof window !== "undefined") {
@@ -26,6 +28,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthStoreProvider>
+      <AppDataReloadProvider>
+      <SkySaveStoreProvider>
       <ToastStoreProvider>
       <AnsattStoreProvider>
         <BilStoreProvider>
@@ -53,6 +57,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         </BilStoreProvider>
       </AnsattStoreProvider>
       </ToastStoreProvider>
+      </SkySaveStoreProvider>
+      </AppDataReloadProvider>
     </AuthStoreProvider>
   );
 }

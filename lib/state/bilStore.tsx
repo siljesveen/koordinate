@@ -43,11 +43,8 @@ function nyId(): string {
 
 export function BilStoreProvider({ children }: { children: React.ReactNode }) {
   const { data: biler, setData: setBiler } = useAppData<Bil[]>(STORAGE_KEY, {
-    getDefault: standardBiler,
-    parse: (raw) => {
-      const normalized = normalizeLoaded(raw);
-      return normalized.length > 0 ? normalized : standardBiler();
-    },
+    getDefault: () => [],
+    parse: (raw) => normalizeLoaded(raw),
   });
 
   const lagre = (item: Bil) => {

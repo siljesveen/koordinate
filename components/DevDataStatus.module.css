@@ -1,0 +1,103 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.35rem 1rem;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid #334155;
+}
+
+.label {
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.ok {
+  color: #86efac;
+}
+
+.warn {
+  color: #fcd34d;
+}
+
+.err {
+  color: #fca5a5;
+}
+
+.btn {
+  margin-left: auto;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.35rem;
+  border: 1px solid #475569;
+  background: #334155;
+  color: #f8fafc;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: #475569;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.35rem;
+  border: 1px solid #475569;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnSecondary:hover {
+  background: #334155;
+}
+
+.hint {
+  width: 100%;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.importBox {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.script {
+  width: 100%;
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 0.35rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.6875rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.35rem;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-family: inherit;
+  resize: vertical;
+}

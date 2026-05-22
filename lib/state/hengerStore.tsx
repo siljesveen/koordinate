@@ -42,11 +42,8 @@ function nyId(): string {
 
 export function HengerStoreProvider({ children }: { children: React.ReactNode }) {
   const { data: hengere, setData: setHengere } = useAppData<Henger[]>(STORAGE_KEY, {
-    getDefault: standardHengere,
-    parse: (raw) => {
-      const normalized = normalizeLoaded(raw);
-      return normalized.length > 0 ? normalized : standardHengere();
-    },
+    getDefault: () => [],
+    parse: (raw) => normalizeLoaded(raw),
   });
 
   const lagre = (item: Henger) => {

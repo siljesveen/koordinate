@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import type { Koblingsgruppe, MasterRuteSlot, MasterRuteplan, Skift } from "@/lib/domain";
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
 import { useAuth } from "@/lib/state/authStore";
+import { useAppDataReload } from "@/lib/state/appDataReload";
 import {
   RINGNES_CYCLE,
   type RingnesCycleData,
@@ -199,7 +200,9 @@ function ensureBamaAlleDager(plan: MasterRuteplan): MasterRuteplan {
 }
 
 export function MasterplanStoreProvider({ children }: { children: React.ReactNode }) {
-  const { dataReady, canEdit } = useAuth();
+  const { dataReady, canEdit, configured, profile } = useAuth();
+  const { reloadTick } = useAppDataReload();
+  const innlogget = configured && !!profile;
   const [masterplan, setMasterplan] = useState<MasterRuteplan>({ syklusLengde: 4, slots: [] });
   const loadedRef = useRef(false);
   /** Unngår at innlasting overskriver sky med tom/eldre masterplan (f.eks. uten koblingsgrupper). */
@@ -212,7 +215,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
 
     void (async () => {
       try {
-        const raw = await loadAppData(STORAGE_KEY);
+        const raw = await loadAppData(STORAGE_KEY, innlogget);
         if (cancelled) return;
 
         if (raw !== null && raw !== undefined) {
@@ -243,7 +246,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
     return () => {
       cancelled = true;
     };
-  }, [dataReady]);
+  }, [dataReady, reloadTick, innlogget]);
 
   useEffect(() => {
     if (!loadedRef.current || !dataReady || !brukerHarEndret.current) return;

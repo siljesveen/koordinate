@@ -5,6 +5,7 @@ import type { BilUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
 import { resolveBilPeriodeEtterMerkeTilbake } from "@/lib/kjoretoyTilgjengelighet";
 import { useAuth } from "@/lib/state/authStore";
+import { useAppDataReload } from "@/lib/state/appDataReload";
 import {
   abonnerBilUtilgjengelig,
   sendBilTilbakeMelding,
@@ -80,9 +81,9 @@ function normalizeLoaded(data: unknown): BilUtilgjengelig[] {
     .filter(Boolean) as BilUtilgjengelig[];
 }
 
-async function lesFraLagring(): Promise<BilUtilgjengelig[]> {
+async function lesFraLagring(innlogget = false): Promise<BilUtilgjengelig[]> {
   try {
-    const raw = await loadAppData(STORAGE_KEY);
+    const raw = await loadAppData(STORAGE_KEY, innlogget);
     if (raw === null || raw === undefined) return [];
     return normalizeLoaded(raw);
   } catch {
@@ -96,22 +97,25 @@ function nyId(): string {
 }
 
 export function BilUtilgjengeligStoreProvider({ children }: { children: React.ReactNode }) {
-  const { dataReady, canEdit } = useAuth();
+  const { dataReady, canEdit, configured, profile } = useAuth();
+  const { reloadTick } = useAppDataReload();
+  const innlogget = configured && !!profile;
   const [poster, setPoster] = useState<BilUtilgjengelig[]>([]);
   const loaded = useRef(false);
   const hopperOverLagring = useRef(false);
 
   const lastInnFraLagring = useCallback(() => {
-    void lesFraLagring().then(setPoster);
-  }, []);
+    void lesFraLagring(innlogget).then(setPoster);
+  }, [innlogget]);
 
   useEffect(() => {
     if (!dataReady) return;
-    void lesFraLagring().then((data) => {
+    hopperOverLagring.current = true;
+    void lesFraLagring(innlogget).then((data) => {
       setPoster(data);
       loaded.current = true;
     });
-  }, [dataReady]);
+  }, [dataReady, reloadTick, innlogget]);
 
   useEffect(() => {
     if (!loaded.current || !dataReady) return;
