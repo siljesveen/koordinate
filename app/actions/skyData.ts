@@ -131,9 +131,13 @@ export async function saveAppDataToSkyAction(
   return {};
 }
 
+/** @deprecated Bruk loadAppDataFromSkyAction i stedet. */
 export async function fetchAppDataRowAction(
   key: string,
 ): Promise<{ value: unknown | null; error?: string }> {
+  console.warn(
+    "[skyData] fetchAppDataRowAction er deprecated — bruk loadAppDataFromSkyAction",
+  );
   if (!isSupabaseConfigured()) {
     return { value: null };
   }
@@ -160,10 +164,14 @@ export async function fetchAppDataRowAction(
   return { value: data?.value ?? null };
 }
 
+/** @deprecated Bruk saveAppDataToSkyAction i stedet. */
 export async function upsertAppDataRowAction(
   key: string,
   value: unknown,
 ): Promise<{ error?: string }> {
+  console.warn(
+    "[skyData] upsertAppDataRowAction er deprecated — bruk saveAppDataToSkyAction",
+  );
   if (!isSupabaseConfigured()) {
     return {};
   }
@@ -348,4 +356,61 @@ export async function fetchAllAppDataFromSkyAction(): Promise<{
   }
 
   return { rows: data ?? [] };
+}
+
+export async function applyUke1MasterplanAction(): Promise<{
+  updated: number;
+  error?: string;
+}> {
+  if (!isSupabaseConfigured()) {
+    return { updated: 0, error: "Supabase er ikke konfigurert" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { updated: 0, error: "Ikke innlogget" };
+  }
+
+  const profile = await hentProfil(supabase, user.id, user.email ?? null);
+  if (!canEditData(profile.role)) {
+    return { updated: 0, error: "Mangler rettigheter (admin/planlegger)" };
+  }
+
+  const { applyUke1ToMasterplan } = await import("@/lib/imported/applyUke1Masterplan");
+  type Ansatt = import("@/lib/domain").Ansatt;
+
+  const [{ data: row, error: loadError }, { data: ansattRow, error: ansattError }] =
+    await Promise.all([
+      supabase.from("app_data").select("value").eq("key", "bemanning.masterplan.v1").maybeSingle(),
+      supabase.from("app_data").select("value").eq("key", "bemanning.ansatte.v2").maybeSingle(),
+    ]);
+
+  if (loadError) {
+    return { updated: 0, error: loadError.message };
+  }
+  if (ansattError) {
+    return { updated: 0, error: ansattError.message };
+  }
+
+  const ansattListe = Array.isArray(ansattRow?.value) ? (ansattRow.value as Ansatt[]) : [];
+  const ansattById = new Map(ansattListe.map((a) => [a.id, a]));
+
+  const { plan, updated } = applyUke1ToMasterplan(row?.value ?? null, ansattById);
+
+  const { error: saveError } = await supabase.from("app_data").upsert({
+    key: "bemanning.masterplan.v1",
+    value: plan,
+    updated_at: new Date().toISOString(),
+    updated_by: user.id,
+  });
+
+  if (saveError) {
+    return { updated: 0, error: saveError.message };
+  }
+
+  return { updated };
 }

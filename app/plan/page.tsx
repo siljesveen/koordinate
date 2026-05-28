@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type DragEvent, type ReactNode } from "react";
-import { ukedag1til7FraDato } from "@/lib/imported/ringnesCycle";
+import { syklusUkeFraDato, ukedag1til7FraDato } from "@/lib/imported/ringnesCycle";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import {
@@ -41,6 +41,7 @@ import {
 } from "@/lib/state/planRuteTildelingStore";
 import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import styles from "./page.module.css";
 
 const DRAG_MIME = "application/x-bemanning-plan-ansatt";
@@ -83,18 +84,8 @@ function overlapperDato(p: { fraDato: string; tilDato?: string }, dato: string):
   return dato <= p.tilDato;
 }
 
-/**
- * Beregner syklus-uke (1–4) fra en dato.
- * Ankerpunkt: 2026-05-11 (mandag) = start av syklus-uke 1.
- */
-function syklusUkeFraDato(d: Date): 1 | 2 | 3 | 4 {
-  const anker = new Date(2026, 4, 11); // 11. mai 2026, mandag, uke 1 start
-  const diff = Math.floor((d.getTime() - anker.getTime()) / (7 * 24 * 60 * 60 * 1000));
-  const mod = ((diff % 4) + 4) % 4; // alltid 0-3
-  return (mod + 1) as 1 | 2 | 3 | 4;
-}
-
 export default function PlanPage() {
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const [skift, setSkift] = useState<PlanSkift>("Dag");
   const [dato, setDato] = useState<string>(() => isoDato(new Date()));
 
@@ -237,12 +228,12 @@ export default function PlanPage() {
     return [];
   }
 
-  function opphevKoblingForDag(rutekode: string) {
+  async function opphevKoblingForDag(rutekode: string) {
     const info = finnKoblingForRute(rutekode);
     if (!info) return;
     const nøkkel = koblingLagringsNøkkel(info);
     const liste = info.rutekoder.join(", ");
-    const ok = window.confirm(
+    const ok = await requestBekreft(
       `Oppheve kobling mellom ${liste} for ${dato} (${skift})?\n\nRutene kan planlegges separat denne dagen. Masterplan endres ikke.`,
     );
     if (!ok) return;
@@ -257,12 +248,12 @@ export default function PlanPage() {
     });
   }
 
-  function gjenopprettKoblingForDag(rutekode: string) {
+  async function gjenopprettKoblingForDag(rutekode: string) {
     const info = finnKoblingForRute(rutekode);
     if (!info) return;
     const nøkkel = koblingLagringsNøkkel(info);
     const liste = info.rutekoder.join(", ");
-    const ok = window.confirm(
+    const ok = await requestBekreft(
       `Gjenopprette kobling mellom ${liste} for ${dato} (${skift})?\n\nSjåfør, bil og henger deles igjen mellom rutene.`,
     );
     if (!ok) return;
@@ -792,7 +783,7 @@ export default function PlanPage() {
     e.dataTransfer.dropEffect = "move";
   }
 
-  function handleDropPåRute(e: DragEvent, ruteKode: string) {
+  async function handleDropPåRute(e: DragEvent, ruteKode: string) {
     e.preventDefault();
     const raw = e.dataTransfer.getData(DRAG_MIME);
     if (!raw) return;
@@ -810,7 +801,7 @@ export default function PlanPage() {
     if (grunn) {
       const a = ansatte.find((x) => x.id === ansattId);
       const navn = a ? fullNavn(a) : ansattId;
-      const ok = window.confirm(
+      const ok = await requestBekreft(
         `${navn} er ikke tilgjengelig (${grunn}). Vil du sette inn likevel?`,
       );
       if (!ok) return;
@@ -1602,6 +1593,7 @@ export default function PlanPage() {
           </div>
         </aside>
       </div>
+      {bekreftDialog}
     </div>
   );
 }

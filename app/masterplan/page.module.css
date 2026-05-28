@@ -308,6 +308,7 @@
   border: 1px solid transparent;
   border-radius: 0.25rem;
   font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
   background: transparent;
 }
 

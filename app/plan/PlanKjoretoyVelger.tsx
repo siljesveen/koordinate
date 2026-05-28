@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fullNavn, type Ansatt } from "@/lib/domain";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import styles from "./page.module.css";
 
 export type PlanKjoretoyItem = {
@@ -63,6 +64,7 @@ export default function PlanKjoretoyVelger({
   søkTomTekst = "Ingen treff for søket",
   ariaLabel,
 }: PlanKjoretoyVelgerProps) {
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const [åpen, setÅpen] = useState(false);
   const [søk, setSøk] = useState("");
   const rotRef = useRef<HTMLDivElement>(null);
@@ -214,10 +216,10 @@ export default function PlanKjoretoyVelger({
     setSøk("");
   }
 
-  function velg(verdi: string, kjoretoyIdForBekreft?: string) {
+  async function velg(verdi: string, kjoretoyIdForBekreft?: string) {
     if (kjoretoyIdForBekreft && !erLedig(kjoretoyIdForBekreft, rute)) {
       const kj = byId.get(kjoretoyIdForBekreft)?.kjennemerke ?? kjoretoyIdForBekreft;
-      const ok = window.confirm(
+      const ok = await requestBekreft(
         `${kj} er ${statusEtikett(kjoretoyIdForBekreft).toLowerCase()}. Vil du tildele til rute ${rute} likevel?`,
       );
       if (!ok) return;
@@ -252,6 +254,7 @@ export default function PlanKjoretoyVelger({
 
   return (
     <div className={styles.kjoretoyCombo} ref={rotRef}>
+      {bekreftDialog}
       <button
         type="button"
         className={`${styles.kjoretoyComboTrigger} ${åpen ? styles.kjoretoyComboTriggerOpen : ""} ${visningFraMaster ? styles.kjoretoyComboTriggerMaster : ""} ${valgtViserVerksted ? styles.kjoretoyComboTriggerMasterWarn : ""}`}

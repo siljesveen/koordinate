@@ -53,3 +53,14 @@ export function ukedag1til7FraDato(d: Date): number {
   return js === 0 ? 7 : js;
 }
 
+/** Anker: 2026-05-11 (mandag) = start av syklus-uke 1. */
+const SYKLUS_ANKER = new Date(2026, 4, 11);
+
+export function syklusUkeFraDato(d: Date): 1 | 2 | 3 | 4 {
+  const diff = Math.floor(
+    (d.getTime() - SYKLUS_ANKER.getTime()) / (7 * 24 * 60 * 60 * 1000),
+  );
+  const mod = ((diff % 4) + 4) % 4;
+  return (mod + 1) as 1 | 2 | 3 | 4;
+}
+

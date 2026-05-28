@@ -14,6 +14,7 @@ import { useTurnus4UkerStore, type TurnusSkiftType } from "@/lib/state/turnus4uk
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import styles from "./page.module.css";
 
 const TURNUS_REKKEFØLGE: TurnusSkiftType[] = ["Ingen", "Dag", "Kveld", "Begge"];
@@ -217,6 +218,7 @@ function visFastHenger(id: string | undefined, h: Henger | undefined): ReactNode
 }
 
 export default function AnsattePage() {
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { fravær, slettForAnsatt: slettFraværForAnsatt } = useFraværStore();
   const { biler } = useBilStore();
@@ -383,7 +385,7 @@ export default function AnsattePage() {
     );
   }
 
-  function lagre(e: React.FormEvent) {
+  async function lagre(e: React.FormEvent) {
     e.preventDefault();
 
     const nyFornavn = skjema.fornavn.trim();
@@ -402,19 +404,19 @@ export default function AnsattePage() {
         : undefined;
 
       if (navnTreff && tlfTreff && navnTreff.id === tlfTreff.id) {
-        const ok = window.confirm(
+        const ok = await requestBekreft(
           `Det finnes allerede en ansatt med samme navn og telefonnummer: «${fullNavn(navnTreff)}» (${nyttTlf}). Vil du opprette en ny profil likevel?`,
         );
         if (!ok) return;
       } else {
         if (navnTreff) {
-          const ok = window.confirm(
+          const ok = await requestBekreft(
             `Det finnes allerede en ansatt med navnet «${fullNavn(navnTreff)}». Vil du opprette en ny profil likevel?`,
           );
           if (!ok) return;
         }
         if (tlfTreff) {
-          const ok = window.confirm(
+          const ok = await requestBekreft(
             `Telefonnummeret ${nyttTlf} er allerede registrert på «${fullNavn(tlfTreff)}». Vil du opprette en ny profil likevel?`,
           );
           if (!ok) return;
@@ -923,14 +925,17 @@ export default function AnsattePage() {
               <button
                 type="button"
                 className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
-                onClick={() => {
-                  if (window.confirm(`Er du sikker på at du vil slette oppføringen for ${fullNavn(visAnsatt)}? Fravær og tildelinger knyttet til denne personen fjernes også.`)) {
-                    const id = visAnsatt.id;
-                    setAnsatte((prev) => prev.filter((a) => a.id !== id));
-                    slettFraværForAnsatt(id);
-                    fjernTildelingRef("ansattId", id);
-                    lukkVisning();
-                  }
+                onClick={async () => {
+                  const ok = await requestBekreft(
+                    `Er du sikker på at du vil slette oppføringen for ${fullNavn(visAnsatt)}? Fravær og tildelinger knyttet til denne personen fjernes også.`,
+                    { bekreftTekst: "Slett" },
+                  );
+                  if (!ok) return;
+                  const id = visAnsatt.id;
+                  setAnsatte((prev) => prev.filter((a) => a.id !== id));
+                  slettFraværForAnsatt(id);
+                  fjernTildelingRef("ansattId", id);
+                  lukkVisning();
                 }}
               >
                 Slett
@@ -946,6 +951,7 @@ export default function AnsattePage() {
           </div>
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

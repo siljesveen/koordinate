@@ -1,34 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { mergeUke1MasterplanPatch, UKE1_MASTERPLAN_PATCH } from "@/lib/imported/applyUke1Masterplan";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
+import { useAuth } from "@/lib/state/authStore";
 import SokbarVelger from "@/components/SokbarVelger";
+import TidInput24 from "@/components/TidInput24";
 import { fullNavn, type Ansatt, type MasterRuteSlot, type Skift } from "@/lib/domain";
+import { slotMedSjåførOgKjoretoy } from "@/lib/utils/masterplanKjoretoy";
 import { compareNb } from "@/lib/utils/sort";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import styles from "./page.module.css";
-
-function slotMedSjåførOgKjoretoy(
-  slot: MasterRuteSlot,
-  ansattId: string | undefined,
-  ansattById: Map<string, Ansatt>,
-): MasterRuteSlot {
-  if (!ansattId) {
-    return { ...slot, standardSjåførAnsattId: undefined };
-  }
-  const ansatt = ansattById.get(ansattId);
-  return {
-    ...slot,
-    standardSjåførAnsattId: ansattId,
-    standardBilId: ansatt?.fastBilId,
-    standardHengerId: ansatt?.fastHengerId,
-  };
-}
 
 function sjåførFraMasterSlots(
   slots: MasterRuteSlot[],
@@ -62,10 +49,11 @@ function nySlotId(): string {
 }
 
 export default function MasterplanPage() {
-  const { masterplan, lagreSlot, slettSlot, koblRuter, fjernKobling } = useMasterplanStore();
+  const { masterplan, lagreSlot, slettSlot, lagreHel, koblRuter, fjernKobling } = useMasterplanStore();
   const { ansatte } = useAnsattStore();
   const { biler } = useBilStore();
   const { hengere } = useHengerStore();
+  const { canEdit } = useAuth();
 
   const [filterUke, setFilterUke] = useState<1 | 2 | 3 | 4>(1);
   const [filterDag, setFilterDag] = useState<number>(0); // 0 = alle
@@ -82,6 +70,8 @@ export default function MasterplanPage() {
   const [nyRuteNavn, setNyRuteNavn] = useState("");
   const [nyRuteDag, setNyRuteDag] = useState<number>(0);
   const [nyRuteSkift, setNyRuteSkift] = useState<Skift | "">("Dag");
+  const [uke1ImportMsg, setUke1ImportMsg] = useState<string | null>(null);
+  const [uke1Importerer, setUke1Importerer] = useState(false);
 
   const aktiveAnsatte = useMemo(() => ansatte.filter((a) => a.aktiv), [ansatte]);
   const ansattById = useMemo(
@@ -275,6 +265,27 @@ export default function MasterplanPage() {
     }
   }
 
+  async function leggInnUke1FraPlan() {
+    if (
+      !window.confirm(
+        "Legge inn uke 1 fra Ringnes-planen? Sjåfør og starttid oppdateres for alle uke 1-ruter. Koblingsgrupper og uke 2–4 påvirkes ikke.",
+      )
+    ) {
+      return;
+    }
+    setUke1Importerer(true);
+    setUke1ImportMsg(null);
+    try {
+      const { plan, updated } = mergeUke1MasterplanPatch(masterplan, ansattById);
+      lagreHel(plan);
+      const patchVersjon = String(UKE1_MASTERPLAN_PATCH.meta?.generert ?? "1");
+      window.localStorage.setItem("bemanning.uke1ImportApplied.v2", patchVersjon);
+      setUke1ImportMsg(`Uke 1 oppdatert — ${updated} ruter lagt inn. Lagrer til sky…`);
+    } finally {
+      setUke1Importerer(false);
+    }
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -440,7 +451,18 @@ export default function MasterplanPage() {
           aria-label="Søk i ruter"
         />
         <span className={styles.slotCount}>{filtrertSlots.length} ruter</span>
+        {canEdit && filterUke === 1 && (
+          <button
+            type="button"
+            className={styles.submitBtn}
+            onClick={() => void leggInnUke1FraPlan()}
+            disabled={uke1Importerer}
+          >
+            {uke1Importerer ? "Legger inn uke 1…" : "Legg inn uke 1 fra plan"}
+          </button>
+        )}
       </div>
+      {uke1ImportMsg && <p className={styles.hint}>{uke1ImportMsg}</p>}
 
       {/* Legg til-knapp */}
       <div className={styles.addRow}>
@@ -588,19 +610,19 @@ export default function MasterplanPage() {
                   />
                 </td>
                 <td>
-                  <input
+                  <TidInput24
                     className={styles.cellInputTime}
-                    type="time"
-                    value={slot.startTid ?? ""}
-                    onChange={(e) => oppdaterSlot(slot, { startTid: e.target.value || undefined })}
+                    value={slot.startTid}
+                    onChange={(startTid) => oppdaterSlot(slot, { startTid })}
+                    ariaLabel={`Starttid, rute ${slot.rutekode}`}
                   />
                 </td>
                 <td>
-                  <input
+                  <TidInput24
                     className={styles.cellInputTime}
-                    type="time"
-                    value={slot.sluttTid ?? ""}
-                    onChange={(e) => oppdaterSlot(slot, { sluttTid: e.target.value || undefined })}
+                    value={slot.sluttTid}
+                    onChange={(sluttTid) => oppdaterSlot(slot, { sluttTid })}
+                    ariaLabel={`Slutttid, rute ${slot.rutekode}`}
                   />
                 </td>
                 <td>

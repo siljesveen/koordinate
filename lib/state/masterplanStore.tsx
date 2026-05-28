@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { Koblingsgruppe, MasterRuteSlot, MasterRuteplan, Skift } from "@/lib/domain";
+import type { Koblingsgruppe, MasterRuteSlot, MasterRuteplan, Skift, Ansatt } from "@/lib/domain";
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
+import { mergeUke1MasterplanPatch, UKE1_MASTERPLAN_PATCH } from "@/lib/imported/applyUke1Masterplan";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import {
@@ -12,6 +13,7 @@ import {
 import { ALIAS_MAP_KEY, BASELINE_KEY, type AliasMap, safeJsonParse } from "./baselineStore";
 
 const STORAGE_KEY = "bemanning.masterplan.v1";
+const UKE1_IMPORT_KEY = "bemanning.uke1ImportApplied.v2";
 
 export function masterSlotId(
   uke: number,
@@ -199,6 +201,19 @@ function ensureBamaAlleDager(plan: MasterRuteplan): MasterRuteplan {
   return { ...plan, slots: nyeSlots };
 }
 
+function ansattMapFraLocalStorage(): Map<string, Ansatt> {
+  if (typeof window === "undefined") return new Map();
+  try {
+    const raw = window.localStorage.getItem("bemanning.ansatte.v2");
+    if (!raw) return new Map();
+    const liste = JSON.parse(raw) as Ansatt[];
+    if (!Array.isArray(liste)) return new Map();
+    return new Map(liste.map((a) => [a.id, a]));
+  } catch {
+    return new Map();
+  }
+}
+
 export function MasterplanStoreProvider({ children }: { children: React.ReactNode }) {
   const { dataReady, canEdit, configured, profile } = useAuth();
   const { reloadTick } = useAppDataReload();
@@ -247,6 +262,28 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
       cancelled = true;
     };
   }, [dataReady, reloadTick, innlogget]);
+
+  /** Engangsimport av uke 1 fra patch (per patch-generert tidspunkt). */
+  useEffect(() => {
+    if (!dataReady || !canEdit || !loadedRef.current || !innlogget) return;
+    if (masterplan.slots.length === 0) return;
+
+    const patchVersjon = String(UKE1_MASTERPLAN_PATCH.meta?.generert ?? "");
+    if (!patchVersjon) return;
+    if (window.localStorage.getItem(UKE1_IMPORT_KEY) === patchVersjon) return;
+
+    const ansattMap = ansattMapFraLocalStorage();
+    if (ansattMap.size === 0) return;
+
+    const { plan, updated } = mergeUke1MasterplanPatch(masterplan, ansattMap);
+    window.localStorage.setItem(UKE1_IMPORT_KEY, patchVersjon);
+
+    if (updated === 0) return;
+
+    brukerHarEndret.current = true;
+    setMasterplan(plan);
+    console.info(`[masterplan] Uke 1 lagt inn — ${updated} ruter oppdatert.`);
+  }, [dataReady, canEdit, innlogget, masterplan, reloadTick]);
 
   useEffect(() => {
     if (!loadedRef.current || !dataReady || !brukerHarEndret.current) return;
