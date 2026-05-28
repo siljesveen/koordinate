@@ -1,0 +1,2238 @@
+{
+  "meta": {
+    "generert": "2026-05-28T15:31:28.548Z",
+    "kilde": "C:\\Users\\sisvee7\\Downloads\\Uke 3 fra 19.2.26 Ringnes.xlsx",
+    "uke": 3,
+    "antallOppdateringer": 318,
+    "medSjåfør": 255,
+    "utenSjåfør": 63
+  },
+  "uke": 3,
+  "slotUpdates": [
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1550",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hilafu-mentay"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1156",
+      "startTid": "06:00",
+      "standardSjåførAnsattId": "a-thomas-yen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1112",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1128-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1128-2",
+      "startTid": "11:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1127-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1127-2",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1110-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-vebj-rn-sveum"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1110-2",
+      "startTid": "08:30",
+      "standardSjåførAnsattId": "a-vebj-rn-sveum"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1120",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ottar-luvasen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1122",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1123",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-morgan-johansen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1130",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ferad-mehmed-rufad"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1131",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-j-rn-erik-sanaker"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1132",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-stian-otnes"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1133",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-rune-berntsen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1135",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mateus-rogstad"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1136",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-morten-steinbakken"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1137",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-arne-johnsen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1139",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-madelen-asen-slaen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1150",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-cato-nilsen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1151",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andre-stli"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1160",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-arturs-dambrovskis"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1161",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-olav-lundstad"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1163",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-anstein-skj-nsberg"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1168-1",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1168-2",
+      "startTid": "11:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1172",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-perti-portimo"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1171",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-yvind-hagen"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1228-1",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-morten-bakken"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1227-1",
+      "startTid": "14:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1227-2",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1227-3",
+      "startTid": "20:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1231",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-andrius-rukas"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1232",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-hilafu-mentay"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1233",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-roger-skogheim"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1235",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-iver-tr-nnes"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1236",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-thorbj-rn-kjernaas"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1237",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-pal-westerhaug"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1239",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-gjermund-petrud"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1250",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-jurij-ciuikov"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1251",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-per-ola-ake-lundgren"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1253",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-tommy-iversen"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1254",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-tore-furuli"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1255",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-roger-moseng"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1256",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-stein-arve-lunde"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1257",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-audun-esbj-rnsen"
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1272",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-trond-hagen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1550",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hilafu-mentay"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1520",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2172",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-yvind-hagen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2173",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-amund-nygaard-andersen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2180",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-rune-berntsen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2127-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2127-2",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2128-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2128-2",
+      "startTid": "11:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2111",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-erik-solbakken"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2120",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mats-astr-m"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2121",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-arne-johnsen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2123",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-anstein-skj-nsberg"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2130",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-stian-otnes"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2136",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-thomas-yen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2137",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-morten-steinbakken"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2150",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-cato-nilsen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2151",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-vebj-rn-sveum"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2153",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andrejs-seleznovs"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2158",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-arturs-dambrovskis"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2159",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-morgan-johansen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2160",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-olav-lundstad"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2161",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-perti-portimo"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2163",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-madelen-asen-slaen"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2164",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mateus-rogstad"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2168-1",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2168-2",
+      "startTid": "11:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2228-1",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-jack-petersen"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2227-1",
+      "startTid": "14:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2227-2",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2227-3",
+      "startTid": "20:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2230",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-tommy-iversen"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2231",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-audun-esbj-rnsen"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2233",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-iver-tr-nnes"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2234",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2235",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-pal-westerhaug"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2236",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-s-rbye-ronny"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2237",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-gjermund-petrud"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2251",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-morten-bakken"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2252",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-roger-skogheim"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2253",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-r-stum-arnt-georg"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2254",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-jurij-ciuikov"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2255",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-roger-moseng"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2256",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-tore-furuli"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2270",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-stein-arve-lunde"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2271",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-trond-hagen"
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2780",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-frode-degardstuen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1550",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-reza-sakhicade"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1520",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3136",
+      "startTid": "06:00",
+      "standardSjåførAnsattId": "a-ferad-mehmed-rufad"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3172",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andre-stli"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3127-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3127-2",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3128-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3112",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3128-2",
+      "startTid": "11:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3110",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-arturs-dambrovskis"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3120",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ottar-luvasen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3121",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-madelen-asen-slaen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3130",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-vebj-rn-sveum"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3131",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-arne-johnsen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3135",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-morten-steinbakken"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3134",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-olav-lundstad"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3137",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-amund-nygaard-andersen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3133",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-perti-portimo"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3139",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-cato-nilsen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3140",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-stian-otnes"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3146",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-mats-astr-m"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3147",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-rune-berntsen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3150",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-morgan-johansen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3151",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-yvind-hagen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3160",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andrejs-seleznovs"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3162",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mateus-rogstad"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3163",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-anstein-skj-nsberg"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3166",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-thomas-yen"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3168-1",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3168-2",
+      "startTid": "11:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3228-1",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-jack-petersen"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3227-1",
+      "startTid": "14:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3227-2",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3227-3",
+      "startTid": "20:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3233",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-tommy-iversen"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3230",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-per-ola-ake-lundgren"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3231",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-audun-esbj-rnsen"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3232",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-tore-furuli"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3236",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-pal-westerhaug"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3240",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-thorbj-rn-kjernaas"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3241",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-trond-hagen"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3251",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-andrius-rukas"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3252",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3250",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-roger-skogheim"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3254",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-r-stum-arnt-georg"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3255",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-gjermund-petrud"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3272",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-morten-bakken"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3270",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-iver-tr-nnes"
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3271",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-stein-arve-lunde"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1550",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hilafu-mentay"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1520",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4127-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4127-2",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4128-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4112",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4128-2",
+      "startTid": "11:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4111",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-arne-johnsen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4120",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mateus-rogstad"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4123",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-roger-moseng"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4124",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ottar-luvasen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4125",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ferad-mehmed-rufad"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4130",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-cato-nilsen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4131",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-madelen-asen-slaen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4141",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-rune-berntsen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4142",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-amund-nygaard-andersen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4143",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andre-stli"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4157",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-thomas-yen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4158",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-yvind-hagen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4159",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-morgan-johansen"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4167",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mats-astr-m"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4160",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andrejs-seleznovs"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4161",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-vebj-rn-sveum"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4162",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-anstein-skj-nsberg"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4163",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-j-rn-erik-sanaker"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4164",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-arturs-dambrovskis"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4168-1",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4168-2",
+      "startTid": "11:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4228-1",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-jack-petersen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4227-1",
+      "startTid": "14:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4227-2",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4227-3",
+      "startTid": "20:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4230",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-pal-westerhaug"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4231",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-thorbj-rn-kjernaas"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4232",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-iver-tr-nnes"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4233",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-john-olav-lundstad"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4235",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-gjermund-petrud"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4236",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-r-stum-arnt-georg"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4250",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-roger-skogheim"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4251",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-stein-arve-lunde"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4253",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-per-ola-ake-lundgren"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4254",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-jurij-ciuikov"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4255",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-audun-esbj-rnsen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4256",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-tommy-iversen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4257",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-andrius-rukas"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4270",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-morten-bakken"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4272",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-trond-hagen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4780",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-frode-degardstuen"
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4782",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-tore-furuli"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1550",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hilafu-mentay"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1520",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5172",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-john-arne-johnsen"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5173",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-arturs-dambrovskis"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5175",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-anstein-skj-nsberg"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5176",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andre-stli"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5127-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5127-2",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-ivan-djordjevic"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5128-1",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5112",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-hakon-amb"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5128-2",
+      "startTid": "11:00",
+      "standardSjåførAnsattId": "a-christian-elvestad"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5134",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-stian-otnes"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5140",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-morten-steinbakken"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5120",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ottar-luvasen"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5121",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-erik-solbakken"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5131",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mats-astr-m"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5132",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-amund-nygaard-andersen"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5133",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-roger-moseng"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5135",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-perti-portimo"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5137",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-j-rn-erik-sanaker"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5138",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-rune-berntsen"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5151",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ferad-mehmed-rufad"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5155",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-yvind-hagen"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5160",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mateus-rogstad"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5161",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-vebj-rn-sveum"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5163",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-ivan-morgan-johansen"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5164",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-madelen-asen-slaen"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5168-1",
+      "startTid": "06:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5168-2",
+      "startTid": "11:30",
+      "standardSjåførAnsattId": "a-cien-van-cao"
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5174",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-andrejs-seleznovs"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5252",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-roger-skogheim"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5250",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-per-ola-ake-lundgren"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5255",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-audun-esbj-rnsen"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5256",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-jurij-ciuikov"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5257",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5270",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-r-stum-arnt-georg"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5227-1",
+      "startTid": "14:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5227-2",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5227-3",
+      "startTid": "20:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5225",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-thorbj-rn-kjernaas"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5223",
+      "startTid": "16:00",
+      "standardSjåførAnsattId": "a-andrius-rukas"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5224",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-iver-tr-nnes"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5237",
+      "startTid": "13:00",
+      "standardSjåførAnsattId": "a-trond-hagen"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5222",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-gjermund-petrud"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5260",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-pal-westerhaug"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5261",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-morten-bakken"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5262",
+      "startTid": "18:00",
+      "standardSjåførAnsattId": "a-tommy-iversen"
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5228-1",
+      "startTid": "17:00",
+      "standardSjåførAnsattId": "a-jack-petersen"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6110-1",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-r-stum-arnt-georg"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6110-2",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-r-stum-arnt-georg"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6120",
+      "startTid": "06:00",
+      "standardSjåførAnsattId": "a-frode-degardstuen"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6130",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-pal-westerhaug"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6121-11",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-hilafu-mentay"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6131",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-per-ola-ake-lundgren"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6152-12",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-hilafu-mentay"
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7780",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-frode-degardstuen"
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7780",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-frode-degardstuen"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1520",
+      "startTid": "09:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1121",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1134",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1138",
+      "startTid": "06:30",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1153",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1166",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1252",
+      "startTid": "16:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1271",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1770",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1771",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 1,
+      "skift": "Kveld",
+      "rutekode": "1774",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2112",
+      "startTid": "06:30",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2140",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2154",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2162",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Dag",
+      "rutekode": "2166",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2232",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2257",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2272",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2781",
+      "startTid": "14:30",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2770",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 2,
+      "skift": "Kveld",
+      "rutekode": "2771",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3132",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3138",
+      "startTid": "06:30",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Dag",
+      "rutekode": "3173",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3253",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3256",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3780",
+      "startTid": "14:30",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3770",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3771",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3772",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 3,
+      "skift": "Kveld",
+      "rutekode": "3773",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4122",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4135",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4150",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Dag",
+      "rutekode": "4166",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4234",
+      "startTid": "16:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4252",
+      "startTid": "16:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4271",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4781",
+      "startTid": "14:30",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4770",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4771",
+      "startTid": "17:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 4,
+      "skift": "Kveld",
+      "rutekode": "4778",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5130",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5136",
+      "startTid": "06:30",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5150",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5153",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Dag",
+      "rutekode": "5166",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5251",
+      "startTid": "16:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5271",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 5,
+      "skift": "Kveld",
+      "rutekode": "5226",
+      "startTid": "16:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6138",
+      "startTid": "06:02",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6150",
+      "startTid": "10:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6151",
+      "startTid": "10:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
+      "rutekode": "6160",
+      "startTid": "07:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7770",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7771",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7772",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7781",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7770",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7771",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7772",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7781",
+      "startTid": "15:00",
+      "clearSjåfør": true
+    }
+  ]
+}

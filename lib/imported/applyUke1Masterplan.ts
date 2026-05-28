@@ -1,13 +1,20 @@
 /** Bakoverkompatibilitet — se applyUkeMasterplan.ts */
 export {
   applyUke1ToMasterplan,
+  applyUke2ToMasterplan,
+  applyUke3ToMasterplan,
   mergeUke1MasterplanPatch,
   mergeUke2MasterplanPatch,
+  mergeUke3MasterplanPatch,
   mergeUkeMasterplanPatch,
+  mergeUkeMasterplanPatchForUke,
   normalizeMasterplan,
   UKE1_MASTERPLAN_PATCH,
   UKE2_MASTERPLAN_PATCH,
+  UKE3_MASTERPLAN_PATCH,
+  UKE_MASTERPLAN_PATCHES,
   type Uke1SlotPatch,
   type UkeMasterplanPatch,
+  type UkeNummer,
   type UkeSlotPatch,
 } from "./applyUkeMasterplan";

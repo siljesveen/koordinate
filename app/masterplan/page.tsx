@@ -2,10 +2,9 @@
 
 import { useMemo, useState } from "react";
 import {
-  mergeUke1MasterplanPatch,
-  mergeUke2MasterplanPatch,
-  UKE1_MASTERPLAN_PATCH,
-  UKE2_MASTERPLAN_PATCH,
+  mergeUkeMasterplanPatchForUke,
+  UKE_MASTERPLAN_PATCHES,
+  type UkeNummer,
 } from "@/lib/imported/applyUkeMasterplan";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
@@ -285,12 +284,16 @@ export default function MasterplanPage() {
     }
   }
 
-  async function leggInnUkeFraPlan(uke: 1 | 2) {
-    const andreUker =
-      uke === 1 ? "Koblingsgrupper og uke 2–4 påvirkes ikke." : "Koblingsgrupper og uke 1, 3–4 påvirkes ikke.";
+  const UKE_IMPORT_KEYS: Record<UkeNummer, string> = {
+    1: "bemanning.uke1ImportApplied.v2",
+    2: "bemanning.uke2ImportApplied.v1",
+    3: "bemanning.uke3ImportApplied.v1",
+  };
+
+  async function leggInnUkeFraPlan(uke: UkeNummer) {
     if (
       !window.confirm(
-        `Legge inn uke ${uke} fra Ringnes-planen? Sjåfør og starttid oppdateres for alle uke ${uke}-ruter. ${andreUker}`,
+        `Legge inn uke ${uke} fra Ringnes-planen? Sjåfør og starttid oppdateres for alle uke ${uke}-ruter. Andre uker og koblingsgrupper påvirkes ikke.`,
       )
     ) {
       return;
@@ -298,14 +301,11 @@ export default function MasterplanPage() {
     setUkeImporterer(uke);
     setUkeImportMsg(null);
     try {
-      const merge = uke === 1 ? mergeUke1MasterplanPatch : mergeUke2MasterplanPatch;
-      const patch = uke === 1 ? UKE1_MASTERPLAN_PATCH : UKE2_MASTERPLAN_PATCH;
-      const importKey =
-        uke === 1 ? "bemanning.uke1ImportApplied.v2" : "bemanning.uke2ImportApplied.v1";
-      const { plan, updated } = merge(masterplan, ansattById);
+      const patch = UKE_MASTERPLAN_PATCHES[uke];
+      const { plan, updated } = mergeUkeMasterplanPatchForUke(masterplan, uke, ansattById);
       lagreHel(plan);
       const patchVersjon = String(patch.meta?.generert ?? "1");
-      window.localStorage.setItem(importKey, patchVersjon);
+      window.localStorage.setItem(UKE_IMPORT_KEYS[uke], patchVersjon);
       setUkeImportMsg(`Uke ${uke} oppdatert — ${updated} ruter lagt inn. Lagrer til sky…`);
     } finally {
       setUkeImporterer(null);
@@ -477,24 +477,16 @@ export default function MasterplanPage() {
           aria-label="Søk i ruter"
         />
         <span className={styles.slotCount}>{filtrertSlots.length} ruter</span>
-        {canEdit && filterUke === 1 && (
+        {canEdit && (filterUke === 1 || filterUke === 2 || filterUke === 3) && (
           <button
             type="button"
             className={styles.submitBtn}
-            onClick={() => void leggInnUkeFraPlan(1)}
+            onClick={() => void leggInnUkeFraPlan(filterUke as UkeNummer)}
             disabled={ukeImporterer !== null}
           >
-            {ukeImporterer === 1 ? "Legger inn uke 1…" : "Legg inn uke 1 fra plan"}
-          </button>
-        )}
-        {canEdit && filterUke === 2 && (
-          <button
-            type="button"
-            className={styles.submitBtn}
-            onClick={() => void leggInnUkeFraPlan(2)}
-            disabled={ukeImporterer !== null}
-          >
-            {ukeImporterer === 2 ? "Legger inn uke 2…" : "Legg inn uke 2 fra plan"}
+            {ukeImporterer === filterUke
+              ? `Legger inn uke ${filterUke}…`
+              : `Legg inn uke ${filterUke} fra plan`}
           </button>
         )}
       </div>

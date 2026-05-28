@@ -2,16 +2,17 @@
  * Dev/CI: legg inn uke-patch med service role.
  * POST /api/dev/apply-uke?uke=2
  */
-import { applyUkeToMasterplan, UKE1_MASTERPLAN_PATCH, UKE2_MASTERPLAN_PATCH } from "@/lib/imported/applyUkeMasterplan";
+import { applyUkeToMasterplan, UKE_MASTERPLAN_PATCHES, type UkeNummer } from "@/lib/imported/applyUkeMasterplan";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 const MASTERPLAN_KEY = "bemanning.masterplan.v1";
 
-const PATCHES = {
-  1: UKE1_MASTERPLAN_PATCH,
-  2: UKE2_MASTERPLAN_PATCH,
-} as const;
+const PATCHES: Partial<Record<UkeNummer, (typeof UKE_MASTERPLAN_PATCHES)[UkeNummer]>> = {
+  1: UKE_MASTERPLAN_PATCHES[1],
+  2: UKE_MASTERPLAN_PATCHES[2],
+  3: UKE_MASTERPLAN_PATCHES[3],
+};
 
 export async function POST(request: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,10 +26,10 @@ export async function POST(request: Request) {
   }
 
   const ukeParam = new URL(request.url).searchParams.get("uke");
-  const uke = Number(ukeParam ?? 1) as 1 | 2;
+  const uke = Number(ukeParam ?? 1) as UkeNummer;
   const patch = PATCHES[uke];
   if (!patch) {
-    return NextResponse.json({ error: "Uke må være 1 eller 2" }, { status: 400 });
+    return NextResponse.json({ error: "Uke må være 1, 2 eller 3" }, { status: 400 });
   }
 
   const supabase = createClient(url, serviceKey, {

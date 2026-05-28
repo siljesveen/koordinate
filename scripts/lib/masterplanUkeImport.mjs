@@ -29,6 +29,7 @@ export const BEKREFTET_ALIAS = {
   josse: "a-john-arne-johnsen",
   rufad: "a-ferad-mehmed-rufad",
   bakshi: "a-mohammad-bakhshi",
+  baksi: "a-mohammad-bakhshi",
   oivind: "a-yvind-hagen",
   oyvind: "a-yvind-hagen",
   arturs: "a-arturs-dambrovskis",

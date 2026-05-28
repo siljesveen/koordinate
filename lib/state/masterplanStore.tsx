@@ -3,7 +3,11 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Koblingsgruppe, MasterRuteSlot, MasterRuteplan, Skift, Ansatt } from "@/lib/domain";
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
-import { mergeUkeMasterplanPatch, UKE1_MASTERPLAN_PATCH, UKE2_MASTERPLAN_PATCH } from "@/lib/imported/applyUkeMasterplan";
+import {
+  mergeUkeMasterplanPatch,
+  UKE_MASTERPLAN_PATCHES,
+  type UkeNummer,
+} from "@/lib/imported/applyUkeMasterplan";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import {
@@ -15,11 +19,18 @@ import { ALIAS_MAP_KEY, BASELINE_KEY, type AliasMap, safeJsonParse } from "./bas
 const STORAGE_KEY = "bemanning.masterplan.v1";
 const UKE1_IMPORT_KEY = "bemanning.uke1ImportApplied.v2";
 const UKE2_IMPORT_KEY = "bemanning.uke2ImportApplied.v1";
+const UKE3_IMPORT_KEY = "bemanning.uke3ImportApplied.v1";
 
-const UKE_AUTO_IMPORTS = [
-  { patch: UKE1_MASTERPLAN_PATCH, key: UKE1_IMPORT_KEY },
-  { patch: UKE2_MASTERPLAN_PATCH, key: UKE2_IMPORT_KEY },
-] as const;
+const UKE_IMPORT_KEYS: Record<UkeNummer, string> = {
+  1: UKE1_IMPORT_KEY,
+  2: UKE2_IMPORT_KEY,
+  3: UKE3_IMPORT_KEY,
+};
+
+const UKE_AUTO_IMPORTS = ([1, 2, 3] as const).map((uke) => ({
+  patch: UKE_MASTERPLAN_PATCHES[uke],
+  key: UKE_IMPORT_KEYS[uke],
+}));
 
 export function masterSlotId(
   uke: number,
