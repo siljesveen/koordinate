@@ -7,6 +7,8 @@ export const BEKREFTET_ALIAS: Record<string, string> = {
   bakshi: "a-mohammad-bakhshi",
   baksi: "a-mohammad-bakhshi",
   m3: "a-mohammad-bakhshi",
+  "christian e": "a-christian-elvestad",
+  christian: "a-christian-elvestad",
   oivind: "a-yvind-hagen",
   oyvind: "a-yvind-hagen",
   arturs: "a-arturs-dambrovskis",
@@ -24,7 +26,8 @@ export const BEKREFTET_ALIAS: Record<string, string> = {
   "frode o": "a-frode-degardstuen",
   "frode ø": "a-frode-degardstuen",
   "morten b": "a-morten-bakken",
-  "morten s": "a-morten-steinsholt",
+  "morten s": "a-morten-steinbakken",
+  morten: "a-morten-steinbakken",
   "trond h": "a-trond-hagen",
   "rune b": "a-rune-berntsen",
   "rune be": "a-rune-berntsen",
@@ -169,6 +172,7 @@ export function matchPlanNavnTilAnsatt(planNavn: string, ansatte: Ansatt[]): Pla
     if (pdfFn === "rufad") return a.id === "a-ferad-mehmed-rufad";
     if (pdfFn === "bakshi") return a.id === "a-mohammad-bakhshi";
     if (pdfFn === "oivind") return a.id === "a-yvind-hagen";
+    if (pdfFn === "christian") return a.id === "a-christian-elvestad";
 
     return false;
   });

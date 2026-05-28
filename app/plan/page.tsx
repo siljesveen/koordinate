@@ -40,9 +40,14 @@ import {
   usePlanRuteTildelingStore,
 } from "@/lib/state/planRuteTildelingStore";
 import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
+import DagsFraværOversiktModal from "./DagsFraværOversiktModal";
 import PlanSjåførVelger, { type PlanSjåførVelg } from "./PlanSjåførVelger";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
+import {
+  byggDagsFraværOversikt,
+  dagsFraværOversiktTotalt,
+} from "@/lib/plan/dagsFraværOversikt";
 import {
   finnSjåførRuterPåDag,
   mergeAvspaseringForPlanDag,
@@ -118,6 +123,7 @@ export default function PlanPage() {
   const [draOverAvspasering, setDraOverAvspasering] = useState(false);
   const [visAvspasering, setVisAvspasering] = useState(false);
   const [visFravær, setVisFravær] = useState(false);
+  const [visDagsoversikt, setVisDagsoversikt] = useState(false);
 
   const dayNo = useMemo(() => ukedag1til7FraDato(parseISODateInput(dato)), [dato]);
 
@@ -1254,6 +1260,27 @@ export default function PlanPage() {
     [fravær, dato],
   );
 
+  const dagsoversikt = useMemo(
+    () =>
+      byggDagsFraværOversikt({
+        dato,
+        uke,
+        dag: dayNo,
+        ansatte,
+        fravær,
+        bilUtilgjengelig,
+        hengerUtilgjengelig,
+        biler,
+        hengere,
+      }),
+    [dato, uke, dayNo, ansatte, fravær, bilUtilgjengelig, hengerUtilgjengelig, biler, hengere],
+  );
+
+  const dagsoversiktTotalt = useMemo(
+    () => dagsFraværOversiktTotalt(dagsoversikt),
+    [dagsoversikt],
+  );
+
   const sammendrag = useMemo(() => {
     let ok = 0;
     let rød = 0;
@@ -1408,6 +1435,14 @@ export default function PlanPage() {
         )}
         <span>{tilgjengeligeAnsatte.length} tilgjengelige</span>
         <span>{fraværPåDato.length} fraværende</span>
+        <button
+          type="button"
+          className={styles.summaryDagsoversikt}
+          onClick={() => setVisDagsoversikt(true)}
+          title="Fravær, avspasering og kjøretøy ute for valgt dag"
+        >
+          Dagsoversikt{dagsoversiktTotalt > 0 ? ` · ${dagsoversiktTotalt}` : ""}
+        </button>
       </div>
 
       {/* ── Hovedområde ── */}
@@ -1788,15 +1823,10 @@ export default function PlanPage() {
               {visAvspasering && avspasering.entries.length > 0 && (
                 <div id="plan-avspasering-liste" className={styles.avspaseringList}>
                   {avspasering.entries.map((e) => (
-                    <div key={`${e.kilde}-${e.ansattId}`} className={styles.avspaseringRow}>
+                    <div key={e.entryId} className={styles.avspaseringRow}>
                       <span className={styles.avspaseringNavn}>{e.visningsnavn}</span>
                     </div>
                   ))}
-                  {avspasering.umatchedNavn.length > 0 && (
-                    <div className={styles.avspaseringNote}>
-                      Ukjent i plan: {avspasering.umatchedNavn.join(", ")}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -1898,6 +1928,12 @@ export default function PlanPage() {
         </aside>
       </div>
       {bekreftDialog}
+      <DagsFraværOversiktModal
+        open={visDagsoversikt}
+        onClose={() => setVisDagsoversikt(false)}
+        dato={dato}
+        oversikt={dagsoversikt}
+      />
     </div>
   );
 }

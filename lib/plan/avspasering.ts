@@ -12,10 +12,13 @@ import { erIkkePersonNavn, matchPlanNavnTilAnsatt } from "@/lib/plan/planNavnMat
 export type AvspaseringKilde = "syklus" | "registrert";
 
 export type AvspaseringEntry = {
-  ansattId: string;
+  entryId: string;
+  ansattId?: string;
   visningsnavn: string;
   planNavn: string;
   kilde: AvspaseringKilde;
+  /** Matchet ansatt, uløst navn, eller ikke-person (Bring/TF). */
+  status: "match" | "uløst" | "ikke_person";
 };
 
 export type AvspaseringForDag = {
@@ -24,11 +27,12 @@ export type AvspaseringForDag = {
   umatchedNavn: string[];
 };
 
-/** Fjern «, 2 skift» / «, 2s» fra Excel-listen før navnematching. */
+/** Fjern «2 skift» / «2s» / «2skift» fra Excel-listen før navnematching. */
 export function rensAvspaseringPlanNavn(raw: string): string {
-  return raw
-    .replace(/,\s*\d+\s*skift?/i, "")
-    .replace(/,\s*\d+s\b/i, "")
+  return String(raw ?? "")
+    .trim()
+    .replace(/\s*,?\s*\d+\s*(?:skift|s)\b\s*$/i, "")
+    .replace(/\s+\d+skift\b\s*$/i, "")
     .trim();
 }
 
@@ -55,25 +59,43 @@ export function resolveSyklusAvspaseringForDag(args: {
   const ansattIds = new Set<string>();
   const entries: AvspaseringEntry[] = [];
   const umatchedNavn: string[] = [];
-  const seenIds = new Set<string>();
 
   for (const rå of planNavnListe) {
     const planNavn = rensAvspaseringPlanNavn(rå);
-    if (!planNavn || erIkkePersonNavn(planNavn)) continue;
+    if (!planNavn) continue;
+
+    if (erIkkePersonNavn(planNavn)) {
+      entries.push({
+        entryId: `syklus-tekst:${rå}`,
+        visningsnavn: rå,
+        planNavn: rå,
+        kilde: "syklus",
+        status: "ikke_person",
+      });
+      continue;
+    }
 
     const match = matchPlanNavnTilAnsatt(planNavn, args.ansatte);
     if (match.type === "match") {
-      if (seenIds.has(match.ansatt.id)) continue;
-      seenIds.add(match.ansatt.id);
       ansattIds.add(match.ansatt.id);
       entries.push({
+        entryId: `syklus:${rå}`,
         ansattId: match.ansatt.id,
         visningsnavn: fullNavn(match.ansatt),
         planNavn: rå,
         kilde: "syklus",
+        status: "match",
       });
       continue;
     }
+
+    entries.push({
+      entryId: `syklus-ulost:${rå}`,
+      visningsnavn: rå,
+      planNavn: rå,
+      kilde: "syklus",
+      status: "uløst",
+    });
     if (match.type === "ukjent" || match.type === "tvetydig") {
       umatchedNavn.push(rå);
     }
@@ -108,8 +130,12 @@ export function mergeAvspaseringForPlanDag(args: {
     seenIds.add(post.ansattId);
     ansattIds.add(post.ansattId);
     entries.push({
-      ...post,
+      entryId: `registrert:${post.ansattId}`,
+      ansattId: post.ansattId,
+      visningsnavn: post.visningsnavn,
+      planNavn: post.planNavn,
       kilde: "registrert",
+      status: "match",
     });
   }
 
