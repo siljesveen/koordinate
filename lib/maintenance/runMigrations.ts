@@ -1,4 +1,5 @@
 import { clearAllAnsatteData } from "./clearAllAnsatte";
+import { migratePlanAvspaseringToFravær } from "./migratePlanAvspasering";
 import { seedKjoretoyHvisTomt } from "./seedKjoretoy";
 
 const CLEAR_ANSATTE_MIGRATION = "bemanning.migration.clearAnsatte20260515";
@@ -13,4 +14,5 @@ export function runMigrations(): void {
 
   /* Hver oppstart: fyll inn bil/henger hvis listen i localStorage er tom/ugyldig. */
   seedKjoretoyHvisTomt();
+  migratePlanAvspaseringToFravær();
 }

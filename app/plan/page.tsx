@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type DragEvent, type ReactNode } from "react";
 import { syklusUkeFraDato, ukedag1til7FraDato } from "@/lib/imported/ringnesCycle";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useAnsattStore } from "@/lib/state/ansattStore";
@@ -43,6 +43,11 @@ import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
 import PlanSjåførVelger, { type PlanSjåførVelg } from "./PlanSjåførVelger";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
+import {
+  finnSjåførRuterPåDag,
+  mergeAvspaseringForPlanDag,
+} from "@/lib/plan/avspasering";
+import { fraværForAnsattPåDato } from "@/lib/plan/fraværPlan";
 import {
   motsattSkift,
   sjåførMotpartsskiftGrunn,
@@ -110,8 +115,16 @@ export default function PlanPage() {
   const [sjåførSøk, setSjåførSøk] = useState("");
   const [draOverTilgjengelig, setDraOverTilgjengelig] = useState(false);
   const [draOverFravær, setDraOverFravær] = useState(false);
+  const [draOverAvspasering, setDraOverAvspasering] = useState(false);
+  const [visAvspasering, setVisAvspasering] = useState(false);
+  const [visFravær, setVisFravær] = useState(false);
 
   const dayNo = useMemo(() => ukedag1til7FraDato(parseISODateInput(dato)), [dato]);
+
+  useEffect(() => {
+    setVisAvspasering(false);
+    setVisFravær(false);
+  }, [dato, skift]);
 
   /* ── Koblingsgrupper (filtrert på aktivt skift og dag) ── */
 
@@ -637,6 +650,18 @@ export default function PlanPage() {
 
   /* ── Tilgjengelige ansatte ── */
 
+  const avspasering = useMemo(
+    () =>
+      mergeAvspaseringForPlanDag({
+        uke,
+        dag: dayNo,
+        dato,
+        ansatte,
+        fravær,
+      }),
+    [uke, dayNo, dato, ansatte, fravær],
+  );
+
   const sjåførerPåMotsattSkift = useMemo(
     () =>
       sjåførerJobberPåSkift({
@@ -674,6 +699,7 @@ export default function PlanPage() {
 
     for (const id of sjåførerPåMotsattSkift.keys()) blocked.add(id);
     for (const id of blokkerteAvFlerdagsruter.blokkerteAnsatte) blocked.add(id);
+    for (const id of avspasering.ansattIds) blocked.add(id);
 
     return ansatte
       .filter((a) => {
@@ -703,6 +729,7 @@ export default function PlanPage() {
     fravær,
     hengerUtilgjengelig,
     sjåførerPåMotsattSkift,
+    avspasering,
     tildelingMap,
   ]);
 
@@ -735,6 +762,9 @@ export default function PlanPage() {
         grunner.push(sjåførMotpartsskiftGrunn(motsattSkift(skift), motRute));
       }
       if (blokkerteAvFlerdagsruter.blokkerteAnsatte.has(a.id)) grunner.push("Flerdagstur");
+      if (avspasering.ansattIds.has(a.id) && !grunner.includes("Avspasering")) {
+        grunner.push("Avspasering");
+      }
       if (grunner.length > 0) map.set(a.id, grunner.join(", "));
     }
     return map;
@@ -749,6 +779,7 @@ export default function PlanPage() {
     skift,
     blokkerteAvFlerdagsruter,
     sjåførerPåMotsattSkift,
+    avspasering,
   ]);
 
   const filtrerteAnsatte = useMemo(() => {
@@ -802,6 +833,87 @@ export default function PlanPage() {
       skjulBaselineHenger:
         "skjulBaselineHenger" in patch ? patch.skjulBaselineHenger : cur?.skjulBaselineHenger,
     };
+  }
+
+  function slotForRuteOnSkift(
+    rute: string,
+    targetSkift: PlanSkift,
+    patch: Partial<
+      Pick<
+        PlanRuteTildeling,
+        "bilId" | "hengerId" | "skjulBaselineSjåfør" | "skjulBaselineBil" | "skjulBaselineHenger"
+      >
+    > & { ansattId?: string | null },
+  ): PlanRuteTildeling {
+    const cur = tildelinger.find(
+      (t) => t.uke === uke && t.dag === dayNo && t.skift === targetSkift && t.rute === rute,
+    );
+    const harAnsattPatch = "ansattId" in patch;
+    const harBilPatch = "bilId" in patch;
+    const harHengerPatch = "hengerId" in patch;
+    return {
+      id: planRuteSlotId(uke, dayNo, targetSkift as Skift, rute),
+      uke,
+      dag: dayNo as PlanRuteTildeling["dag"],
+      skift: targetSkift as Skift,
+      rute,
+      ansattId: harAnsattPatch ? (patch.ansattId || undefined) : cur?.ansattId,
+      bilId: harBilPatch ? patch.bilId || undefined : cur?.bilId,
+      hengerId: harHengerPatch ? patch.hengerId || undefined : cur?.hengerId,
+      skjulBaselineSjåfør:
+        "skjulBaselineSjåfør" in patch ? patch.skjulBaselineSjåfør : cur?.skjulBaselineSjåfør,
+      skjulBaselineBil: "skjulBaselineBil" in patch ? patch.skjulBaselineBil : cur?.skjulBaselineBil,
+      skjulBaselineHenger:
+        "skjulBaselineHenger" in patch ? patch.skjulBaselineHenger : cur?.skjulBaselineHenger,
+    };
+  }
+
+  function fjernSjåførFraAlleRuterPåDag(ansattId: string) {
+    const treff = finnSjåførRuterPåDag({
+      uke,
+      dag: dayNo,
+      dato,
+      ansattId,
+      masterSlots: masterplan.slots,
+      dagEndringer,
+      tildelinger,
+    });
+    const items: PlanRuteTildeling[] = [];
+    const seen = new Set<string>();
+
+    for (const { skift: targetSkift, rutekode } of treff) {
+      const key = `${targetSkift}:${rutekode}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push(
+        slotForRuteOnSkift(rutekode, targetSkift, {
+          ansattId: undefined,
+          skjulBaselineSjåfør: true,
+        }),
+      );
+    }
+
+    if (items.length > 0) lagreFlere(items);
+  }
+
+  function registrerManuellAvspasering(ansattId: string, kilde: string) {
+    const finnes = fraværForAnsattPåDato(fravær, ansattId, dato, "Avspasering");
+    if (!finnes) {
+      const ny: Fravær = {
+        id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `f-${Date.now()}`,
+        ansattId,
+        type: "Avspasering",
+        fraDato: dato,
+        tilDato: dato,
+        planlagt: true,
+        kommentar: `Registrert fra Plan (${kilde}, ${dato})`,
+      };
+      lagreFravær(ny);
+    }
+    fjernSjåførFraAlleRuterPåDag(ansattId);
   }
 
   function lagreSlot(
@@ -921,6 +1033,21 @@ export default function PlanPage() {
     if (!fraRute) return;
     const ruter = [fraRute, ...kobleteMedRute(fraRute)];
     lagreFlere(ruter.map((r) => slotForRute(r, { ansattId: undefined, skjulBaselineSjåfør: true })));
+  }
+
+  function handleDropRegistrerAvspasering(e: DragEvent) {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData(DRAG_MIME);
+    if (!raw) return;
+    let payload: DragAnsattPayload;
+    try {
+      payload = JSON.parse(raw) as DragAnsattPayload;
+    } catch {
+      return;
+    }
+    const { ansattId, fraRute } = payload;
+    if (!ansattId) return;
+    registrerManuellAvspasering(ansattId, fraRute ? `rute ${fraRute}` : "tilgjengelig");
   }
 
   function handleDropRegistrerFravær(e: DragEvent) {
@@ -1123,7 +1250,7 @@ export default function PlanPage() {
   /* ── Beregn sammendrag ── */
 
   const fraværPåDato = useMemo(
-    () => fravær.filter((f) => overlapperDato(f, dato)),
+    () => fravær.filter((f) => overlapperDato(f, dato) && f.type !== "Avspasering"),
     [fravær, dato],
   );
 
@@ -1635,22 +1762,82 @@ export default function PlanPage() {
 
             <hr className={styles.divider} />
 
-            {/* Fravær drop-sone */}
-            <div
-              className={`${styles.fraværSection} ${draOverFravær ? styles.fraværDragOver : ""}`}
-              onDragOver={(e) => { handleDragOverSlot(e); setDraOverFravær(true); }}
-              onDragLeave={() => setDraOverFravær(false)}
-              onDrop={(e) => { handleDropRegistrerFravær(e); setDraOverFravær(false); }}
-            >
-              <div className={styles.sectionLabel}>Fravær ({fraværPåDato.length})</div>
-              <div className={styles.dropPoolMuted}>
-                Dra sjåfør hit = registrer syk
-              </div>
-              {fraværPåDato.map((f) => (
-                <span key={f.id} className={styles.tag}>
-                  {ansattNavnById.get(f.ansattId) ?? f.ansattId} · {f.type}
+            <div className={styles.avspaseringSection}>
+              <button
+                type="button"
+                className={styles.avspaseringToggle}
+                onClick={() => setVisAvspasering((v) => !v)}
+                aria-expanded={visAvspasering}
+                aria-controls="plan-avspasering-liste"
+                disabled={avspasering.entries.length === 0}
+              >
+                <span>Avspasering ({avspasering.entries.length})</span>
+                <span className={styles.avspaseringToggleIcon} aria-hidden>
+                  {visAvspasering ? "▾" : "▸"}
                 </span>
-              ))}
+              </button>
+
+              <div
+                className={`${styles.avspaseringDropSection} ${draOverAvspasering ? styles.avspaseringDragOver : ""}`}
+                onDragOver={(e) => { handleDragOverSlot(e); setDraOverAvspasering(true); }}
+                onDragLeave={() => setDraOverAvspasering(false)}
+                onDrop={(e) => { handleDropRegistrerAvspasering(e); setDraOverAvspasering(false); }}
+                aria-label="Avspasering"
+              />
+
+              {visAvspasering && avspasering.entries.length > 0 && (
+                <div id="plan-avspasering-liste" className={styles.avspaseringList}>
+                  {avspasering.entries.map((e) => (
+                    <div key={`${e.kilde}-${e.ansattId}`} className={styles.avspaseringRow}>
+                      <span className={styles.avspaseringNavn}>{e.visningsnavn}</span>
+                    </div>
+                  ))}
+                  {avspasering.umatchedNavn.length > 0 && (
+                    <div className={styles.avspaseringNote}>
+                      Ukjent i plan: {avspasering.umatchedNavn.join(", ")}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <hr className={styles.divider} />
+
+            <div className={styles.fraværBlock}>
+              <button
+                type="button"
+                className={styles.avspaseringToggle}
+                onClick={() => setVisFravær((v) => !v)}
+                aria-expanded={visFravær}
+                aria-controls="plan-fravær-liste"
+                disabled={fraværPåDato.length === 0}
+              >
+                <span>Fravær ({fraværPåDato.length})</span>
+                <span className={styles.avspaseringToggleIcon} aria-hidden>
+                  {visFravær ? "▾" : "▸"}
+                </span>
+              </button>
+
+              <div
+                className={`${styles.fraværDropSection} ${draOverFravær ? styles.fraværDragOver : ""}`}
+                onDragOver={(e) => { handleDragOverSlot(e); setDraOverFravær(true); }}
+                onDragLeave={() => setDraOverFravær(false)}
+                onDrop={(e) => { handleDropRegistrerFravær(e); setDraOverFravær(false); }}
+                aria-label="Fravær"
+              />
+
+              {visFravær && fraværPåDato.length > 0 && (
+                <div id="plan-fravær-liste" className={styles.avspaseringList}>
+                  {fraværPåDato.map((f) => (
+                    <div key={f.id} className={styles.avspaseringRow}>
+                      <span className={styles.avspaseringNavn}>
+                        {ansattNavnById.get(f.ansattId) ?? f.ansattId}
+                      </span>
+                      <span className={styles.avspaseringKildeTag}>{f.type}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <hr className={styles.divider} />

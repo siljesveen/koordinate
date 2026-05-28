@@ -645,16 +645,116 @@
   background: var(--status-info-bg);
 }
 
-.fraværSection {
+.fraværBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fraværDropSection {
   border-radius: 0.4rem;
   border: 2px solid transparent;
-  padding: 0.2rem;
+  padding: 0.25rem;
+  min-height: 1.25rem;
   transition: border-color 0.15s, background 0.15s;
 }
 
 .fraværDragOver {
   border-color: var(--status-warn);
   background: var(--status-warn-bg);
+}
+
+.avspaseringSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.avspaseringToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.avspaseringToggle:hover {
+  background: var(--background-subtle);
+  border-color: var(--foreground-muted);
+  color: var(--foreground);
+}
+
+.avspaseringToggleIcon {
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.avspaseringList {
+  border-radius: 0.35rem;
+  border: 1px solid var(--border);
+  background: var(--background-subtle);
+  max-height: 8rem;
+  overflow-y: auto;
+}
+
+.avspaseringRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.avspaseringDropSection {
+  border-radius: 0.4rem;
+  border: 2px solid transparent;
+  padding: 0.25rem;
+  min-height: 1.25rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.avspaseringDragOver {
+  border-color: var(--brand-primary);
+  background: var(--status-info-bg);
+}
+
+.avspaseringKildeTag {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--foreground-muted);
+  padding: 0.05rem 0.25rem;
+  border-radius: 0.2rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.avspaseringRow:last-child {
+  border-bottom: none;
+}
+
+.avspaseringNavn {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+}
+
+.avspaseringNote {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.65rem;
+  color: var(--foreground-muted);
+  font-style: italic;
+  border-top: 1px dashed var(--border);
 }
 
 .sidebarSøk {
@@ -745,17 +845,6 @@
   white-space: nowrap;
   flex-shrink: 0;
   margin-left: 0.25rem;
-}
-
-.dropPoolMuted {
-  font-size: 0.72rem;
-  color: var(--foreground-muted);
-  padding: 0.3rem;
-  border-radius: 0.4rem;
-  border: 1px dashed var(--border);
-  background: var(--background-subtle);
-  line-height: 1.3;
-  text-align: center;
 }
 
 .tag {

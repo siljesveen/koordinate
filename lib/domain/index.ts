@@ -18,6 +18,7 @@ export type {
   PlanRuteTildeling,
   Rute,
 } from "./types";
+export { FRAVÆR_TYPER } from "./types";
 export {
   MOCK_ANSATTE,
   MOCK_FRAVÆR,

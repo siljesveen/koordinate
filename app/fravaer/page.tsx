@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import SokbarVelger from "@/components/SokbarVelger";
-import { fullNavn, type Ansatt, type Fravær, type FraværType } from "@/lib/domain";
+import { fullNavn, FRAVÆR_TYPER, type Ansatt, type Fravær, type FraværType } from "@/lib/domain";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
@@ -168,11 +168,11 @@ export default function FraværPage() {
             aria-label="Filter type"
           >
             <option value="">Alle typer</option>
-            <option value="Syk">Syk</option>
-            <option value="Ferie">Ferie</option>
-            <option value="Fri">Fri</option>
-            <option value="Permisjon">Permisjon</option>
-            <option value="Annet">Annet</option>
+            {FRAVÆR_TYPER.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
           </select>
           <button type="button" className={styles.primaryBtn} onClick={åpneNy} disabled={!aktiveAnsatte.length}>
             Nytt fravær
@@ -276,14 +276,21 @@ export default function FraværPage() {
                   <select
                     className={styles.select}
                     value={skjema.type}
-                    onChange={(e) => setSkjema((s) => ({ ...s, type: e.target.value as FraværType }))}
+                    onChange={(e) => {
+                      const type = e.target.value as FraværType;
+                      setSkjema((s) => ({
+                        ...s,
+                        type,
+                        planlagt: type === "Avspasering" ? "ja" : s.planlagt,
+                      }));
+                    }}
                     required
                   >
-                    <option value="Syk">Syk</option>
-                    <option value="Ferie">Ferie</option>
-                    <option value="Fri">Fri</option>
-                    <option value="Permisjon">Permisjon</option>
-                    <option value="Annet">Annet</option>
+                    {FRAVÆR_TYPER.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

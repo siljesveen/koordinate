@@ -7,7 +7,16 @@ export type DagsplanStatus =
 
 export type Skift = "Dag" | "Kveld";
 
-export type FraværType = "Syk" | "Ferie" | "Fri" | "Permisjon" | "Annet";
+export type FraværType = "Syk" | "Ferie" | "Fri" | "Permisjon" | "Avspasering" | "Annet";
+
+export const FRAVÆR_TYPER: FraværType[] = [
+  "Syk",
+  "Ferie",
+  "Fri",
+  "Permisjon",
+  "Avspasering",
+  "Annet",
+];
 
 export type AnsattSelskap = "Asko" | "Bring" | "TF" | "GDF" | "Kjørekontor";
 
