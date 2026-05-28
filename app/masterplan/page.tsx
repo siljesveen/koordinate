@@ -288,7 +288,7 @@ export default function MasterplanPage() {
     1: "bemanning.uke1ImportApplied.v2",
     2: "bemanning.uke2ImportApplied.v1",
     3: "bemanning.uke3ImportApplied.v1",
-    4: "bemanning.uke4ImportApplied.v1",
+    4: "bemanning.uke4ImportApplied.v2",
   };
 
   async function leggInnUkeFraPlan(uke: UkeNummer) {

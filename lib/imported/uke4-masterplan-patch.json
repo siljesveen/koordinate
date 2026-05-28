@@ -1,11 +1,11 @@
 {
   "meta": {
-    "generert": "2026-05-28T15:42:12.234Z",
+    "generert": "2026-05-28T15:44:34.281Z",
     "kilde": "C:\\Users\\sisvee7\\Downloads\\Uke 4 fra 19.2.26 Ringnes.xlsx",
     "uke": 4,
     "antallOppdateringer": 318,
-    "medSjåfør": 241,
-    "utenSjåfør": 77
+    "medSjåfør": 248,
+    "utenSjåfør": 70
   },
   "uke": 4,
   "slotUpdates": [
@@ -15,6 +15,13 @@
       "rutekode": "1550",
       "startTid": "09:00",
       "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
     },
     {
       "dag": 1,
@@ -353,6 +360,13 @@
       "standardSjåførAnsattId": "a-david-baranowski"
     },
     {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
       "dag": 2,
       "skift": "Dag",
       "rutekode": "2172",
@@ -673,6 +687,13 @@
       "rutekode": "1550",
       "startTid": "09:00",
       "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
     },
     {
       "dag": 3,
@@ -1004,6 +1025,13 @@
       "standardSjåførAnsattId": "a-david-baranowski"
     },
     {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
       "dag": 4,
       "skift": "Dag",
       "rutekode": "4127-1",
@@ -1331,6 +1359,13 @@
       "rutekode": "1550",
       "startTid": "09:00",
       "standardSjåførAnsattId": "a-david-baranowski"
+    },
+    {
+      "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1560",
+      "startTid": "09:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
     },
     {
       "dag": 5,
@@ -1678,30 +1713,37 @@
     {
       "dag": 6,
       "skift": "Dag",
+      "rutekode": "6121-11",
+      "startTid": "07:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
+      "dag": 6,
+      "skift": "Dag",
       "rutekode": "6131",
       "startTid": "10:00",
       "standardSjåførAnsattId": "a-madelen-asen-slaen"
     },
     {
-      "dag": 7,
-      "skift": "Kveld",
-      "rutekode": "7780",
-      "startTid": "15:00",
-      "standardSjåførAnsattId": "a-erik-solbakken"
-    },
-    {
-      "dag": 7,
-      "skift": "Kveld",
-      "rutekode": "7780",
-      "startTid": "15:00",
-      "standardSjåførAnsattId": "a-erik-solbakken"
-    },
-    {
-      "dag": 1,
+      "dag": 6,
       "skift": "Dag",
-      "rutekode": "1560",
-      "startTid": "09:00",
-      "clearSjåfør": true
+      "rutekode": "6152-12",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-mohammad-bakhshi"
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7780",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-erik-solbakken"
+    },
+    {
+      "dag": 7,
+      "skift": "Kveld",
+      "rutekode": "7780",
+      "startTid": "15:00",
+      "standardSjåførAnsattId": "a-erik-solbakken"
     },
     {
       "dag": 1,
@@ -1777,13 +1819,6 @@
       "dag": 1,
       "skift": "Kveld",
       "rutekode": "1774",
-      "clearSjåfør": true
-    },
-    {
-      "dag": 1,
-      "skift": "Dag",
-      "rutekode": "1560",
-      "startTid": "09:00",
       "clearSjåfør": true
     },
     {
@@ -1873,13 +1908,6 @@
     {
       "dag": 1,
       "skift": "Dag",
-      "rutekode": "1560",
-      "startTid": "09:00",
-      "clearSjåfør": true
-    },
-    {
-      "dag": 1,
-      "skift": "Dag",
       "rutekode": "1520",
       "startTid": "09:00",
       "clearSjåfør": true
@@ -1959,13 +1987,6 @@
       "skift": "Kveld",
       "rutekode": "3773",
       "startTid": "17:00",
-      "clearSjåfør": true
-    },
-    {
-      "dag": 1,
-      "skift": "Dag",
-      "rutekode": "1560",
-      "startTid": "09:00",
       "clearSjåfør": true
     },
     {
@@ -2057,13 +2078,6 @@
       "skift": "Kveld",
       "rutekode": "4778",
       "startTid": "15:00",
-      "clearSjåfør": true
-    },
-    {
-      "dag": 1,
-      "skift": "Dag",
-      "rutekode": "1560",
-      "startTid": "09:00",
       "clearSjåfør": true
     },
     {
@@ -2162,20 +2176,6 @@
       "skift": "Dag",
       "rutekode": "6160",
       "startTid": "07:00",
-      "clearSjåfør": true
-    },
-    {
-      "dag": 6,
-      "skift": "Dag",
-      "rutekode": "6121-11",
-      "startTid": "07:00",
-      "clearSjåfør": true
-    },
-    {
-      "dag": 6,
-      "skift": "Dag",
-      "rutekode": "6152-12",
-      "startTid": "10:00",
       "clearSjåfør": true
     },
     {

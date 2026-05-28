@@ -30,6 +30,7 @@ export const BEKREFTET_ALIAS = {
   rufad: "a-ferad-mehmed-rufad",
   bakshi: "a-mohammad-bakhshi",
   baksi: "a-mohammad-bakhshi",
+  m3: "a-mohammad-bakhshi",
   oivind: "a-yvind-hagen",
   oyvind: "a-yvind-hagen",
   arturs: "a-arturs-dambrovskis",
@@ -106,7 +107,6 @@ const IKKE_PERSON = new Set([
   "ledig kveld",
   "(sesong)",
   "v-d",
-  "m3",
 ]);
 
 export function erIkkePerson(navn) {
