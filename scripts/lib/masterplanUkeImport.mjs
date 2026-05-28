@@ -106,6 +106,7 @@ const IKKE_PERSON = new Set([
   "ledig kveld",
   "(sesong)",
   "v-d",
+  "m3",
 ]);
 
 export function erIkkePerson(navn) {

@@ -288,6 +288,7 @@ export default function MasterplanPage() {
     1: "bemanning.uke1ImportApplied.v2",
     2: "bemanning.uke2ImportApplied.v1",
     3: "bemanning.uke3ImportApplied.v1",
+    4: "bemanning.uke4ImportApplied.v1",
   };
 
   async function leggInnUkeFraPlan(uke: UkeNummer) {
@@ -477,7 +478,7 @@ export default function MasterplanPage() {
           aria-label="Søk i ruter"
         />
         <span className={styles.slotCount}>{filtrertSlots.length} ruter</span>
-        {canEdit && (filterUke === 1 || filterUke === 2 || filterUke === 3) && (
+        {canEdit && filterUke >= 1 && filterUke <= 4 && (
           <button
             type="button"
             className={styles.submitBtn}

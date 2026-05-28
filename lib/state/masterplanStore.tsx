@@ -20,14 +20,16 @@ const STORAGE_KEY = "bemanning.masterplan.v1";
 const UKE1_IMPORT_KEY = "bemanning.uke1ImportApplied.v2";
 const UKE2_IMPORT_KEY = "bemanning.uke2ImportApplied.v1";
 const UKE3_IMPORT_KEY = "bemanning.uke3ImportApplied.v1";
+const UKE4_IMPORT_KEY = "bemanning.uke4ImportApplied.v1";
 
 const UKE_IMPORT_KEYS: Record<UkeNummer, string> = {
   1: UKE1_IMPORT_KEY,
   2: UKE2_IMPORT_KEY,
   3: UKE3_IMPORT_KEY,
+  4: UKE4_IMPORT_KEY,
 };
 
-const UKE_AUTO_IMPORTS = ([1, 2, 3] as const).map((uke) => ({
+const UKE_AUTO_IMPORTS = ([1, 2, 3, 4] as const).map((uke) => ({
   patch: UKE_MASTERPLAN_PATCHES[uke],
   key: UKE_IMPORT_KEYS[uke],
 }));

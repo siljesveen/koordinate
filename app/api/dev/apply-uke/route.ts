@@ -12,6 +12,7 @@ const PATCHES: Partial<Record<UkeNummer, (typeof UKE_MASTERPLAN_PATCHES)[UkeNumm
   1: UKE_MASTERPLAN_PATCHES[1],
   2: UKE_MASTERPLAN_PATCHES[2],
   3: UKE_MASTERPLAN_PATCHES[3],
+  4: UKE_MASTERPLAN_PATCHES[4],
 };
 
 export async function POST(request: Request) {
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   const uke = Number(ukeParam ?? 1) as UkeNummer;
   const patch = PATCHES[uke];
   if (!patch) {
-    return NextResponse.json({ error: "Uke må være 1, 2 eller 3" }, { status: 400 });
+    return NextResponse.json({ error: "Uke må være 1–4" }, { status: 400 });
   }
 
   const supabase = createClient(url, serviceKey, {
