@@ -1,11 +1,19 @@
-import { applyUke1ToMasterplan } from "@/lib/imported/applyUkeMasterplan";
+/**
+ * Dev/CI: legg inn uke-patch med service role.
+ * POST /api/dev/apply-uke?uke=2
+ */
+import { applyUkeToMasterplan, UKE1_MASTERPLAN_PATCH, UKE2_MASTERPLAN_PATCH } from "@/lib/imported/applyUkeMasterplan";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 const MASTERPLAN_KEY = "bemanning.masterplan.v1";
 
-/** Dev/CI: legg inn uke 1 med service role (ingen nettleser-innlogging). */
-export async function POST() {
+const PATCHES = {
+  1: UKE1_MASTERPLAN_PATCH,
+  2: UKE2_MASTERPLAN_PATCH,
+} as const;
+
+export async function POST(request: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -14,6 +22,13 @@ export async function POST() {
       { error: "SUPABASE_SERVICE_ROLE_KEY mangler i .env.local" },
       { status: 503 },
     );
+  }
+
+  const ukeParam = new URL(request.url).searchParams.get("uke");
+  const uke = Number(ukeParam ?? 1) as 1 | 2;
+  const patch = PATCHES[uke];
+  if (!patch) {
+    return NextResponse.json({ error: "Uke må være 1 eller 2" }, { status: 400 });
   }
 
   const supabase = createClient(url, serviceKey, {
@@ -36,7 +51,7 @@ export async function POST() {
   const ansattListe = Array.isArray(ansattRow?.value) ? ansattRow.value : [];
   const ansattById = new Map(ansattListe.map((a) => [a.id, a]));
 
-  const { plan, updated } = applyUke1ToMasterplan(row?.value ?? null, ansattById);
+  const { plan, updated } = applyUkeToMasterplan(row?.value ?? null, patch, ansattById);
 
   const { error: saveError } = await supabase.from("app_data").upsert({
     key: MASTERPLAN_KEY,
@@ -49,5 +64,5 @@ export async function POST() {
     return NextResponse.json({ error: saveError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, updated });
+  return NextResponse.json({ ok: true, uke, updated });
 }

@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { mergeUke1MasterplanPatch, UKE1_MASTERPLAN_PATCH } from "@/lib/imported/applyUke1Masterplan";
+import {
+  mergeUke1MasterplanPatch,
+  mergeUke2MasterplanPatch,
+  UKE1_MASTERPLAN_PATCH,
+  UKE2_MASTERPLAN_PATCH,
+} from "@/lib/imported/applyUkeMasterplan";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { useAnsattStore } from "@/lib/state/ansattStore";
@@ -74,8 +79,8 @@ export default function MasterplanPage() {
   const [nyRuteNavn, setNyRuteNavn] = useState("");
   const [nyRuteDag, setNyRuteDag] = useState<number>(0);
   const [nyRuteSkift, setNyRuteSkift] = useState<Skift | "">("Dag");
-  const [uke1ImportMsg, setUke1ImportMsg] = useState<string | null>(null);
-  const [uke1Importerer, setUke1Importerer] = useState(false);
+  const [ukeImportMsg, setUkeImportMsg] = useState<string | null>(null);
+  const [ukeImporterer, setUkeImporterer] = useState<number | null>(null);
 
   const aktiveAnsatte = useMemo(() => ansatte.filter((a) => a.aktiv), [ansatte]);
   const ansattById = useMemo(
@@ -280,24 +285,30 @@ export default function MasterplanPage() {
     }
   }
 
-  async function leggInnUke1FraPlan() {
+  async function leggInnUkeFraPlan(uke: 1 | 2) {
+    const andreUker =
+      uke === 1 ? "Koblingsgrupper og uke 2–4 påvirkes ikke." : "Koblingsgrupper og uke 1, 3–4 påvirkes ikke.";
     if (
       !window.confirm(
-        "Legge inn uke 1 fra Ringnes-planen? Sjåfør og starttid oppdateres for alle uke 1-ruter. Koblingsgrupper og uke 2–4 påvirkes ikke.",
+        `Legge inn uke ${uke} fra Ringnes-planen? Sjåfør og starttid oppdateres for alle uke ${uke}-ruter. ${andreUker}`,
       )
     ) {
       return;
     }
-    setUke1Importerer(true);
-    setUke1ImportMsg(null);
+    setUkeImporterer(uke);
+    setUkeImportMsg(null);
     try {
-      const { plan, updated } = mergeUke1MasterplanPatch(masterplan, ansattById);
+      const merge = uke === 1 ? mergeUke1MasterplanPatch : mergeUke2MasterplanPatch;
+      const patch = uke === 1 ? UKE1_MASTERPLAN_PATCH : UKE2_MASTERPLAN_PATCH;
+      const importKey =
+        uke === 1 ? "bemanning.uke1ImportApplied.v2" : "bemanning.uke2ImportApplied.v1";
+      const { plan, updated } = merge(masterplan, ansattById);
       lagreHel(plan);
-      const patchVersjon = String(UKE1_MASTERPLAN_PATCH.meta?.generert ?? "1");
-      window.localStorage.setItem("bemanning.uke1ImportApplied.v2", patchVersjon);
-      setUke1ImportMsg(`Uke 1 oppdatert — ${updated} ruter lagt inn. Lagrer til sky…`);
+      const patchVersjon = String(patch.meta?.generert ?? "1");
+      window.localStorage.setItem(importKey, patchVersjon);
+      setUkeImportMsg(`Uke ${uke} oppdatert — ${updated} ruter lagt inn. Lagrer til sky…`);
     } finally {
-      setUke1Importerer(false);
+      setUkeImporterer(null);
     }
   }
 
@@ -470,14 +481,24 @@ export default function MasterplanPage() {
           <button
             type="button"
             className={styles.submitBtn}
-            onClick={() => void leggInnUke1FraPlan()}
-            disabled={uke1Importerer}
+            onClick={() => void leggInnUkeFraPlan(1)}
+            disabled={ukeImporterer !== null}
           >
-            {uke1Importerer ? "Legger inn uke 1…" : "Legg inn uke 1 fra plan"}
+            {ukeImporterer === 1 ? "Legger inn uke 1…" : "Legg inn uke 1 fra plan"}
+          </button>
+        )}
+        {canEdit && filterUke === 2 && (
+          <button
+            type="button"
+            className={styles.submitBtn}
+            onClick={() => void leggInnUkeFraPlan(2)}
+            disabled={ukeImporterer !== null}
+          >
+            {ukeImporterer === 2 ? "Legger inn uke 2…" : "Legg inn uke 2 fra plan"}
           </button>
         )}
       </div>
-      {uke1ImportMsg && <p className={styles.hint}>{uke1ImportMsg}</p>}
+      {ukeImportMsg && <p className={styles.hint}>{ukeImportMsg}</p>}
 
       {/* Legg til-knapp */}
       <div className={styles.addRow}>
