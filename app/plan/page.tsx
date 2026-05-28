@@ -40,6 +40,7 @@ import {
   usePlanRuteTildelingStore,
 } from "@/lib/state/planRuteTildelingStore";
 import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
+import PlanSjåførVelger, { type PlanSjåførVelg } from "./PlanSjåførVelger";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
 import {
@@ -830,34 +831,47 @@ export default function PlanPage() {
     e.dataTransfer.dropEffect = "move";
   }
 
-  async function handleDropPåRute(e: DragEvent, ruteKode: string) {
-    e.preventDefault();
-    const raw = e.dataTransfer.getData(DRAG_MIME);
-    if (!raw) return;
-    let payload: DragAnsattPayload;
-    try {
-      payload = JSON.parse(raw) as DragAnsattPayload;
-    } catch {
-      return;
-    }
-    const { ansattId, fraRute } = payload;
-    if (!ansattId) return;
-    if (fraRute === ruteKode) return;
+  async function applySjåførOnRute(
+    ruteKode: string,
+    valg: PlanSjåførVelg,
+    options?: { fraRute?: string; skipConfirm?: boolean },
+  ) {
+    const fraRute = options?.fraRute;
+    if (fraRute === ruteKode && valg !== "__ingen__" && valg !== "__baseline__") return;
 
-    const grunn = utilgjengeligeGrunner.get(ansattId);
-    if (grunn) {
-      const a = ansatte.find((x) => x.id === ansattId);
-      const navn = a ? fullNavn(a) : ansattId;
-      const ok = await requestBekreft(
-        `${navn} er ikke tilgjengelig (${grunn}). Vil du sette inn likevel?`,
-      );
-      if (!ok) return;
+    if (valg !== "__ingen__" && valg !== "__baseline__") {
+      const grunn = utilgjengeligeGrunner.get(valg.ansattId);
+      if (grunn && !options?.skipConfirm) {
+        const a = ansatte.find((x) => x.id === valg.ansattId);
+        const navn = a ? fullNavn(a) : valg.ansattId;
+        const ok = await requestBekreft(
+          `${navn} er ikke tilgjengelig (${grunn}). Vil du sette inn likevel?`,
+        );
+        if (!ok) return;
+      }
     }
 
     const målRuter = [ruteKode, ...kobleteMedRute(ruteKode)];
     const målSet = new Set(målRuter);
-
     const items: PlanRuteTildeling[] = [];
+
+    if (valg === "__ingen__") {
+      for (const mål of målRuter) {
+        items.push(slotForRute(mål, { ansattId: undefined, skjulBaselineSjåfør: true }));
+      }
+      lagreFlere(items);
+      return;
+    }
+
+    if (valg === "__baseline__") {
+      for (const mål of målRuter) {
+        items.push(slotForRute(mål, { ansattId: undefined, skjulBaselineSjåfør: false }));
+      }
+      lagreFlere(items);
+      return;
+    }
+
+    const { ansattId } = valg;
 
     for (const slot of effektiveRuter) {
       if (målSet.has(slot.rutekode)) continue;
@@ -876,6 +890,21 @@ export default function PlanPage() {
     }
 
     lagreFlere(items);
+  }
+
+  async function handleDropPåRute(e: DragEvent, ruteKode: string) {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData(DRAG_MIME);
+    if (!raw) return;
+    let payload: DragAnsattPayload;
+    try {
+      payload = JSON.parse(raw) as DragAnsattPayload;
+    } catch {
+      return;
+    }
+    const { ansattId, fraRute } = payload;
+    if (!ansattId) return;
+    await applySjåførOnRute(ruteKode, { ansattId }, { fraRute, skipConfirm: false });
   }
 
   function handleDropFjernSjåfør(e: DragEvent) {
@@ -1054,6 +1083,41 @@ export default function PlanPage() {
       rutekode: kode,
     });
     setLeggTilRuteInput("");
+  }
+
+  function sjåførSelectVerdi(
+    til: PlanRuteTildeling | undefined,
+    slot: MasterRuteSlot,
+  ): string {
+    if (til?.ansattId) return til.ansattId;
+    if (til?.skjulBaselineSjåfør) return "__ingen__";
+    if (slot.standardSjåførAnsattId) return "__baseline__";
+    return "__ingen__";
+  }
+
+  function sjåførVisningNavn(
+    selectVal: string,
+    res: ReturnType<typeof effektivRessursForSlot>,
+    masterSjåførNavn?: string,
+  ): string {
+    if (selectVal === "__ingen__") return "—";
+    if (selectVal === "__baseline__") {
+      return masterSjåførNavn ?? "—";
+    }
+    if (res.sjåfør) return fullNavn(res.sjåfør);
+    const a = ansattById.get(selectVal);
+    return a ? fullNavn(a) : "—";
+  }
+
+  function masterSjåførFraværInfo(
+    slot: MasterRuteSlot,
+    til: PlanRuteTildeling | undefined,
+  ): { påFravær: false } | { påFravær: true; grunn: string } {
+    const id = slot.standardSjåførAnsattId;
+    if (!id || til?.ansattId || til?.skjulBaselineSjåfør) return { påFravær: false };
+    if (!ansattHarFraværPåDato(id)) return { påFravær: false };
+    const f = fravær.find((x) => x.ansattId === id && overlapperDato(x, dato));
+    return { påFravær: true, grunn: f?.type ?? "Fravær" };
   }
 
   /* ── Beregn sammendrag ── */
@@ -1325,6 +1389,8 @@ export default function PlanPage() {
                   erKoblingOpphevetForDag(kobling.gruppeKey, kobling.rutekoder);
                 const bilValgbare = bilValgbareForRute(slot.rutekode);
                 const hengerValgbare = hengerValgbareForRute(slot.rutekode);
+                const sjåførSelect = sjåførSelectVerdi(til, slot);
+                const masterSjåførFravær = masterSjåførFraværInfo(slot, til);
 
                 return (
                   <tr key={slot.rutekode} className={styles.dataRow}>
@@ -1363,27 +1429,31 @@ export default function PlanPage() {
                         onDragOver={handleDragOverSlot}
                         onDrop={(e) => handleDropPåRute(e, slot.rutekode)}
                       >
-                        {res.sjåfør ? (
-                          <span
-                            className={`${styles.dragChip}${res.sjåførHarFravær ? ` ${styles.dragChipWarn}` : ""}`}
-                            draggable
-                            onDragStart={(e) =>
-                              handleDragStartAnsatt(e, {
-                                ansattId: res.sjåfør!.id,
-                                fraRute: slot.rutekode,
-                              })
-                            }
-                            title={res.sjåførHarFravær ? "Har fravær — manuelt innsatt" : res.sjåførFraMaster ? "Fra master" : "Overstyrt for denne dagen"}
-                          >
-                            {fullNavn(res.sjåfør)}{res.sjåførHarFravær ? " ⚠" : ""}
-                          </span>
-                        ) : (
-                          <span className={styles.dropPlaceholder}>
-                            {res.sjåførHarFravær && masterSjåførNavn
-                              ? `${masterSjåførNavn} — fravær`
-                              : "Dra sjåfør hit"}
-                          </span>
-                        )}
+                        <PlanSjåførVelger
+                          rute={slot.rutekode}
+                          selectValue={sjåførSelect}
+                          visningNavn={sjåførVisningNavn(sjåførSelect, res, masterSjåførNavn)}
+                          sjåførFraMaster={res.sjåførFraMaster}
+                          sjåførHarFravær={res.sjåførHarFravær}
+                          manueltInnsatt={Boolean(til?.ansattId)}
+                          masterSjåførNavn={masterSjåførNavn}
+                          masterPåFravær={masterSjåførFravær.påFravær}
+                          masterFraværGrunn={
+                            masterSjåførFravær.påFravær ? masterSjåførFravær.grunn : undefined
+                          }
+                          dragAnsattId={res.sjåfør?.id}
+                          onDragStart={(e, ansattId) =>
+                            handleDragStartAnsatt(e, {
+                              ansattId,
+                              fraRute: slot.rutekode,
+                            })
+                          }
+                          ansatte={ansatte}
+                          tilgjengeligeIdSet={tilgjengeligeIdSet}
+                          utilgjengeligeGrunner={utilgjengeligeGrunner}
+                          onVelg={(valg) => applySjåførOnRute(slot.rutekode, valg)}
+                          ariaLabel={`Velg sjåfør for rute ${slot.rutekode}`}
+                        />
                       </div>
                     </td>
                     <td className={styles.tdTildel}>

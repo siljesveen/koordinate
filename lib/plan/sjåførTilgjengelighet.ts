@@ -136,3 +136,18 @@ export function sjåførErBlokkertMotpartsskift(
   const key = `${slot.uke}-${slot.dag}-${mot}`;
   return cache.get(key)?.has(ansattId) ?? false;
 }
+
+/** Gul advarsel kun ved reell overstyring — ikke master-fravær (vises som egen «Fravær»-status). */
+export function sjåførValgtErOverstyring(
+  ansattId: string | undefined,
+  sjåførHarFravær: boolean,
+  utilgjengeligeGrunner: ReadonlyMap<string, string>,
+  manueltInnsatt: boolean,
+): boolean {
+  if (ansattId && sjåførHarFravær && manueltInnsatt) return true;
+  if (!ansattId) return false;
+  const grunn = utilgjengeligeGrunner.get(ansattId);
+  if (!grunn) return false;
+  if (grunn.startsWith("På rute ")) return false;
+  return true;
+}

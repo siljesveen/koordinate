@@ -502,6 +502,45 @@
   font-style: italic;
 }
 
+.sjåførComboTrigger {
+  padding: 0;
+  gap: 0;
+}
+
+.sjåførComboValue {
+  flex: 1;
+  min-width: 0;
+  padding: 0.28rem 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.sjåførComboNavn {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sjåførComboChevronBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.28rem 0.35rem;
+  border: none;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.sjåførComboChevronBtn:hover {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.04));
+}
+
 .baselineHint {
   font-size: 0.7rem;
   color: var(--foreground-muted);
@@ -515,9 +554,12 @@
   border: 1px dashed var(--border-strong);
   background: var(--surface-raised);
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+}
+
+.dropCell .kjoretoyCombo {
+  width: 100%;
 }
 
 .dropPlaceholder {
