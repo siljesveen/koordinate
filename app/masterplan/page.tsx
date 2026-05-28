@@ -12,6 +12,10 @@ import SokbarVelger from "@/components/SokbarVelger";
 import TidInput24 from "@/components/TidInput24";
 import { fullNavn, type Ansatt, type MasterRuteSlot, type Skift } from "@/lib/domain";
 import { slotMedSjåførOgKjoretoy } from "@/lib/utils/masterplanKjoretoy";
+import {
+  sjåførErBlokkertMotpartsskift,
+  sjåførerPerSkiftDagCache,
+} from "@/lib/plan/sjåførTilgjengelighet";
 import { compareNb } from "@/lib/utils/sort";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
@@ -120,6 +124,17 @@ export default function MasterplanPage() {
       })),
     [aktiveAnsatte],
   );
+
+  const sjåførPerSkiftDag = useMemo(
+    () => sjåførerPerSkiftDagCache(masterplan.slots),
+    [masterplan.slots],
+  );
+
+  function sjåførVelgerValgForSlot(slot: MasterRuteSlot) {
+    return sjåførVelgerValg.filter(
+      (o) => !sjåførErBlokkertMotpartsskift(sjåførPerSkiftDag, slot, o.value),
+    );
+  }
 
   const bilVelgerValg = useMemo(
     () =>
@@ -647,7 +662,7 @@ export default function MasterplanPage() {
                     onChange={(id) =>
                       lagreSlot(slotMedSjåførOgKjoretoy(slot, id || undefined, ansattById))
                     }
-                    options={sjåførVelgerValg}
+                    options={sjåførVelgerValgForSlot(slot)}
                     ariaLabel={`Fast sjåfør, rute ${slot.rutekode}`}
                     søkPlaceholder="Søk navn…"
                     tomTreffTekst="Ingen ansatt funnet"

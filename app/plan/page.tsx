@@ -42,6 +42,11 @@ import {
 import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
+import {
+  motsattSkift,
+  sjåførMotpartsskiftGrunn,
+  sjåførerJobberPåSkift,
+} from "@/lib/plan/sjåførTilgjengelighet";
 import styles from "./page.module.css";
 
 const DRAG_MIME = "application/x-bemanning-plan-ansatt";
@@ -631,6 +636,32 @@ export default function PlanPage() {
 
   /* ── Tilgjengelige ansatte ── */
 
+  const sjåførerPåMotsattSkift = useMemo(
+    () =>
+      sjåførerJobberPåSkift({
+        uke,
+        dag: dayNo,
+        dato,
+        skift: motsattSkift(skift),
+        masterSlots: masterplan.slots,
+        dagEndringer,
+        tildelinger,
+        erAktivSjåfør: (id) => ansattById.get(id)?.aktiv === true,
+        harFravær: (id) => fravær.some((f) => f.ansattId === id && overlapperDato(f, dato)),
+      }),
+    [
+      uke,
+      dayNo,
+      dato,
+      skift,
+      masterplan.slots,
+      dagEndringer,
+      tildelinger,
+      ansattById,
+      fravær,
+    ],
+  );
+
   const tilgjengeligeAnsatte = useMemo(() => {
     const blocked = new Set<string>();
 
@@ -640,6 +671,7 @@ export default function PlanPage() {
       if (res.sjåfør) blocked.add(res.sjåfør.id);
     }
 
+    for (const id of sjåførerPåMotsattSkift.keys()) blocked.add(id);
     for (const id of blokkerteAvFlerdagsruter.blokkerteAnsatte) blocked.add(id);
 
     return ansatte
@@ -669,6 +701,7 @@ export default function PlanPage() {
     effektiveRuter,
     fravær,
     hengerUtilgjengelig,
+    sjåførerPåMotsattSkift,
     tildelingMap,
   ]);
 
@@ -696,12 +729,26 @@ export default function PlanPage() {
         grunner.push(ftype ?? "Fravær");
       }
       if (tildeltPåRute.has(a.id)) grunner.push(`På rute ${tildeltPåRute.get(a.id)}`);
+      const motRute = sjåførerPåMotsattSkift.get(a.id);
+      if (motRute) {
+        grunner.push(sjåførMotpartsskiftGrunn(motsattSkift(skift), motRute));
+      }
       if (blokkerteAvFlerdagsruter.blokkerteAnsatte.has(a.id)) grunner.push("Flerdagstur");
       if (grunner.length > 0) map.set(a.id, grunner.join(", "));
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ansatte, tilgjengeligeIdSet, effektiveRuter, tildelingMap, fravær, dato, blokkerteAvFlerdagsruter]);
+  }, [
+    ansatte,
+    tilgjengeligeIdSet,
+    effektiveRuter,
+    tildelingMap,
+    fravær,
+    dato,
+    skift,
+    blokkerteAvFlerdagsruter,
+    sjåførerPåMotsattSkift,
+  ]);
 
   const filtrerteAnsatte = useMemo(() => {
     const q = sjåførSøk.trim().toLowerCase();
