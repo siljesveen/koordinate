@@ -2,7 +2,6 @@ import { reportSkySave } from "@/lib/data/skySaveNotify";
 import {
   fetchAllAppDataFromSkyAction,
   importAppDataBatchAction,
-  loadAppDataFromSkyAction,
   saveAppDataToSkyAction,
 } from "@/app/actions/skyData";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
@@ -83,33 +82,19 @@ export async function syncLocalCacheFromSky(removeMissing = true): Promise<SkySy
   return { updated, missing, ansatteCount };
 }
 
-/** Les data: Supabase er eneste kilde når innlogget. localStorage kun uten innlogging. */
+/**
+ * Les data fra localStorage-cachen.
+ *
+ * Skyen leses i bulk én gang ved innlogging/last (`syncOnLogin` →
+ * `syncLocalCacheFromSky`) og speiles til localStorage før `dataReady` settes.
+ * Per-nøkkel-lesing går derfor mot cachen, slik at vi slipper et eget sky-kall
+ * per store ved oppstart (det ga tidligere en treg, seriell kjede av ~12
+ * server actions – hver med en egen `auth.getUser()`-validering).
+ */
 export async function loadAppData(key: string, innlogget = false): Promise<unknown | null> {
-  if (!isSupabaseConfigured()) {
-    return lesLocal(key);
-  }
-
-  const { data, error } = await loadAppDataFromSkyAction(key);
-
-  if (error === "not_authenticated") {
-    return lesLocal(key);
-  }
-
-  if (error) {
-    console.warn("[app_data] load feilet:", key, error);
-    return innlogget ? null : lesLocal(key);
-  }
-
-  if (data !== undefined && data !== null) {
-    skrivLocal(key, data);
-    return data;
-  }
-
-  if (innlogget) {
-    window.localStorage?.removeItem(key);
-    return null;
-  }
-
+  // Cachen er fersk for både innlogget (speilet fra sky) og uinnlogget (kun
+  // localStorage / Supabase ikke konfigurert), så lesing er likt i alle tilfeller.
+  void innlogget;
   return lesLocal(key);
 }
 

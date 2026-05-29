@@ -10,6 +10,9 @@ export const APP_DATA_KEYS = [
   "bemanning.bilUtilgjengelig.v1",
   "bemanning.hengerUtilgjengelig.v1",
   "bemanning.turnus4uker.v1",
+  "bemanning.skiftTilgjengelighet.v1",
+  "bemanning.henting.v1",
+  "bemanning.hentingDag.v1",
 ] as const;
 
 export type AppDataKey = (typeof APP_DATA_KEYS)[number];
