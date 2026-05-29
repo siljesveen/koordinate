@@ -1,0 +1,21 @@
+---
+description: React/TS UI – KOordinate-mønstre
+globs: bemanning-dashboard/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# UI i KOordinate
+
+## Komponenter
+
+- Søkbare lister for navn/reg.nr: bruk `components/SokbarVelger.tsx` (alfabetisk, norsk sortering via `lib/utils/sort.ts`).
+- Plan bil/henger: `app/plan/PlanKjoretoyVelger.tsx` — ikke dupliser uten grunn.
+
+## Stores
+
+- Persistens: `useAppData` eller `loadAppData` / `saveAppData` fra `lib/data/appDataStorage.ts`.
+- Nye stores: følg eksisterende mønster; ikke introduser ny lagringsmekanisme i samme PR som en UI-fiks.
+
+## Stil
+
+- CSS Modules (`*.module.css`) — match eksisterende naming i siden du redigerer.

@@ -1,0 +1,50 @@
+---
+description: Kun én endring om gangen – ingen uønskede bivirkninger
+alwaysApply: true
+---
+
+# Én endring om gangen
+
+## Hovedregel
+
+Når brukeren ber om **én** ting (f.eks. «søkbar dropdown», «fiks innlogging»), skal du:
+
+1. **Kun** endre filer som er nødvendige for akkurat den oppgaven.
+2. **Ikke** refaktorere, rydde, oppdatere avhengigheter eller «forbedre» annen kode i samme omgang.
+3. **Ikke** endre lagring, migrering eller auth med mindre oppgaven **uttrykkelig** handler om det.
+
+## Unngå kobling-situasjonen (eksempel)
+
+- ❌ Bruker ber om Supabase-innlogging → du endrer også masterplan-lagring, alle stores og migrerer data i samme PR.
+- ✅ Bruker ber om Supabase-innlogging → kun auth, middleware, login; masterplan/data tas i **egen** oppgave etterpå.
+
+## Før du lagrer
+
+- Spør deg: «Kan denne endringen påvirke annen data eller oppførsel?»
+- Hvis ja: **del opp** i steg og si til brukeren hva som kommer i steg 2.
+- Ved endring i `*Store*` eller `appDataStorage`: ikke lagre til sky/localStorage ved **innlasting** uten brukerhandling (kun ved eksplisitt redigering).
+
+## Scope
+
+- Minste mulige diff. Fem linjer som løser problemet er bedre enn hundre linjer refaktor.
+- Ikke legg til tester, docs eller nye abstraksjoner med mindre brukeren ber om det.
+
+## Ved tvil
+
+- Gjør **kun** steg 1 nå. Ikke implementer steg 2+ i samme omgang med mindre brukeren sier «gjør alt» / «fortsett».
+
+## Forslag til neste steg (påkrevd når det trengs flere steg)
+
+Hvis oppgaven egentlig krever **flere** deler (f.eks. SQL + kode + deploy + test):
+
+1. **Gjør bare steg 1** i denne runden (den minste trygge endringen).
+2. **Skriv tydelig «Neste steg»** etterpå — nummerert liste med hva brukeren bør gjøre eller be om neste.
+3. **Spør** om du skal ta neste steg — ikke anta at brukeren vil ha alt med en gang.
+
+Eksempel på svar-struktur:
+
+- **Gjort nå:** … (kort)
+- **Neste steg (anbefalt):** 1. … 2. … 3. …
+- **Vil du at jeg tar steg 2?** (ja/nei)
+
+Unntak: Brukeren sier eksplisitt «gjør hele opplegget» / «ta alle steg» — da kan du planlegge flere steg, men fortsatt unngå urelaterte endringer utenfor oppgaven.

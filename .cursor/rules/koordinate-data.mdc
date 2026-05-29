@@ -1,0 +1,26 @@
+---
+description: Datalagring – Supabase, masterplan, backup (ikke overskriv ved load)
+alwaysApply: true
+---
+
+# Data og Supabase
+
+## Lagring
+
+- Masterdata speiles i Supabase-tabellen `app_data` (nøkler som `bemanning.masterplan.v1`, `bemanning.ansatte.v2`, osv.).
+- `localStorage` er cache; ved innlogging leses **Supabase først** (når konfigurert).
+
+## Kritiske regler (koblingsgrupper)
+
+- **Masterplan** har `koblingsgrupper` og `slot.koblingsgruppe` — begge må bevares ved load/save.
+- **Ikke** trigge `saveAppData` for masterplan rett etter innlasting; kun etter **bruker** endrer masterplan (lagre slot, kobl ruter, osv.).
+- Ved migrering localStorage → Supabase: ikke overskriv sky hvis remote har **flere** `koblingsgrupper` enn local.
+
+## Backup
+
+- Bruker tar backup: **Innstillinger** → «Last ned backup» (JSON fra nettleser).
+- Import skriver `localStorage`; etter import på Vercel kan sky trenge manuell sync — ikke anta at import alene er nok uten å verifisere.
+
+## SQL
+
+- Nye tabeller/policies: legg fil i `supabase/migrations/` og si at bruker må kjøre i **SQL Editor** (ikke forvent at de forstår CLI).

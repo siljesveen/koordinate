@@ -1,0 +1,27 @@
+---
+description: KOordinate – prosjekt, språk og arbeidsmåte
+alwaysApply: true
+---
+
+# KOordinate – grunnregler
+
+## Prosjekt
+
+- Appen ligger i `bemanning-dashboard/` (Next.js App Router, React, TypeScript, Supabase).
+- Produksjon: Vercel (`koordinate-two.vercel.app`). Ekte masterdata skal ligge i Supabase etter innlogging.
+- Localhost og Vercel deler data bare når samme Supabase-nøkler brukes (`.env.local`).
+
+## Kommunikasjon
+
+- Brukeren skriver ofte norsk → svar på **norsk**, enkelt språk, steg for steg ved oppsett (Supabase, Vercel, SQL).
+- Ikke anta at brukeren kan terminal, Git eller SQL — forklar hvor i UI de skal klikke.
+
+## Git og deploy
+
+- **Ikke** `git commit`, `git push` eller redeploy med mindre brukeren ber eksplisitt om det.
+- Etter push: minn brukeren om å vente på Vercel **Ready** før testing.
+
+## Dokumentasjon
+
+- SQL-migrasjoner: `supabase/migrations/` (kjør manuelt i Supabase SQL Editor).
+- Env-variabler: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (se `.env.example`).
