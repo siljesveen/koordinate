@@ -39,7 +39,12 @@ import {
   planRuteSlotId,
   usePlanRuteTildelingStore,
 } from "@/lib/state/planRuteTildelingStore";
+import {
+  skiftTilgjengelighetId,
+  useSkiftTilgjengelighetStore,
+} from "@/lib/state/skiftTilgjengelighetStore";
 import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
+import PlanSkiftMenu from "./PlanSkiftMenu";
 import DagsFraværOversiktModal from "./DagsFraværOversiktModal";
 import PlanSjåførVelger, { type PlanSjåførVelg } from "./PlanSjåførVelger";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
@@ -58,6 +63,7 @@ import {
   sjåførMotpartsskiftGrunn,
   sjåførerJobberPåSkift,
 } from "@/lib/plan/sjåførTilgjengelighet";
+import { byggSkiftOverstyringMap } from "@/lib/plan/skiftTilgjengelighet";
 import styles from "./page.module.css";
 
 const DRAG_MIME = "application/x-bemanning-plan-ansatt";
@@ -115,6 +121,11 @@ export default function PlanPage() {
   const { tildelinger, lagre: lagreTildeling, lagreFlere } = usePlanRuteTildelingStore();
   const { masterplan } = useMasterplanStore();
   const { endringer: dagEndringer, lagre: lagreDagEndring, fjern: fjernDagEndring } = useDagEndringStore();
+  const {
+    poster: skiftTilgjengelighet,
+    lagre: lagreSkiftTilgjengelighet,
+    fjern: fjernSkiftTilgjengelighet,
+  } = useSkiftTilgjengelighetStore();
   const [leggTilRuteInput, setLeggTilRuteInput] = useState("");
   const [modulSøk, setModulSøk] = useModulSøkFraUrl();
   const [sjåførSøk, setSjåførSøk] = useState("");
@@ -126,6 +137,49 @@ export default function PlanPage() {
   const [visDagsoversikt, setVisDagsoversikt] = useState(false);
 
   const dayNo = useMemo(() => ukedag1til7FraDato(parseISODateInput(dato)), [dato]);
+
+  /** Sjåfører med skift-overstyring på valgt dato (ansattId → skift). */
+  const skiftOverstyringMap = useMemo(
+    () => byggSkiftOverstyringMap(skiftTilgjengelighet, dato),
+    [skiftTilgjengelighet, dato],
+  );
+
+  function settSkiftForAnsatt(
+    ansattId: string,
+    nyttSkift: PlanSkift,
+    omfang: "dag" | "uke",
+  ) {
+    fjernSkiftForAnsatt(ansattId);
+    if (omfang === "uke") {
+      const mandag = parseISODateInput(dato);
+      mandag.setDate(mandag.getDate() - (dayNo - 1));
+      const søndag = new Date(mandag);
+      søndag.setDate(mandag.getDate() + 6);
+      const fraDato = isoDato(mandag);
+      lagreSkiftTilgjengelighet({
+        id: skiftTilgjengelighetId(ansattId, fraDato),
+        ansattId,
+        fraDato,
+        tilDato: isoDato(søndag),
+        skift: nyttSkift,
+      });
+    } else {
+      lagreSkiftTilgjengelighet({
+        id: skiftTilgjengelighetId(ansattId, dato),
+        ansattId,
+        fraDato: dato,
+        skift: nyttSkift,
+      });
+    }
+  }
+
+  function fjernSkiftForAnsatt(ansattId: string) {
+    for (const p of skiftTilgjengelighet) {
+      if (p.ansattId !== ansattId) continue;
+      const dekker = p.tilDato ? dato >= p.fraDato && dato <= p.tilDato : dato === p.fraDato;
+      if (dekker) fjernSkiftTilgjengelighet(p.id);
+    }
+  }
 
   useEffect(() => {
     setVisAvspasering(false);
@@ -388,6 +442,8 @@ export default function PlanPage() {
     sjåfør: Ansatt | undefined;
     sjåførFraMaster: boolean;
     sjåførHarFravær: boolean;
+    /** Satt når master-sjåføren er flyttet til motsatt skift (skiftbytte). */
+    sjåførPåAnnetSkift: PlanSkift | undefined;
     bilId: string | undefined;
     bilFraMaster: boolean;
     bilUtilgjengelig: boolean;
@@ -416,6 +472,16 @@ export default function PlanPage() {
     if (sjåfør && ansattHarFraværPåDato(sjåfør.id)) {
       sjåførHarFravær = true;
       if (sjåførFraMaster) {
+        sjåfør = undefined;
+      }
+    }
+
+    // Skiftbytte: fast turnus-sjåfør flyttet til motsatt skift → vises som gul advarsel.
+    let sjåførPåAnnetSkift: PlanSkift | undefined;
+    if (sjåfør && sjåførFraMaster) {
+      const overstyrtSkift = skiftOverstyringMap.get(sjåfør.id);
+      if (overstyrtSkift && overstyrtSkift !== slot.skift) {
+        sjåførPåAnnetSkift = overstyrtSkift;
         sjåfør = undefined;
       }
     }
@@ -484,6 +550,7 @@ export default function PlanPage() {
       sjåfør,
       sjåførFraMaster,
       sjåførHarFravær,
+      sjåførPåAnnetSkift,
       bilId,
       bilFraMaster,
       bilUtilgjengelig: bilUtilgjengeligFlag,
@@ -703,7 +770,11 @@ export default function PlanPage() {
       if (res.sjåfør) blocked.add(res.sjåfør.id);
     }
 
-    for (const id of sjåførerPåMotsattSkift.keys()) blocked.add(id);
+    for (const id of sjåførerPåMotsattSkift.keys()) {
+      // Flyttet til dette skiftet via skiftbytte → ikke blokker (skal være tilgjengelig her).
+      if (skiftOverstyringMap.get(id) === skift) continue;
+      blocked.add(id);
+    }
     for (const id of blokkerteAvFlerdagsruter.blokkerteAnsatte) blocked.add(id);
     for (const id of avspasering.ansattIds) blocked.add(id);
 
@@ -712,6 +783,9 @@ export default function PlanPage() {
         if (!a.aktiv) return false;
         if (a.selskap && a.selskap !== "Asko") return false;
         if (blocked.has(a.id)) return false;
+        // Skift-overstyring: vis kun i skiftet sjåføren er satt til.
+        const overstyrtSkift = skiftOverstyringMap.get(a.id);
+        if (overstyrtSkift && overstyrtSkift !== skift) return false;
         const harFravær = fravær.some(
           (f) => f.ansattId === a.id && overlapperDato(f, dato),
         );
@@ -737,6 +811,8 @@ export default function PlanPage() {
     sjåførerPåMotsattSkift,
     avspasering,
     tildelingMap,
+    skiftOverstyringMap,
+    skift,
   ]);
 
   const tilgjengeligeIdSet = useMemo(
@@ -1304,7 +1380,8 @@ export default function PlanPage() {
           erHengerIUtilgjengeligPeriodePåDato(mpHeng, dato, hengerUtilgjengelig) &&
           (hengSel === "__ingen__" || hengSel === "__baseline__" || hengSel === mpHeng),
       );
-      const manglerSj = !res.sjåfør;
+      const påAnnetSkift = Boolean(res.sjåførPåAnnetSkift);
+      const manglerSj = !res.sjåfør && !påAnnetSkift;
       const manglerB = !planHarBilTildelt(tilKj, slot, res);
       const manglerH = !planHarHengerTildelt(tilKj, slot, res);
       const utilgj =
@@ -1312,7 +1389,8 @@ export default function PlanPage() {
         res.hengerUtilgjengeligFlag ||
         res.sjåførHarFravær ||
         masterBilV ||
-        masterHengV;
+        masterHengV ||
+        påAnnetSkift;
 
       if (!manglerSj && !manglerB && !manglerH && !utilgj) ok++;
       else if (manglerSj || manglerB) rød++;
@@ -1494,7 +1572,8 @@ export default function PlanPage() {
                   masterHengerPaVerksted &&
                   (hengerSelectVal === "__ingen__" || hengerValgtErMaster);
 
-                const manglerSjåfør = !res.sjåfør;
+                const sjåførPåAnnetSkift = Boolean(res.sjåførPåAnnetSkift);
+                const manglerSjåfør = !res.sjåfør && !sjåførPåAnnetSkift;
                 const manglerBil = !planHarBilTildelt(tilKjoretoy, slot, res);
                 const manglerHenger = !planHarHengerTildelt(tilKjoretoy, slot, res);
                 const utilgjengelig =
@@ -1502,7 +1581,8 @@ export default function PlanPage() {
                   res.hengerUtilgjengeligFlag ||
                   res.sjåførHarFravær ||
                   masterBilAdvarsel ||
-                  masterHengerAdvarsel;
+                  masterHengerAdvarsel ||
+                  sjåførPåAnnetSkift;
 
                 let statusCell: ReactNode;
                 if (!manglerSjåfør && !manglerBil && !manglerHenger && !utilgjengelig) {
@@ -1523,6 +1603,7 @@ export default function PlanPage() {
                   // Gul: noe er utilgjengelig
                   const deler: string[] = [];
                   if (res.sjåførHarFravær) deler.push("Sjåfør fravær");
+                  if (sjåførPåAnnetSkift) deler.push(`Sjåfør på ${res.sjåførPåAnnetSkift?.toLowerCase()}`);
                   if (res.bilUtilgjengelig) deler.push("Bil ute");
                   else if (masterBilAdvarsel) deler.push("Masterbil verksted");
                   if (res.hengerUtilgjengeligFlag) deler.push("Henger ute");
@@ -1603,6 +1684,7 @@ export default function PlanPage() {
                           masterFraværGrunn={
                             masterSjåførFravær.påFravær ? masterSjåførFravær.grunn : undefined
                           }
+                          påAnnetSkift={res.sjåførPåAnnetSkift?.toLowerCase()}
                           dragAnsattId={res.sjåfør?.id}
                           onDragStart={(e, ansattId) =>
                             handleDragStartAnsatt(e, {
@@ -1767,6 +1849,12 @@ export default function PlanPage() {
                     title={`Dra ${fullNavn(a)} til en rute`}
                   >
                     <span className={styles.driverName}>{fullNavn(a)}</span>
+                    <PlanSkiftMenu
+                      navn={fullNavn(a)}
+                      overstyrtSkift={skiftOverstyringMap.get(a.id)}
+                      onSett={(s, omfang) => settSkiftForAnsatt(a.id, s, omfang)}
+                      onFjern={() => fjernSkiftForAnsatt(a.id)}
+                    />
                   </div>
                 ))}
                 {filtrerteAnsatte.utilgjengelige.length > 0 && (
@@ -1782,6 +1870,12 @@ export default function PlanPage() {
                       >
                         <span className={styles.driverName}>{fullNavn(a)}</span>
                         <span className={styles.driverGrunn}>{a.grunn}</span>
+                        <PlanSkiftMenu
+                          navn={fullNavn(a)}
+                          overstyrtSkift={skiftOverstyringMap.get(a.id)}
+                          onSett={(s, omfang) => settSkiftForAnsatt(a.id, s, omfang)}
+                          onFjern={() => fjernSkiftForAnsatt(a.id)}
+                        />
                       </div>
                     ))}
                   </>

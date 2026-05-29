@@ -209,3 +209,22 @@ export type DagEndring = {
   /** Alle rutekoder som var koblet denne dagen (før oppheving). */
   rutekoder?: string[];
 };
+
+/* ─── Skift-tilgjengelighet (avvik fra turnus for en eller flere datoer) ─── */
+
+/**
+ * Overstyrer hvilket skift en sjåfør er tilgjengelig på, uten å endre turnusen.
+ * Brukes både for skiftbytte (fast turnus → motsatt skift) og for å «parkere»
+ * fleksible sjåfører (tilgjengelig begge skift) på ett skift en periode.
+ */
+export type SkiftTilgjengelighet = {
+  id: string;
+  ansattId: string;
+  /** Første dato (ISO yyyy-mm-dd) overstyringen gjelder. */
+  fraDato: string;
+  /** Siste dato (ISO). Utelatt = kun fraDato (én dag). */
+  tilDato?: string;
+  /** Skiftet sjåføren er tilgjengelig på i perioden. */
+  skift: Skift;
+  kommentar?: string;
+};

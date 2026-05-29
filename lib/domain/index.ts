@@ -17,6 +17,7 @@ export type {
   MasterRuteplan,
   PlanRuteTildeling,
   Rute,
+  SkiftTilgjengelighet,
 } from "./types";
 export { FRAVÆR_TYPER } from "./types";
 export {

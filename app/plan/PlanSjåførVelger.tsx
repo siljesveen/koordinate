@@ -20,6 +20,8 @@ type PlanSjåførVelgerProps = {
   masterSjåførNavn?: string;
   masterPåFravær?: boolean;
   masterFraværGrunn?: string;
+  /** Satt (f.eks. "kveld") når master-sjåføren er flyttet til motsatt skift. */
+  påAnnetSkift?: string;
   dragAnsattId?: string;
   onDragStart: (e: DragEvent, ansattId: string) => void;
   ansatte: Ansatt[];
@@ -44,6 +46,7 @@ export default function PlanSjåførVelger({
   masterSjåførNavn,
   masterPåFravær = false,
   masterFraværGrunn,
+  påAnnetSkift,
   dragAnsattId,
   onDragStart,
   ansatte,
@@ -144,11 +147,13 @@ export default function PlanSjåførVelger({
     manueltInnsatt,
   );
 
-  const valgtViserAdvarsel = valgtViserFravær || valgtErOverstyring;
+  const valgtViserAdvarsel = valgtViserFravær || valgtErOverstyring || Boolean(påAnnetSkift);
 
   const masterFraværTittel = valgtViserFravær
     ? `Mastersjåfør fraværende${masterFraværGrunn ? ` (${masterFraværGrunn})` : ""}`
-    : undefined;
+    : påAnnetSkift
+      ? `Sjåfør flyttet til ${påAnnetSkift}`
+      : undefined;
 
   useEffect(() => {
     if (!åpen) return;
@@ -271,6 +276,9 @@ export default function PlanSjåførVelger({
           }
         >
           <span className={styles.sjåførComboNavn}>{visningNavn}</span>
+          {påAnnetSkift && (
+            <span className={styles.sjåførPåAnnetSkift}>på {påAnnetSkift}</span>
+          )}
         </span>
         <button
           type="button"
