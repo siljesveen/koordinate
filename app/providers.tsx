@@ -10,6 +10,7 @@ import { BilUtilgjengeligStoreProvider } from "@/lib/state/bilUtilgjengeligStore
 import { ToastStoreProvider } from "@/lib/state/toastStore";
 import { DagEndringStoreProvider } from "@/lib/state/dagEndringStore";
 import { SkiftTilgjengelighetStoreProvider } from "@/lib/state/skiftTilgjengelighetStore";
+import { HentingStoreProvider } from "@/lib/state/hentingStore";
 
 import { HengerStoreProvider } from "@/lib/state/hengerStore";
 import { HengerUtilgjengeligStoreProvider } from "@/lib/state/hengerUtilgjengeligStore";
@@ -40,6 +41,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 <MasterplanStoreProvider>
                   <DagEndringStoreProvider>
                     <SkiftTilgjengelighetStoreProvider>
+                    <HentingStoreProvider>
                     <PlanRuteTildelingStoreProvider>
                       <Turnus4UkerStoreProvider>
                         <FraværStoreProvider>
@@ -51,6 +53,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                         </FraværStoreProvider>
                       </Turnus4UkerStoreProvider>
                     </PlanRuteTildelingStoreProvider>
+                    </HentingStoreProvider>
                     </SkiftTilgjengelighetStoreProvider>
                   </DagEndringStoreProvider>
                 </MasterplanStoreProvider>

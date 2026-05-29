@@ -12,6 +12,7 @@ import styles from "./TopNav.module.css";
 const NAV_ITEMS: { href: string; label: string; group: "plan" | "ressurs" | "admin" }[] = [
   { href: "/plan", label: "Plan", group: "plan" },
   { href: "/masterplan", label: "Masterplan", group: "plan" },
+  { href: "/hentinger", label: "Hentinger", group: "plan" },
   { href: "/ansatte", label: "Ansatte", group: "ressurs" },
   { href: "/biler", label: "Biler", group: "ressurs" },
   { href: "/verksted", label: "Verksted", group: "ressurs" },

@@ -6,6 +6,8 @@ export type {
   DagEndring,
   Dagsplan,
   DagsplanStatus,
+  Henting,
+  HentingDagValg,
   Koblingsgruppe,
   Skift,
   Fravær,

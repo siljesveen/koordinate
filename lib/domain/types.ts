@@ -210,6 +210,35 @@ export type DagEndring = {
   rutekoder?: string[];
 };
 
+/* ─── Hentinger (faste henteoppdrag + daglig avhuking) ─── */
+
+/** Fast henteoppdrag i katalogen. */
+export type Henting = {
+  id: string;
+  /** Kunde/leverandør – hovedidentifikasjon. */
+  kunde: string;
+  /**
+   * Ukeoppsett: rute(r) som henter per ukedag (1 = mandag … 7 = søndag).
+   * Tom liste / mangler = henting går normalt ikke den ukedagen.
+   */
+  ukeRuter: Record<number, string[]>;
+  /** Valgfri mengde (fritekst, f.eks. «3 paller»). */
+  antall?: string;
+  kommentar?: string;
+  aktiv: boolean;
+};
+
+/** Avhuket henting for en bestemt dato (med evt. overstyrte ruter den dagen). */
+export type HentingDagValg = {
+  id: string;
+  dato: string;
+  hentingId: string;
+  /** Overstyrte ruter for denne dagen (ellers brukes ukeRuter for ukedagen). */
+  ruter?: string[];
+  /** Mengde registrert for denne dagen (fritekst, f.eks. «4 paller»). */
+  antall?: string;
+};
+
 /* ─── Skift-tilgjengelighet (avvik fra turnus for en eller flere datoer) ─── */
 
 /**
