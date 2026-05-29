@@ -1,41 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
-import { fullNavn, type Ansatt, type MasterRuteSlot, type PlanRuteTildeling } from "@/lib/domain";
+import { useMemo, useState } from "react";
+import { syklusUkeFraDato, ukedag1til7FraDato } from "@/lib/imported/ringnesCycle";
+import { isoDato, parseISODateInput } from "@/lib/kjoretoyTilgjengelighet";
+import { byggDagDriftOversikt, formatPlanDatoLang } from "@/lib/plan/dagDriftOversikt";
+import { byggUkesFraværOversikt, formatUkeIntervall } from "@/lib/plan/ukesFraværOversikt";
 import { useAnsattStore } from "@/lib/state/ansattStore";
+import { useBilStore } from "@/lib/state/bilStore";
+import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
+import { useDagEndringStore } from "@/lib/state/dagEndringStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
+import { useHengerStore } from "@/lib/state/hengerStore";
+import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
-import { useBilStore } from "@/lib/state/bilStore";
-import { useHengerStore } from "@/lib/state/hengerStore";
 import styles from "./page.module.css";
 
-function isoDato(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${dd}`;
-}
-
-function ukedag1til7(d: Date): number {
-  return d.getDay() === 0 ? 7 : d.getDay();
-}
-
-function syklusUke(d: Date): 1 | 2 | 3 | 4 {
-  const anker = new Date(2026, 4, 11);
-  const diff = Math.floor((d.getTime() - anker.getTime()) / (7 * 24 * 60 * 60 * 1000));
-  const mod = ((diff % 4) + 4) % 4;
-  return (mod + 1) as 1 | 2 | 3 | 4;
-}
-
-function overlapperDato(
-  post: { fraDato: string; tilDato?: string },
-  dato: string,
-): boolean {
-  if (dato < post.fraDato) return false;
-  if (!post.tilDato) return true;
-  return dato <= post.tilDato;
+function addDays(iso: string, delta: number): string {
+  const d = parseISODateInput(iso);
+  d.setDate(d.getDate() + delta);
+  return isoDato(d);
 }
 
 export default function Home() {
@@ -43,198 +28,323 @@ export default function Home() {
   const { fravær } = useFraværStore();
   const { masterplan } = useMasterplanStore();
   const { tildelinger } = usePlanRuteTildelingStore();
+  const { endringer: dagEndringer } = useDagEndringStore();
   const { biler } = useBilStore();
   const { hengere } = useHengerStore();
+  const { poster: bilUtilgjengelig } = useBilUtilgjengeligStore();
+  const { poster: hengerUtilgjengelig } = useHengerUtilgjengeligStore();
 
-  const iDag = useMemo(() => new Date(), []);
-  const dato = useMemo(() => isoDato(iDag), [iDag]);
-  const dayNo = useMemo(() => ukedag1til7(iDag), [iDag]);
-  const uke = useMemo(() => syklusUke(iDag), [iDag]);
+  const iDagIso = useMemo(() => isoDato(new Date()), []);
+  const [dato, setDato] = useState(iDagIso);
+  const [visning, setVisning] = useState<"dag" | "uke">("dag");
 
-  const dagNavn = new Intl.DateTimeFormat("nb-NO", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(iDag);
+  const uke = useMemo(() => syklusUkeFraDato(parseISODateInput(dato)), [dato]);
+  const dayNo = useMemo(() => ukedag1til7FraDato(parseISODateInput(dato)), [dato]);
+  const iMorgenIso = useMemo(() => addDays(iDagIso, 1), [iDagIso]);
 
-  const ansattById = useMemo(
-    () => new Map(ansatte.map((a) => [a.id, a] as const)),
-    [ansatte],
-  );
-
-  const dagRuter = useMemo(
+  const drift = useMemo(
     () =>
-      masterplan.slots
-        .filter((s) => s.uke === uke && s.dag === dayNo && s.skift === "Dag")
-        .sort((a, b) => a.rutekode.localeCompare(b.rutekode, "nb", { numeric: true })),
-    [masterplan.slots, uke, dayNo],
+      byggDagDriftOversikt({
+        dato,
+        uke,
+        dag: dayNo,
+        ansatte,
+        fravær,
+        masterSlots: masterplan.slots,
+        koblingsgrupper: masterplan.koblingsgrupper,
+        dagEndringer,
+        tildelinger,
+        bilUtilgjengelig,
+        hengerUtilgjengelig,
+        biler,
+        hengere,
+      }),
+    [
+      dato,
+      uke,
+      dayNo,
+      ansatte,
+      fravær,
+      masterplan.slots,
+      masterplan.koblingsgrupper,
+      dagEndringer,
+      tildelinger,
+      bilUtilgjengelig,
+      hengerUtilgjengelig,
+      biler,
+      hengere,
+    ],
   );
 
-  const tildelingMap = useMemo(() => {
-    const m = new Map<string, PlanRuteTildeling>();
-    for (const t of tildelinger) {
-      if (t.uke === uke && t.dag === dayNo && t.skift === "Dag") {
-        m.set(t.rute, t);
-      }
-    }
-    return m;
-  }, [tildelinger, uke, dayNo]);
-
-  const fraværIDag = useMemo(
-    () => fravær.filter((f) => overlapperDato(f, dato)),
-    [fravær, dato],
+  const ukesoversikt = useMemo(
+    () =>
+      byggUkesFraværOversikt({
+        dato,
+        ansatte,
+        fravær,
+        masterSlots: masterplan.slots,
+        bilUtilgjengelig,
+        hengerUtilgjengelig,
+        biler,
+        hengere,
+      }),
+    [dato, ansatte, fravær, masterplan.slots, bilUtilgjengelig, hengerUtilgjengelig, biler, hengere],
   );
 
-  const stats = useMemo(() => {
-    let ok = 0;
-    let mangler = 0;
-    let utilgjengelig = 0;
-    const tildelteSjåfører = new Set<string>();
-
-    for (const slot of dagRuter) {
-      const til = tildelingMap.get(slot.rutekode);
-      let sjåførId = til?.ansattId ?? slot.standardSjåførAnsattId;
-      const sjåfør = sjåførId ? ansattById.get(sjåførId) : undefined;
-      if (sjåfør && !sjåfør.aktiv) sjåførId = undefined;
-
-      const harFravær = sjåførId
-        ? fraværIDag.some((f) => f.ansattId === sjåførId)
-        : false;
-
-      const bilId = til?.bilId ?? slot.standardBilId;
-
-      if (!sjåførId || !bilId) {
-        mangler++;
-      } else if (harFravær) {
-        utilgjengelig++;
-      } else {
-        ok++;
-        tildelteSjåfører.add(sjåførId);
-      }
-    }
-
-    const aktiveAsko = ansatte.filter(
-      (a) => a.aktiv && (!a.selskap || a.selskap === "Asko"),
-    );
-    const fraværSet = new Set(fraværIDag.map((f) => f.ansattId));
-    const tilgjengelige = aktiveAsko.filter(
-      (a) => !tildelteSjåfører.has(a.id) && !fraværSet.has(a.id),
-    );
-    const antallFravær = aktiveAsko.filter((a) => fraværSet.has(a.id)).length;
-
-    return {
-      totaltRuter: dagRuter.length,
-      ok,
-      mangler,
-      utilgjengelig,
-      tilgjengelige: tilgjengelige.length,
-      antallFravær,
-      totalAnsatte: aktiveAsko.length,
-      totalBiler: biler.filter((b) => b.aktiv).length,
-      totalHengere: hengere.filter((h) => h.aktiv).length,
-    };
-  }, [dagRuter, tildelingMap, ansattById, fraværIDag, ansatte, biler, hengere]);
-
-  const ruterMedMangler = useMemo(() => {
-    const resultat: { rutekode: string; rutenavn: string; problem: string }[] = [];
-    for (const slot of dagRuter) {
-      const til = tildelingMap.get(slot.rutekode);
-      let sjåførId = til?.ansattId ?? slot.standardSjåførAnsattId;
-      const sjåfør = sjåførId ? ansattById.get(sjåførId) : undefined;
-      if (sjåfør && !sjåfør.aktiv) sjåførId = undefined;
-      const harFravær = sjåførId ? fraværIDag.some((f) => f.ansattId === sjåførId) : false;
-      const bilId = til?.bilId ?? slot.standardBilId;
-
-      const problemer: string[] = [];
-      if (!sjåførId) problemer.push("Mangler sjåfør");
-      else if (harFravær) problemer.push("Sjåfør har fravær");
-      if (!bilId) problemer.push("Mangler bil");
-
-      if (problemer.length > 0) {
-        resultat.push({
-          rutekode: slot.rutekode,
-          rutenavn: slot.rutenavn ?? slot.rutekode,
-          problem: problemer.join(", "),
-        });
-      }
-    }
-    return resultat;
-  }, [dagRuter, tildelingMap, ansattById, fraværIDag]);
+  const { sammendrag, problemer } = drift;
+  const harRuter = sammendrag.dag.totalt + sammendrag.kveld.totalt > 0;
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      <div className={styles.topRow}>
         <div>
-          <h1 className={styles.title}>Dagsoversikt</h1>
-          <p className={styles.subtitle}>{dagNavn} · Uke {uke} i syklus</p>
+          <h1 className={styles.title}>{visning === "dag" ? "Drift i dag" : "Ukesoversikt"}</h1>
+          <p className={styles.subtitle}>
+            {visning === "dag"
+              ? `${formatPlanDatoLang(dato)} · Syklus uke ${uke}`
+              : `Uke ${formatUkeIntervall(ukesoversikt)} · ${ukesoversikt.totalt.ansatte} sjåfør · ${ukesoversikt.totalt.biler} bil · ${ukesoversikt.totalt.hengere} henger ute`}
+          </p>
         </div>
-        <Link href="/plan" className={styles.filterBtn}>
-          Åpne Plan →
-        </Link>
-      </header>
 
-      {/* Sammendrag-kort */}
-      <div className={styles.cardGrid}>
-        <div className={`${styles.card} ${styles.cardGreen}`}>
-          <div className={styles.cardValue}>{stats.ok}</div>
-          <div className={styles.cardLabel}>Ruter OK</div>
-        </div>
-        <div className={`${styles.card} ${stats.mangler > 0 ? styles.cardRed : styles.cardNeutral}`}>
-          <div className={styles.cardValue}>{stats.mangler}</div>
-          <div className={styles.cardLabel}>Mangler ressurs</div>
-        </div>
-        <div className={`${styles.card} ${stats.utilgjengelig > 0 ? styles.cardYellow : styles.cardNeutral}`}>
-          <div className={styles.cardValue}>{stats.utilgjengelig}</div>
-          <div className={styles.cardLabel}>Utilgjengelig</div>
-        </div>
-        <div className={styles.card}>
-          <div className={styles.cardValue}>{stats.tilgjengelige}</div>
-          <div className={styles.cardLabel}>Ledige sjåfører</div>
-        </div>
-        <div className={`${styles.card} ${stats.antallFravær > 0 ? styles.cardOrange : styles.cardNeutral}`}>
-          <div className={styles.cardValue}>{stats.antallFravær}</div>
-          <div className={styles.cardLabel}>Fravær i dag</div>
-        </div>
-      </div>
-
-      {/* Ressursoversikt */}
-      <div className={styles.resourceRow}>
-        <span>{stats.totalAnsatte} aktive sjåfører</span>
-        <span className={styles.dot} />
-        <span>{stats.totalBiler} biler</span>
-        <span className={styles.dot} />
-        <span>{stats.totalHengere} hengere</span>
-        <span className={styles.dot} />
-        <span>{stats.totaltRuter} ruter i dag</span>
-      </div>
-
-      {/* Ruter som trenger oppmerksomhet */}
-      {ruterMedMangler.length > 0 && (
-        <div className={styles.alertSection}>
-          <h2 className={styles.alertTitle}>Trenger oppmerksomhet ({ruterMedMangler.length})</h2>
-          <div className={styles.alertList}>
-            {ruterMedMangler.map((r) => (
-              <div key={r.rutekode} className={styles.alertRow}>
-                <span className={styles.alertRute}>{r.rutekode}</span>
-                <span className={styles.alertNavn}>{r.rutenavn}</span>
-                <span className={styles.alertProblem}>{r.problem}</span>
-              </div>
-            ))}
+        <div className={styles.dateNav}>
+          <div className={styles.viewToggle} role="tablist" aria-label="Visning">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={visning === "dag"}
+              className={`${styles.toggleBtn}${visning === "dag" ? ` ${styles.toggleBtnActive}` : ""}`}
+              onClick={() => setVisning("dag")}
+            >
+              Dag
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={visning === "uke"}
+              className={`${styles.toggleBtn}${visning === "uke" ? ` ${styles.toggleBtnActive}` : ""}`}
+              onClick={() => setVisning("uke")}
+            >
+              Uke
+            </button>
           </div>
+          <button
+            type="button"
+            className={styles.dayBtn}
+            onClick={() => setDato((d) => addDays(d, -1))}
+            aria-label="Forrige dag"
+          >
+            ‹
+          </button>
+          <input
+            className={styles.dateInput}
+            type="date"
+            value={dato}
+            onChange={(e) => setDato(e.target.value)}
+            aria-label="Dato"
+          />
+          <button
+            type="button"
+            className={styles.dayBtn}
+            onClick={() => setDato((d) => addDays(d, 1))}
+            aria-label="Neste dag"
+          >
+            ›
+          </button>
+          <button
+            type="button"
+            className={`${styles.shortcut}${dato === iDagIso ? ` ${styles.shortcutActive}` : ""}`}
+            onClick={() => setDato(iDagIso)}
+          >
+            I dag
+          </button>
+          <button
+            type="button"
+            className={`${styles.shortcut}${dato === iMorgenIso ? ` ${styles.shortcutActive}` : ""}`}
+            onClick={() => setDato(iMorgenIso)}
+          >
+            I morgen
+          </button>
+          <Link href="/plan" className={styles.planBtn}>
+            Åpne Plan
+          </Link>
         </div>
-      )}
+      </div>
 
-      {ruterMedMangler.length === 0 && stats.totaltRuter > 0 && (
-        <div className={styles.allGood}>
-          Alle {stats.totaltRuter} ruter har sjåfør og bil tildelt for dagskiftet i dag.
-        </div>
-      )}
+      {visning === "dag" ? (
+        harRuter ? (
+        <>
+          <div className={styles.statusBar}>
+            <span className={styles.statusOk}>{sammendrag.ok} OK</span>
+            {sammendrag.trengerHandling > 0 ? (
+              <span className={styles.statusBad}>{sammendrag.trengerHandling} trenger handling</span>
+            ) : (
+              <span className={styles.statusOk}>Ingen problemer</span>
+            )}
+            <span className={styles.statusDot} />
+            <span className={styles.statusMuted}>
+              Dag {sammendrag.dag.problemer > 0 ? `${sammendrag.dag.problemer} problem` : "OK"}
+              {" · "}
+              Kveld {sammendrag.kveld.problemer > 0 ? `${sammendrag.kveld.problemer} problem` : "OK"}
+            </span>
+            {(sammendrag.personerUte > 0 || sammendrag.kjøretøyUte > 0) && (
+              <>
+                <span className={styles.statusDot} />
+                <span className={styles.statusMuted}>
+                  {sammendrag.personerUte > 0 ? `${sammendrag.personerUte} ute` : null}
+                  {sammendrag.personerUte > 0 && sammendrag.kjøretøyUte > 0 ? " · " : null}
+                  {sammendrag.kjøretøyUte > 0 ? `${sammendrag.kjøretøyUte} kjøretøy ute` : null}
+                </span>
+              </>
+            )}
+          </div>
 
-      {stats.totaltRuter === 0 && (
-        <div className={styles.emptyState}>
-          Ingen ruter funnet for i dag. Sjekk <Link href="/masterplan" className={styles.inlineLink}>Masterplan</Link> for oppsett.
-        </div>
+          <section className={styles.hero}>
+            {problemer.length > 0 ? (
+              <>
+                <h2 className={styles.heroTitle}>Trenger handling · {problemer.length}</h2>
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Rute</th>
+                        <th className={styles.hideSm}>Navn</th>
+                        <th>Skift</th>
+                        <th>Sjåfør</th>
+                        <th className={styles.hideSm}>Bil</th>
+                        <th>Problem</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {problemer.map((p) => (
+                        <tr
+                          key={p.id}
+                          className={p.alvor === "kritisk" ? styles.rowKritisk : undefined}
+                        >
+                          <td className={styles.rute}>{p.rutekode}</td>
+                          <td className={`${styles.navn} ${styles.hideSm}`}>{p.rutenavn}</td>
+                          <td className={styles.skift}>{p.skift}</td>
+                          <td className={styles.sjåfør}>{p.sjåførNavn ?? "—"}</td>
+                          <td className={`${styles.bil} ${styles.hideSm}`}>{p.bilMerke ?? "—"}</td>
+                          <td className={styles.problem}>{p.problem}</td>
+                          <td>
+                            <Link href="/plan" className={styles.actionLink}>
+                              Plan →
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <div className={styles.allGood}>
+                Alle {sammendrag.ok} ruter er klare for dag og kveld.
+              </div>
+            )}
+          </section>
+
+          <div className={styles.footerMeta}>
+            <span>
+              {sammendrag.dag.totalt} ruter dag · {sammendrag.kveld.totalt} ruter kveld
+            </span>
+            <span className={styles.statusDot} />
+            <Link href="/plan" className={styles.inlineLink}>
+              Fravær, avspasering og kjøretøy — se i Plan
+            </Link>
+          </div>
+        </>
+        ) : (
+          <div className={styles.emptyState}>
+            Ingen ruter funnet for valgt dag. Sjekk{" "}
+            <Link href="/masterplan" className={styles.inlineLink}>
+              Masterplan
+            </Link>
+            .
+          </div>
+        )
+      ) : (
+        <section className={styles.weekWrap}>
+          <div className={styles.statusBar}>
+            <span className={styles.statusMuted}>
+              {ukesoversikt.totalt.ansatte} sjåfør ute
+            </span>
+            <span className={styles.statusDot} />
+            <span className={styles.statusMuted}>{ukesoversikt.totalt.biler} bil ute</span>
+            <span className={styles.statusDot} />
+            <span className={styles.statusMuted}>{ukesoversikt.totalt.hengere} henger ute</span>
+          </div>
+
+          <div className={styles.weekGrid}>
+            {ukesoversikt.dager.map((dag) => {
+              const tomt =
+                dag.ansatte.length === 0 && dag.biler.length === 0 && dag.hengere.length === 0;
+              return (
+                <div
+                  key={dag.dato}
+                  className={`${styles.dayCard}${dag.erIDag ? ` ${styles.dayCardToday}` : ""}`}
+                >
+                  <div className={styles.dayCardHead}>
+                    <span className={styles.dayCardName}>
+                      {dag.dagNavn} {dag.datoKort}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.dayCardLink}
+                      onClick={() => {
+                        setDato(dag.dato);
+                        setVisning("dag");
+                      }}
+                    >
+                      Åpne dag →
+                    </button>
+                  </div>
+
+                  {tomt ? (
+                    <p className={styles.dayCardEmpty}>Ingen fravær eller kjøretøy ute.</p>
+                  ) : (
+                    <div className={styles.dayCardBody}>
+                      {dag.ansatte.length > 0 && (
+                        <div className={styles.dayCardGroup}>
+                          <span className={styles.dayCardGroupTitle}>
+                            Sjåfører · {dag.ansatte.length}
+                          </span>
+                          {dag.ansatte.map((r) => (
+                            <div key={r.id} className={styles.dayCardRow}>
+                              <span className={styles.dayCardRowName}>{r.navn}</span>
+                              <span className={styles.dayCardTag}>{r.type}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {(dag.biler.length > 0 || dag.hengere.length > 0) && (
+                        <div className={styles.dayCardGroup}>
+                          <span className={styles.dayCardGroupTitle}>
+                            Kjøretøy · {dag.biler.length + dag.hengere.length}
+                          </span>
+                          {dag.biler.map((r) => (
+                            <div key={r.id} className={styles.dayCardRow}>
+                              <span className={styles.dayCardRowName}>{r.etikett}</span>
+                              <span className={styles.dayCardTag}>{r.type}</span>
+                            </div>
+                          ))}
+                          {dag.hengere.map((r) => (
+                            <div key={r.id} className={styles.dayCardRow}>
+                              <span className={styles.dayCardRowName}>{r.etikett}</span>
+                              <span className={styles.dayCardTag}>{r.type}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
     </div>
   );
