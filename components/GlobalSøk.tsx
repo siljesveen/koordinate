@@ -45,10 +45,9 @@ function byggIndeks(
   ansattById: Map<string, Ansatt>,
   bilById: Map<string, Bil>,
   hengerById: Map<string, Henger>,
-  slots: { rutekode: string; rutenavn?: string; standardSjåførAnsattId?: string; standardBilId?: string; standardHengerId?: string }[],
+  slots: { rutekode: string; skift: string; rutenavn?: string; standardSjåførAnsattId?: string; standardBilId?: string; standardHengerId?: string }[],
 ): SøkTreff[] {
   const treff: SøkTreff[] = [];
-  const settRuter = new Set<string>();
 
   for (const a of ansatte) {
     const bil = a.fastBilId ? bilById.get(a.fastBilId) : undefined;
@@ -103,34 +102,61 @@ function byggIndeks(
     });
   }
 
+  // Aggreger per rutekode + skift, så alle sjåfører/biler/hengere gjennom
+  // hele syklusen (uke 1–4, dag 1–7) blir søkbare – ikke bare første slot.
+  type RuteAgg = {
+    rutekode: string;
+    skift: string;
+    rutenavn?: string;
+    sjåfører: Set<string>;
+    biler: Set<string>;
+    hengere: Set<string>;
+  };
+  const ruteAgg = new Map<string, RuteAgg>();
   for (const slot of slots) {
-    if (settRuter.has(slot.rutekode)) continue;
-    settRuter.add(slot.rutekode);
+    const key = `${slot.rutekode}|${slot.skift}`;
+    let agg = ruteAgg.get(key);
+    if (!agg) {
+      agg = {
+        rutekode: slot.rutekode,
+        skift: slot.skift,
+        rutenavn: slot.rutenavn,
+        sjåfører: new Set(),
+        biler: new Set(),
+        hengere: new Set(),
+      };
+      ruteAgg.set(key, agg);
+    }
+    if (!agg.rutenavn && slot.rutenavn) agg.rutenavn = slot.rutenavn;
+    if (slot.standardSjåførAnsattId) agg.sjåfører.add(slot.standardSjåførAnsattId);
+    if (slot.standardBilId) agg.biler.add(slot.standardBilId);
+    if (slot.standardHengerId) agg.hengere.add(slot.standardHengerId);
+  }
 
-    const sj = slot.standardSjåførAnsattId
-      ? ansattById.get(slot.standardSjåførAnsattId)
-      : undefined;
-    const bil = slot.standardBilId ? bilById.get(slot.standardBilId) : undefined;
-    const henger = slot.standardHengerId ? hengerById.get(slot.standardHengerId) : undefined;
+  for (const agg of ruteAgg.values()) {
+    const sjNavn = [...agg.sjåfører]
+      .map((id) => ansattById.get(id))
+      .filter((a): a is Ansatt => !!a)
+      .map((a) => fullNavn(a));
+    const bilKjenn = [...agg.biler]
+      .map((id) => bilById.get(id)?.kjennemerke)
+      .filter((k): k is string => !!k);
+    const hengerKjenn = [...agg.hengere]
+      .map((id) => hengerById.get(id)?.kjennemerke)
+      .filter((k): k is string => !!k);
 
-    const blob = [
-      slot.rutekode,
-      slot.rutenavn,
-      sj ? fullNavn(sj) : "",
-      bil?.kjennemerke,
-      henger?.kjennemerke,
-    ]
+    const blob = [agg.rutekode, agg.rutenavn, agg.skift, ...sjNavn, ...bilKjenn, ...hengerKjenn]
       .filter(Boolean)
       .join(" ");
 
     treff.push({
       kind: "rute",
-      id: slot.rutekode,
-      label: slot.rutekode,
-      sublabel: [slot.rutenavn, sj ? fullNavn(sj) : "", bil?.kjennemerke, henger?.kjennemerke]
+      id: `${agg.rutekode}|${agg.skift}`,
+      label: `${agg.rutekode} · ${agg.skift}`,
+      sublabel: [agg.rutenavn, sjNavn.join(", "), bilKjenn.join(", ")]
         .filter(Boolean)
         .join(" · ") || undefined,
-      href: `/plan?søk=${encodeURIComponent(slot.rutekode)}`,
+      href: `/plan?søk=${encodeURIComponent(agg.rutekode)}`,
       søkBlob: blob,
     });
   }
