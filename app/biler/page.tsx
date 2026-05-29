@@ -197,10 +197,14 @@ export default function BilerPage() {
                   <td>
                     <span
                       className={
-                        utilgjengeligIDag ? `${styles.badge} ${styles.badgeUtilgjengelig}` : `${styles.badge} ${styles.badgeDisponibel}`
+                        !b.aktiv
+                          ? `${styles.badge} ${styles.badgeInaktiv}`
+                          : utilgjengeligIDag
+                            ? `${styles.badge} ${styles.badgeUtilgjengelig}`
+                            : `${styles.badge} ${styles.badgeDisponibel}`
                       }
                     >
-                      {utilgjengeligIDag ? "Utilgjengelig" : "Disponibel"}
+                      {!b.aktiv ? "Inaktiv" : utilgjengeligIDag ? "Utilgjengelig" : "Disponibel"}
                     </span>
                   </td>
                 </tr>

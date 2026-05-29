@@ -190,12 +190,14 @@ export default function HengerPage() {
                   <td>
                     <span
                       className={
-                        utilgjengeligIDag
-                          ? `${styles.badge} ${styles.badgeUtilgjengelig}`
-                          : `${styles.badge} ${styles.badgeDisponibel}`
+                        !h.aktiv
+                          ? `${styles.badge} ${styles.badgeInaktiv}`
+                          : utilgjengeligIDag
+                            ? `${styles.badge} ${styles.badgeUtilgjengelig}`
+                            : `${styles.badge} ${styles.badgeDisponibel}`
                       }
                     >
-                      {utilgjengeligIDag ? "Utilgjengelig" : "Disponibel"}
+                      {!h.aktiv ? "Inaktiv" : utilgjengeligIDag ? "Utilgjengelig" : "Disponibel"}
                     </span>
                   </td>
                 </tr>

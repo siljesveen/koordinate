@@ -165,6 +165,11 @@
   color: #b45309;
 }
 
+.badgeInaktiv {
+  background: var(--background-subtle);
+  color: var(--foreground-muted);
+}
+
 .empty {
   padding: 2rem 1.25rem !important;
   text-align: center;
