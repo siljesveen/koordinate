@@ -1,7 +1,7 @@
 "use client";
 
 import { syncLocalCacheFromSky, type SkySyncResult } from "@/lib/data/appDataStorage";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type AppDataReloadValue = {
   reloadTick: number;
@@ -20,6 +20,14 @@ export function AppDataReloadProvider({ children }: { children: React.ReactNode 
     setLastSync(result);
     setReloadTick((n) => n + 1);
     return result;
+  }, []);
+
+  useEffect(() => {
+    function påSynkFerdig() {
+      setReloadTick((n) => n + 1);
+    }
+    window.addEventListener("koordinate:dataSynced", påSynkFerdig);
+    return () => window.removeEventListener("koordinate:dataSynced", påSynkFerdig);
   }, []);
 
   const value = useMemo(

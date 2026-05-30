@@ -2,6 +2,7 @@ import { reportSkySave } from "@/lib/data/skySaveNotify";
 import {
   fetchAllAppDataFromSkyAction,
   importAppDataBatchAction,
+  loadAppDataFromSkyAction,
   saveAppDataToSkyAction,
 } from "@/app/actions/skyData";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
@@ -46,8 +47,8 @@ function skrivLocal(key: string, value: unknown): void {
   }
 }
 
-/** Hent alt fra sky og oppdater localStorage. */
-export async function syncLocalCacheFromSky(removeMissing = true): Promise<SkySyncResult> {
+/** Hent alt fra sky og oppdater localStorage. Sletter aldri lokale nøkler som mangler i sky. */
+export async function syncLocalCacheFromSky(removeMissing = false): Promise<SkySyncResult> {
   if (!isSupabaseConfigured() || typeof window === "undefined") {
     return { updated: 0, missing: [...APP_DATA_KEYS] };
   }
@@ -83,19 +84,36 @@ export async function syncLocalCacheFromSky(removeMissing = true): Promise<SkySy
 }
 
 /**
- * Les data fra localStorage-cachen.
- *
- * Skyen leses i bulk én gang ved innlogging/last (`syncOnLogin` →
- * `syncLocalCacheFromSky`) og speiles til localStorage før `dataReady` settes.
- * Per-nøkkel-lesing går derfor mot cachen, slik at vi slipper et eget sky-kall
- * per store ved oppstart (det ga tidligere en treg, seriell kjede av ~12
- * server actions – hver med en egen `auth.getUser()`-validering).
+ * Les data: localStorage-cachen først (raskt etter batch-synk), sky som fallback
+ * når nøkkelen mangler lokalt (ny nettleser, treg synk, race ved oppstart).
  */
 export async function loadAppData(key: string, innlogget = false): Promise<unknown | null> {
-  // Cachen er fersk for både innlogget (speilet fra sky) og uinnlogget (kun
-  // localStorage / Supabase ikke konfigurert), så lesing er likt i alle tilfeller.
-  void innlogget;
-  return lesLocal(key);
+  const cached = lesLocal(key);
+  if (cached !== null) {
+    return cached;
+  }
+
+  if (!isSupabaseConfigured() || !innlogget) {
+    return null;
+  }
+
+  const { data, error } = await loadAppDataFromSkyAction(key);
+
+  if (error === "not_authenticated") {
+    return null;
+  }
+
+  if (error) {
+    console.warn("[app_data] load feilet:", key, error);
+    return null;
+  }
+
+  if (data !== undefined && data !== null) {
+    skrivLocal(key, data);
+    return data;
+  }
+
+  return null;
 }
 
 /** Lagre data: local cache + Supabase når innlogget og kan redigere. */

@@ -107,7 +107,12 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
 
     void syncOnLogin().finally(() => {
       window.clearTimeout(timeoutId);
-      if (!cancelled) setDataReady(true);
+      if (!cancelled) {
+        setDataReady(true);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("koordinate:dataSynced"));
+        }
+      }
     });
 
     return () => {
