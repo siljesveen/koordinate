@@ -122,6 +122,32 @@ export async function saveAppData(
   value: unknown,
   canEdit: boolean,
 ): Promise<SaveAppDataResult> {
+  // Hindre at tomme lister/objekter overskriver eksisterende sky-data ved feil lasting.
+  if (canEdit && isSupabaseConfigured()) {
+    const villeTømme =
+      (Array.isArray(value) && value.length === 0) ||
+      (value &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        "slots" in value &&
+        Array.isArray((value as { slots?: unknown }).slots) &&
+        (value as { slots: unknown[] }).slots.length === 0);
+    if (villeTømme) {
+      const { data: sky } = await loadAppDataFromSkyAction(key);
+      const skyHarInnhold =
+        (Array.isArray(sky) && sky.length > 0) ||
+        (sky &&
+          typeof sky === "object" &&
+          "slots" in sky &&
+          Array.isArray((sky as { slots?: unknown }).slots) &&
+          (sky as { slots: unknown[] }).slots.length > 0);
+      if (skyHarInnhold) {
+        console.warn("[app_data] Blokkerte lagring av tom data over sky-innhold:", key);
+        return { savedToSky: false, error: "Tom data ble ikke lagret (sky har innhold)" };
+      }
+    }
+  }
+
   skrivLocal(key, value);
 
   if (!isSupabaseConfigured()) {

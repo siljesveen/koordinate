@@ -214,3 +214,12 @@ export function applyUke4ToMasterplan(
 ) {
   return applyUkeToMasterplan(existing, UKE4_MASTERPLAN_PATCH, ansattById);
 }
+
+/** Masterplan fra Ringnes-syklus + alle fire uke-patcher (standard grunnlinje). */
+export function buildBaselineMasterplanMedUker(ansattById?: Map<string, Ansatt>): MasterRuteplan {
+  let plan = baselineMasterplan();
+  for (const uke of [1, 2, 3, 4] as const) {
+    plan = mergeUkeMasterplanPatch(plan, UKE_MASTERPLAN_PATCHES[uke], ansattById).plan;
+  }
+  return plan;
+}

@@ -471,3 +471,41 @@ export async function applyUke2MasterplanAction(): Promise<{
 
   return { updated };
 }
+
+/** Gjenopprett standard grunnlinje (ansatte, kjøretøy, masterplan) til Supabase. */
+export async function restoreBaselineToSkyAction(): Promise<{
+  imported: number;
+  summary: string;
+  error?: string;
+}> {
+  if (!isSupabaseConfigured()) {
+    return { imported: 0, summary: "", error: "Supabase er ikke konfigurert" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { imported: 0, summary: "", error: "Ikke innlogget" };
+  }
+
+  const profile = await hentProfil(supabase, user.id, user.email ?? null);
+  if (!canEditData(profile.role)) {
+    return { imported: 0, summary: "", error: "Mangler rettigheter (admin/planlegger)" };
+  }
+
+  const { buildBaselineAppDataPayload, baselineOppsummering } = await import(
+    "@/lib/maintenance/restoreBaseline"
+  );
+  const payload = buildBaselineAppDataPayload();
+  const summary = baselineOppsummering(payload);
+
+  const result = await importAppDataBatchAction(payload);
+  if (result.error) {
+    return { imported: 0, summary, error: result.error };
+  }
+
+  return { imported: result.imported, summary };
+}
