@@ -3,7 +3,6 @@
 import { fetchSkyOverviewAction, restoreBaselineToSkyAction, verifySkySaveAction } from "@/app/actions/skyData";
 import { uploadLocalStorageToSky } from "@/lib/data/appDataStorage";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
-import { clearAllAnsatteData } from "@/lib/maintenance/clearAllAnsatte";
 import { baselineOppsummering, buildBaselineAppDataPayload } from "@/lib/maintenance/restoreBaseline";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
@@ -220,19 +219,6 @@ export default function InnstillingerPage() {
     }
   }
 
-  function handleSlettAlleAnsatte() {
-    if (
-      !window.confirm(
-        "Slette alle ansatte? Fravær og turnus fjernes også. Sjåfør-referanser i masterplan og plan tømmes. Biler og hengere beholdes.",
-      )
-    ) {
-      return;
-    }
-    clearAllAnsatteData();
-    setStatus("Alle ansatte er slettet. Husk «Lagre alt til sky» etterpå.");
-    window.setTimeout(() => window.location.reload(), 400);
-  }
-
   const nåværende = typeof window !== "undefined" ? eksporterData() : {};
   const { nøkler, poster } = tellPoster(nåværende);
 
@@ -317,17 +303,6 @@ export default function InnstillingerPage() {
           </button>
         </section>
       ) : null}
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Ansatte</h2>
-        <p className={styles.info}>
-          Tømmer alle ansatte før du legger inn nye fra dokument. Fravær og turnus slettes.
-          Fast sjåfør i masterplan og plan fjernes, men biler og hengere beholdes.
-        </p>
-        <button type="button" className={styles.dangerBtn} onClick={handleSlettAlleAnsatte}>
-          Slett alle ansatte
-        </button>
-      </section>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Importer fra fil</h2>
