@@ -6,6 +6,7 @@ import { fullNavn, FRAVÆR_TYPER, type Ansatt, type Fravær, type FraværType } 
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
+import { useAuth } from "@/lib/state/authStore";
 import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
 import styles from "./page.module.css";
 
@@ -51,6 +52,7 @@ function toSkjema(item: Fravær | null, ansatte: Ansatt[]): FraværSkjema {
 }
 
 export default function FraværPage() {
+  const { canEdit } = useAuth();
   const { ansatte } = useAnsattStore();
   const aktiveAnsatte = useMemo(() => ansatte.filter((a) => a.aktiv), [ansatte]);
   const ansattById = useMemo(() => new Map(aktiveAnsatte.map((a) => [a.id, a] as const)), [aktiveAnsatte]);
@@ -126,6 +128,7 @@ export default function FraværPage() {
 
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
     if (!skjema.ansattId) return;
     if (!skjema.fraDato || !skjema.tilDato) return;
     if (skjema.fraDato > skjema.tilDato) {
@@ -174,9 +177,11 @@ export default function FraværPage() {
               </option>
             ))}
           </select>
-          <button type="button" className={styles.primaryBtn} onClick={åpneNy} disabled={!aktiveAnsatte.length}>
-            Nytt fravær
-          </button>
+          {canEdit ? (
+            <button type="button" className={styles.primaryBtn} onClick={åpneNy} disabled={!aktiveAnsatte.length}>
+              Nytt fravær
+            </button>
+          ) : null}
         </div>
       </header>
 

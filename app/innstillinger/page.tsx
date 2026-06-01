@@ -1,13 +1,11 @@
 "use client";
 
-import { fetchSkyOverviewAction, restoreBaselineToSkyAction, verifySkySaveAction } from "@/app/actions/skyData";
+import { fetchSkyOverviewAction, verifySkySaveAction } from "@/app/actions/skyData";
 import { uploadLocalStorageToSky } from "@/lib/data/appDataStorage";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
-import { baselineOppsummering, buildBaselineAppDataPayload } from "@/lib/maintenance/restoreBaseline";
 import { useAuth } from "@/lib/state/authStore";
-import { useAppDataReload } from "@/lib/state/appDataReload";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 
 const STORAGE_KEYS = APP_DATA_KEYS;
@@ -54,7 +52,6 @@ function tellPoster(data: ExportData): { nøkler: number; poster: number } {
 
 export default function InnstillingerPage() {
   const { profile, canEdit, configured } = useAuth();
-  const { reloadFromCloud } = useAppDataReload();
   const supabaseAktiv = configured || isSupabaseConfigured();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -62,13 +59,7 @@ export default function InnstillingerPage() {
   const [skyOverview, setSkyOverview] = useState<string | null>(null);
   const [lasterSky, setLasterSky] = useState(false);
   const [lasterOpp, setLasterOpp] = useState(false);
-  const [lasterGjenopprett, setLasterGjenopprett] = useState(false);
   const [testerLagring, setTesterLagring] = useState(false);
-
-  const baselineSummary = useMemo(
-    () => baselineOppsummering(buildBaselineAppDataPayload()),
-    [],
-  );
 
   useEffect(() => {
     if (!supabaseAktiv || !profile) {
@@ -195,30 +186,6 @@ export default function InnstillingerPage() {
     window.location.reload();
   }
 
-  async function handleGjenopprettGrunnlinje() {
-    if (
-      !window.confirm(
-        `Gjenopprette standard grunnlinje (${baselineSummary})?\n\nDette erstatter ansatte, biler, hengere og masterplan i Supabase. Plan-tildelinger, fravær, dagendringer og hentinger nullstilles.\n\nBruk dette hvis alt er borte. Har du backup-fil, importer den i stedet.`,
-      )
-    ) {
-      return;
-    }
-    setLasterGjenopprett(true);
-    setStatus(null);
-    try {
-      const result = await restoreBaselineToSkyAction();
-      if (result.error) {
-        setStatus(`Gjenoppretting feilet: ${result.error}`);
-        return;
-      }
-      await reloadFromCloud();
-      setStatus(`Grunnlinje gjenopprettet (${result.summary}). Laster siden på nytt …`);
-      window.setTimeout(() => window.location.reload(), 800);
-    } finally {
-      setLasterGjenopprett(false);
-    }
-  }
-
   const nåværende = typeof window !== "undefined" ? eksporterData() : {};
   const { nøkler, poster } = tellPoster(nåværende);
 
@@ -260,25 +227,6 @@ export default function InnstillingerPage() {
           {!canEdit ? (
             <p className={styles.info}>Du har kun lesetilgang — kontakt admin for å lagre til sky.</p>
           ) : null}
-        </section>
-      ) : null}
-
-      {supabaseAktiv && profile && canEdit ? (
-        <section className={styles.alertBox}>
-          <h2 className={styles.alertTitle}>Gjenopprett grunnlinje</h2>
-          <p className={styles.info}>
-            Hvis ansatte, biler, hengere eller masterplan er borte, kan du hente inn standard
-            grunnlinje fra importen: {baselineSummary}. Dette gjenoppretter ikke egne
-            planendringer, fravær eller daglige tildelinger — kun grunnlaget.
-          </p>
-          <button
-            type="button"
-            className={styles.dangerBtn}
-            disabled={lasterGjenopprett}
-            onClick={handleGjenopprettGrunnlinje}
-          >
-            {lasterGjenopprett ? "Gjenoppretter …" : "Gjenopprett grunnlinje fra import"}
-          </button>
         </section>
       ) : null}
 

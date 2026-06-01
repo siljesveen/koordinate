@@ -5,6 +5,7 @@ import type { Henger, BilTilhørighet } from "@/lib/domain";
 import { BIL_TILHØRIGHETER } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
 import { syncHengereEtterAnsattFastHenger } from "@/lib/kjoretoy/syncFastKjoretoy";
+import { useAuth } from "@/lib/state/authStore";
 import { IMPORTERTE_HENGERE_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type HengerStoreValue = {
@@ -61,12 +62,14 @@ function nyId(): string {
 }
 
 export function HengerStoreProvider({ children }: { children: React.ReactNode }) {
+  const { canEdit } = useAuth();
   const { data: hengere, setData: setHengere } = useAppData<Henger[]>(STORAGE_KEY, {
     getDefault: () => [],
     parse: (raw) => normalizeLoaded(raw),
   });
 
   const lagre = (item: Henger) => {
+    if (!canEdit) return;
     setHengere((prev) => {
       const i = prev.findIndex((h) => h.id === item.id);
       if (i >= 0) {
@@ -78,9 +81,13 @@ export function HengerStoreProvider({ children }: { children: React.ReactNode })
     });
   };
 
-  const slett = (id: string) => setHengere((prev) => prev.filter((h) => h.id !== id));
+  const slett = (id: string) => {
+    if (!canEdit) return;
+    setHengere((prev) => prev.filter((h) => h.id !== id));
+  };
 
   const syncSjåførForAnsatt = (ansattId: string, nyHengerId?: string, gammelHengerId?: string) => {
+    if (!canEdit) return;
     setHengere((prev) => syncHengereEtterAnsattFastHenger(prev, ansattId, nyHengerId, gammelHengerId));
   };
 

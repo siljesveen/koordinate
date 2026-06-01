@@ -5,6 +5,7 @@ import type { Bil, BilTilhørighet } from "@/lib/domain";
 import { BIL_TILHØRIGHETER } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
 import { syncBilerEtterAnsattFastBil } from "@/lib/kjoretoy/syncFastKjoretoy";
+import { useAuth } from "@/lib/state/authStore";
 import { IMPORTERTE_BILER_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type BilStoreValue = {
@@ -63,12 +64,14 @@ function nyId(): string {
 }
 
 export function BilStoreProvider({ children }: { children: React.ReactNode }) {
+  const { canEdit } = useAuth();
   const { data: biler, setData: setBiler } = useAppData<Bil[]>(STORAGE_KEY, {
     getDefault: () => [],
     parse: (raw) => normalizeLoaded(raw),
   });
 
   const lagre = (item: Bil) => {
+    if (!canEdit) return;
     setBiler((prev) => {
       const i = prev.findIndex((b) => b.id === item.id);
       if (i >= 0) {
@@ -80,9 +83,13 @@ export function BilStoreProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const slett = (id: string) => setBiler((prev) => prev.filter((b) => b.id !== id));
+  const slett = (id: string) => {
+    if (!canEdit) return;
+    setBiler((prev) => prev.filter((b) => b.id !== id));
+  };
 
   const syncSjåførForAnsatt = (ansattId: string, nyBilId?: string, gammelBilId?: string) => {
+    if (!canEdit) return;
     setBiler((prev) => syncBilerEtterAnsattFastBil(prev, ansattId, nyBilId, gammelBilId));
   };
 

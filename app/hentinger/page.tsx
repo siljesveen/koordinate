@@ -10,6 +10,7 @@ import { useHentingStore } from "@/lib/state/hentingStore";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
+import { useAuth } from "@/lib/state/authStore";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
 import SokbarVelger, { type SokbarVelgerValg } from "@/components/SokbarVelger";
 import styles from "./page.module.css";
@@ -96,6 +97,7 @@ function RuteVelgerFlere({
 }
 
 export default function HentingerPage() {
+  const { canEdit } = useAuth();
   const {
     hentinger,
     dagValg,
@@ -283,6 +285,7 @@ export default function HentingerPage() {
 
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
     const kunde = skjema.kunde.trim();
     if (!kunde) return;
     lagreHenting({
@@ -530,9 +533,11 @@ export default function HentingerPage() {
       ) : (
         <>
           <div className={styles.katalogBar}>
-            <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
-              Ny henting
-            </button>
+            {canEdit ? (
+              <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
+                Ny henting
+              </button>
+            ) : null}
           </div>
           <div className={styles.tableWrap}>
             <table className={styles.table}>

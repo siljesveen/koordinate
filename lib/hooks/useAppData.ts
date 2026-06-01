@@ -5,7 +5,7 @@ import { markKeyDirty } from "@/lib/data/dirtyKeys";
 import type { AppDataKey } from "@/lib/data/storageKeys";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
 type UseAppDataOptions<T> = {
   getDefault: () => T;
@@ -19,6 +19,14 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
   const [data, setData] = useState<T>(options.getDefault);
   const [loaded, setLoaded] = useState(false);
   const hoppOverNesteLagring = useRef(true);
+
+  const setDataGuarded = useCallback<Dispatch<SetStateAction<T>>>(
+    (updater) => {
+      if (!canEdit) return;
+      setData(updater);
+    },
+    [canEdit],
+  );
 
   useEffect(() => {
     if (!dataReady) return;
@@ -46,7 +54,7 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
   }, [key, dataReady, reloadTick, innlogget]);
 
   useEffect(() => {
-    if (!loaded || !dataReady) return;
+    if (!loaded || !dataReady || !canEdit) return;
     if (hoppOverNesteLagring.current) {
       hoppOverNesteLagring.current = false;
       return;
@@ -61,5 +69,5 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
     return () => window.clearTimeout(timer);
   }, [key, data, loaded, dataReady, canEdit]);
 
-  return { data, setData, loaded: loaded && dataReady };
+  return { data, setData: setDataGuarded, loaded: loaded && dataReady, canEdit };
 }

@@ -222,10 +222,7 @@ export async function saveAppData(
   }
 
   if (!canEdit) {
-    skrivLocal(key, value);
-    const result = { savedToSky: false, error: "forbidden" };
-    reportSkySave({ key, ...result, error: feilmelding("forbidden") });
-    return result;
+    return { savedToSky: false };
   }
 
   skrivLocal(key, value);

@@ -4,6 +4,7 @@ import TopNav from "@/app/TopNav";
 import DevDataStatus from "@/components/DevDataStatus";
 import SkySaveBanner from "@/components/SkySaveBanner";
 import SkySyncBanner from "@/components/SkySyncBanner";
+import ReadOnlyBanner from "@/components/ReadOnlyBanner";
 import { usePathname } from "next/navigation";
 
 const HIDE_NAV_PREFIXES = ["/login", "/auth"];
@@ -17,6 +18,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   return (
     <>
       <DevDataStatus />
+      <ReadOnlyBanner />
       <SkySaveBanner />
       <SkySyncBanner />
       {!hideNav ? <TopNav /> : null}

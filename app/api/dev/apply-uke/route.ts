@@ -2,6 +2,7 @@
  * Dev/CI: legg inn uke-patch med service role.
  * POST /api/dev/apply-uke?uke=2
  */
+import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
 import { applyUkeToMasterplan, UKE_MASTERPLAN_PATCHES, type UkeNummer } from "@/lib/imported/applyUkeMasterplan";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
@@ -16,6 +17,10 @@ const PATCHES: Partial<Record<UkeNummer, (typeof UKE_MASTERPLAN_PATCHES)[UkeNumm
 };
 
 export async function POST(request: Request) {
+  if (!isDevEnvironment()) {
+    return NextResponse.json({ error: "Ikke tilgjengelig i produksjon" }, { status: 404 });
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

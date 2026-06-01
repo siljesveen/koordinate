@@ -11,6 +11,7 @@ import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { bilMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
+import { useAuth } from "@/lib/state/authStore";
 import styles from "./page.module.css";
 
 type BilSkjema = {
@@ -47,6 +48,7 @@ function toSkjema(b: Bil | null): BilSkjema {
 }
 
 export default function BilerPage() {
+  const { canEdit } = useAuth();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { biler, lagre, slett } = useBilStore();
   const { poster: bilUtilgjengelig } = useBilUtilgjengeligStore();
@@ -127,6 +129,7 @@ export default function BilerPage() {
 
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
     const km = skjema.kjennemerke.trim();
     if (!km) return;
 
@@ -170,9 +173,11 @@ export default function BilerPage() {
           <Link href="/verksted" className={styles.secondaryBtn}>
             Verksted
           </Link>
-          <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
-            Ny bil
-          </button>
+          {canEdit ? (
+            <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
+              Ny bil
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -265,15 +270,17 @@ export default function BilerPage() {
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <div>
-                <div className={styles.modalTitle}>{redigerer ? "Rediger bil" : "Ny bil"}</div>
-                <div className={styles.helper}>Knytt bil til sjåfør via ansattkortet.</div>
+                <div className={styles.modalTitle}>{redigerer ? (canEdit ? "Rediger bil" : "Vis bil") : "Ny bil"}</div>
+                <div className={styles.helper}>
+                  {canEdit ? "Knytt bil til sjåfør via ansattkortet." : "Kun visning — endringer lagres ikke."}
+                </div>
               </div>
               <button type="button" className={styles.closeBtn} onClick={lukk} aria-label="Lukk">
                 Lukk
               </button>
             </div>
             <form className={styles.modalBody} onSubmit={lagreSkjema}>
-              <div className={styles.formGrid}>
+              <fieldset className={styles.formGrid} disabled={!canEdit}>
                 <div className={styles.field}>
                   <label className={styles.label}>Kjennemerke *</label>
                   <input
@@ -282,6 +289,7 @@ export default function BilerPage() {
                     onChange={(e) => setSkjema((s) => ({ ...s, kjennemerke: e.target.value }))}
                     required
                     placeholder="AB 12345"
+                    readOnly={!canEdit}
                   />
                 </div>
                 <div className={styles.field}>
@@ -336,9 +344,9 @@ export default function BilerPage() {
                     onChange={(e) => setSkjema((s) => ({ ...s, kommentar: e.target.value }))}
                   />
                 </div>
-              </div>
+              </fieldset>
               <div className={styles.formActions}>
-                {redigerer ? (
+                {canEdit && redigerer ? (
                   <button
                     type="button"
                     className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
@@ -349,11 +357,13 @@ export default function BilerPage() {
                 ) : null}
                 <div className={styles.formActionsMain}>
                   <button type="button" className={styles.secondaryBtn} onClick={lukk}>
-                    Avbryt
+                    {canEdit ? "Avbryt" : "Lukk"}
                   </button>
-                  <button type="submit" className={styles.primaryBtn}>
-                    Lagre
-                  </button>
+                  {canEdit ? (
+                    <button type="submit" className={styles.primaryBtn}>
+                      Lagre
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </form>

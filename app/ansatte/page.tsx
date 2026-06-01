@@ -13,6 +13,7 @@ import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
 import { useTurnus4UkerStore, type TurnusSkiftType } from "@/lib/state/turnus4ukerStore";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
+import { useAuth } from "@/lib/state/authStore";
 import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
 import styles from "./page.module.css";
@@ -218,6 +219,7 @@ function visFastHenger(id: string | undefined, h: Henger | undefined): ReactNode
 }
 
 export default function AnsattePage() {
+  const { canEdit } = useAuth();
   const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { fravær, slettForAnsatt: slettFraværForAnsatt } = useFraværStore();
@@ -387,6 +389,7 @@ export default function AnsattePage() {
 
   async function lagre(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
 
     const nyFornavn = skjema.fornavn.trim();
     const nyEtternavn = skjema.etternavn.trim();
@@ -487,9 +490,11 @@ export default function AnsattePage() {
             <option value="inaktiv">Kun inaktive</option>
             <option value="alle">Alle</option>
           </select>
-          <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
-            Ny ansatt
-          </button>
+          {canEdit ? (
+            <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
+              Ny ansatt
+            </button>
+          ) : null}
         </div>
       </header>
 

@@ -329,6 +329,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   }, [masterplan, dataReady, canEdit]);
 
   const lagreSlot = (slot: MasterRuteSlot) => {
+    if (!canEdit) return;
     brukerHarEndret.current = true;
     setMasterplan((prev) => {
       const idx = prev.slots.findIndex((s) => s.id === slot.id);
@@ -343,6 +344,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   };
 
   const slettSlot = (id: string) => {
+    if (!canEdit) return;
     brukerHarEndret.current = true;
     setMasterplan((prev) => ({
       ...prev,
@@ -351,11 +353,13 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   };
 
   const lagreHel = (plan: MasterRuteplan) => {
+    if (!canEdit) return;
     brukerHarEndret.current = true;
     setMasterplan(plan);
   };
 
   const koblRuter = (gruppenavn: string, rutekoder: string[], opts?: { skift?: Skift; dag?: 1|2|3|4|5|6|7 }) => {
+    if (!canEdit) return;
     brukerHarEndret.current = true;
     setMasterplan((prev) => {
       const nyGruppe: Koblingsgruppe = { rutekoder, dag: opts?.dag, skift: opts?.skift };
@@ -371,6 +375,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   };
 
   const fjernKobling = (gruppenavn: string) => {
+    if (!canEdit) return;
     brukerHarEndret.current = true;
     setMasterplan((prev) => {
       const grupper = { ...(prev.koblingsgrupper ?? {}) };

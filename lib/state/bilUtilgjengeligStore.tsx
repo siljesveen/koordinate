@@ -151,6 +151,7 @@ export function BilUtilgjengeligStoreProvider({ children }: { children: React.Re
   }, [lastInnFraLagring]);
 
   const lagre = (item: BilUtilgjengelig) => {
+    if (!canEdit) return;
     setPoster((prev) => {
       const i = prev.findIndex((p) => p.id === item.id);
       if (i >= 0) {
@@ -169,9 +170,13 @@ export function BilUtilgjengeligStoreProvider({ children }: { children: React.Re
     });
   };
 
-  const slett = (id: string) => setPoster((prev) => prev.filter((p) => p.id !== id));
+  const slett = (id: string) => {
+    if (!canEdit) return;
+    setPoster((prev) => prev.filter((p) => p.id !== id));
+  };
 
   const merkTilbake = (id: string, meta?: MerkBilTilbakeMeta): BilTilbakeMelding | null => {
+    if (!canEdit) return null;
     const post = poster.find((p) => p.id === id);
     if (!post) return null;
 

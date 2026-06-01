@@ -11,6 +11,7 @@ import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStor
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { hengerMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
+import { useAuth } from "@/lib/state/authStore";
 import styles from "./page.module.css";
 
 type HengerSkjema = {
@@ -41,6 +42,7 @@ function toSkjema(h: Henger | null): HengerSkjema {
 }
 
 export default function HengerPage() {
+  const { canEdit } = useAuth();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { hengere, lagre, slett } = useHengerStore();
   const { poster: hengerUtilgjengelig } = useHengerUtilgjengeligStore();
@@ -121,6 +123,7 @@ export default function HengerPage() {
 
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
     const km = skjema.kjennemerke.trim();
     if (!km) return;
 
@@ -160,9 +163,11 @@ export default function HengerPage() {
             placeholder="Søk reg.nr, sjåfør, type…"
             aria-label="Søk hengere"
           />
-          <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
-            Ny henger
-          </button>
+          {canEdit ? (
+            <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
+              Ny henger
+            </button>
+          ) : null}
         </div>
       </header>
 

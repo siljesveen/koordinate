@@ -1,3 +1,4 @@
+import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
 import { applyUke1ToMasterplan } from "@/lib/imported/applyUkeMasterplan";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
@@ -6,6 +7,10 @@ const MASTERPLAN_KEY = "bemanning.masterplan.v1";
 
 /** Dev/CI: legg inn uke 1 med service role (ingen nettleser-innlogging). */
 export async function POST() {
+  if (!isDevEnvironment()) {
+    return NextResponse.json({ error: "Ikke tilgjengelig i produksjon" }, { status: 404 });
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
