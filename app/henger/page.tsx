@@ -148,7 +148,7 @@ export default function HengerPage() {
         <div>
           <h1 className={styles.title}>Henger</h1>
           <p className={styles.helper}>
-            Registrerte hengere med fast sjåfør fra planlegger-ressurslisten.{" "}
+            Registrerte hengere. Koble fast sjåfør via ansattkortet.{" "}
             <Link href="/verksted?tab=hengere">Verksted · hengere</Link>.
           </p>
         </div>

@@ -3,19 +3,8 @@
 import { fetchSkyOverviewAction, restoreBaselineToSkyAction, verifySkySaveAction } from "@/app/actions/skyData";
 import { uploadLocalStorageToSky } from "@/lib/data/appDataStorage";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
-import {
-  applyPlannerRessurslisteLocal,
-  formatPlannerKjøretøyRapport,
-} from "@/lib/maintenance/applyPlannerRessurslisteLocal";
-import { PLANNER_RESSURSLISTE } from "@/lib/imported/plannerRessursliste";
-import { PLANNER_HENGER_RESSURSLISTE } from "@/lib/imported/plannerHengerRessursliste";
 import { clearAllAnsatteData } from "@/lib/maintenance/clearAllAnsatte";
 import { baselineOppsummering, buildBaselineAppDataPayload } from "@/lib/maintenance/restoreBaseline";
-import { gjenopprettStandardKjoretoy } from "@/lib/maintenance/seedKjoretoy";
-import {
-  IMPORTERTE_BILER_REFERANSE_2026,
-  IMPORTERTE_HENGERE_REFERANSE_2026,
-} from "@/lib/imported/kjoretoy-referanse-2026";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -199,10 +188,7 @@ export default function InnstillingerPage() {
       }
     }
     setImportData(null);
-    const rapport = applyPlannerRessurslisteLocal();
-    setStatus(
-      `Importert ${importert} nøkler og koblet planlegger-ressursliste (${formatPlannerKjøretøyRapport(rapport)}). Laster siden på nytt …`,
-    );
+    setStatus(`Importert ${importert} nøkler. Husk «Lagre alt til sky» etterpå. Laster siden på nytt …`);
     window.setTimeout(() => window.location.reload(), 800);
   }
 
@@ -232,33 +218,6 @@ export default function InnstillingerPage() {
     } finally {
       setLasterGjenopprett(false);
     }
-  }
-
-  function handleGjenopprettKjoretoy() {
-    if (
-      !window.confirm(
-        `Gjenopprette standardlisten? Dette legger inn ${IMPORTERTE_BILER_REFERANSE_2026.length} biler og ${IMPORTERTE_HENGERE_REFERANSE_2026.length} hengere (kun reg.nr). Eksisterende biler/hengere i listen erstattes.`,
-      )
-    ) {
-      return;
-    }
-    gjenopprettStandardKjoretoy();
-    setStatus("Biler og hengere er gjenopprettet. Husk «Lagre alt til sky» etterpå.");
-    window.setTimeout(() => window.location.reload(), 400);
-  }
-
-  function handleApplyPlannerRessursliste() {
-    if (
-      !window.confirm(
-        `Sette bil- og henger-liste fra planlegger (${PLANNER_RESSURSLISTE.length} biler, ${PLANNER_HENGER_RESSURSLISTE.length} hengere)?\n\nAndre kjøretøy fjernes. Fast sjåfør kobles på ansatte. Tilhørighet settes der kommentaren sier Reserve, Bring, GDF eller TF.`,
-      )
-    ) {
-      return;
-    }
-    const rapport = applyPlannerRessurslisteLocal();
-    const tekst = formatPlannerKjøretøyRapport(rapport);
-    setStatus(`${tekst} Laster siden på nytt …`);
-    window.setTimeout(() => window.location.reload(), 600);
   }
 
   function handleSlettAlleAnsatte() {
@@ -358,33 +317,6 @@ export default function InnstillingerPage() {
           </button>
         </section>
       ) : null}
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Biler og hengere</h2>
-        <p className={styles.info}>
-          Hvis bil- eller hengerlisten er tom, kan du hente inn standardlisten fra importen
-          ({IMPORTERTE_BILER_REFERANSE_2026.length} biler, {IMPORTERTE_HENGERE_REFERANSE_2026.length}{" "}
-          hengere).
-        </p>
-        <div className={styles.buttonRow}>
-          <button type="button" className={styles.primaryBtn} onClick={handleGjenopprettKjoretoy}>
-            Gjenopprett biler og hengere
-          </button>
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Ressursliste fra planlegger</h2>
-        <p className={styles.info}>
-          Setter {PLANNER_RESSURSLISTE.length} biler og {PLANNER_HENGER_RESSURSLISTE.length} hengere
-          med kommentarer fra Ringnes-planlegger. Fjerner kjøretøy som ikke står på listene.
-          Kobler fast sjåfør på ansatte og setter tilhørighet der kommentaren sier Reserve, Bring,
-          GDF eller TF.
-        </p>
-        <button type="button" className={styles.primaryBtn} onClick={handleApplyPlannerRessursliste}>
-          Bruk planlegger-ressursliste
-        </button>
-      </section>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Ansatte</h2>

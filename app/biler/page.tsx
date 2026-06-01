@@ -155,7 +155,7 @@ export default function BilerPage() {
         <div>
           <h1 className={styles.title}>Biler</h1>
           <p className={styles.helper}>
-            Registrerte kjøretøy med fast sjåfør fra planlegger-ressurslisten.{" "}
+            Registrerte kjøretøy. Koble fast sjåfør via ansattkortet.{" "}
             <Link href="/verksted">Verksted</Link> (kalender og utilgjengelighetsperioder).
           </p>
         </div>

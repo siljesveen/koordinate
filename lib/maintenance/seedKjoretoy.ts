@@ -35,10 +35,3 @@ export function seedKjoretoyHvisTomt(): { biler: boolean; hengere: boolean } {
 
   return { biler, hengere };
 }
-
-/** Tving inn standardliste (beholder ikke eksisterende data). */
-export function gjenopprettStandardKjoretoy(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(BILER_KEY, JSON.stringify(IMPORTERTE_BILER_REFERANSE_2026));
-  window.localStorage.setItem(HENGER_KEY, JSON.stringify(IMPORTERTE_HENGERE_REFERANSE_2026));
-}
