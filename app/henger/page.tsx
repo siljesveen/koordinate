@@ -203,8 +203,6 @@ export default function HengerPage() {
                           return a.selskap && a.selskap !== "Asko" ? `${navn} (${a.selskap})` : navn;
                         })
                         .join(", ")
-                    ) : h.kommentar?.trim() ? (
-                      h.kommentar
                     ) : h.tilhørighet ? (
                       <span
                         className={`${styles.tilhorighet} ${

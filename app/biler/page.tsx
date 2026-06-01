@@ -213,8 +213,6 @@ export default function BilerPage() {
                           return a.selskap && a.selskap !== "Asko" ? `${navn} (${a.selskap})` : navn;
                         })
                         .join(", ")
-                    ) : b.kommentar?.trim() ? (
-                      b.kommentar
                     ) : b.tilhørighet ? (
                       <span
                         className={`${styles.tilhorighet} ${

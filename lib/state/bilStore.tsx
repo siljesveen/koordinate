@@ -4,13 +4,14 @@ import { createContext, useContext, useMemo } from "react";
 import type { Bil, BilTilhørighet } from "@/lib/domain";
 import { BIL_TILHØRIGHETER } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
-import { enrichBilerMedPlanner } from "@/lib/maintenance/plannerRessurslisteEnrich";
+import { syncBilerEtterAnsattFastBil } from "@/lib/kjoretoy/syncFastKjoretoy";
 import { IMPORTERTE_BILER_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type BilStoreValue = {
   biler: Bil[];
   lagre: (item: Bil) => void;
   slett: (id: string) => void;
+  syncSjåførForAnsatt: (ansattId: string, nyBilId?: string, gammelBilId?: string) => void;
 };
 
 const STORAGE_KEY = "bemanning.biler.v1";
@@ -53,7 +54,7 @@ function normalizeLoaded(data: unknown): Bil[] {
       } as Bil;
     })
     .filter(Boolean) as Bil[];
-  return enrichBilerMedPlanner(parsed);
+  return parsed;
 }
 
 function nyId(): string {
@@ -81,7 +82,14 @@ export function BilStoreProvider({ children }: { children: React.ReactNode }) {
 
   const slett = (id: string) => setBiler((prev) => prev.filter((b) => b.id !== id));
 
-  const value = useMemo(() => ({ biler, lagre, slett }), [biler]);
+  const syncSjåførForAnsatt = (ansattId: string, nyBilId?: string, gammelBilId?: string) => {
+    setBiler((prev) => syncBilerEtterAnsattFastBil(prev, ansattId, nyBilId, gammelBilId));
+  };
+
+  const value = useMemo(
+    () => ({ biler, lagre, slett, syncSjåførForAnsatt }),
+    [biler],
+  );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

@@ -49,32 +49,34 @@ export function computePrimærHengerPerAnsatt(): Map<string, string> {
   return map;
 }
 
-/** Slår inn sjåfør og tilhørighet fra planlegger uansett hva som ligger i sky/cache. */
+/** Slår kun inn manglende sjåfør-koblinger fra planlegger (overskriver ikke lagrede endringer). */
 export function enrichHengereMedPlanner(hengere: Henger[]): Henger[] {
   if (!hengere.length) return hengere;
   return hengere.map((h) => {
     const p = PLANNER_HENGER_BY_REG.get(normReg(h.kjennemerke));
     if (!p) return h;
+    const harSjåfør = (h.fastSjåførAnsattIds?.length ?? 0) > 0;
     return {
       ...h,
-      tilhørighet: p.tilhørighet ?? h.tilhørighet,
-      kommentar: p.kommentar.trim() ? p.kommentar : h.kommentar,
-      fastSjåførAnsattIds: p.sjåførAnsattIds?.length ? [...p.sjåførAnsattIds] : h.fastSjåførAnsattIds,
+      tilhørighet: h.tilhørighet ?? p.tilhørighet,
+      fastSjåførAnsattIds:
+        !harSjåfør && p.sjåførAnsattIds?.length ? [...p.sjåførAnsattIds] : h.fastSjåførAnsattIds,
     };
   });
 }
 
-/** Slår inn sjåfør og tilhørighet fra planlegger uansett hva som ligger i sky/cache. */
+/** Slår kun inn manglende sjåfør-koblinger fra planlegger (overskriver ikke lagrede endringer). */
 export function enrichBilerMedPlanner(biler: Bil[]): Bil[] {
   if (!biler.length) return biler;
   return biler.map((b) => {
     const p = PLANNER_BY_REG.get(normReg(b.kjennemerke));
     if (!p) return b;
+    const harSjåfør = (b.fastSjåførAnsattIds?.length ?? 0) > 0;
     return {
       ...b,
-      tilhørighet: p.tilhørighet ?? b.tilhørighet,
-      kommentar: p.kommentar.trim() ? p.kommentar : b.kommentar,
-      fastSjåførAnsattIds: p.sjåførAnsattIds?.length ? [...p.sjåførAnsattIds] : b.fastSjåførAnsattIds,
+      tilhørighet: b.tilhørighet ?? p.tilhørighet,
+      fastSjåførAnsattIds:
+        !harSjåfør && p.sjåførAnsattIds?.length ? [...p.sjåførAnsattIds] : b.fastSjåførAnsattIds,
     };
   });
 }
@@ -93,8 +95,8 @@ export function enrichAnsatteMedPlanner(ansatte: Ansatt[]): Ansatt[] {
   const primærHenger = computePrimærHengerPerAnsatt();
   return medTillegg.map((a) => ({
     ...a,
-    fastBilId: primærBil.get(a.id) ?? a.fastBilId,
-    fastHengerId: primærHenger.get(a.id) ?? a.fastHengerId,
+    fastBilId: a.fastBilId ?? primærBil.get(a.id),
+    fastHengerId: a.fastHengerId ?? primærHenger.get(a.id),
   }));
 }
 

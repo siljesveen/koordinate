@@ -4,13 +4,14 @@ import { createContext, useContext, useMemo } from "react";
 import type { Henger, BilTilhørighet } from "@/lib/domain";
 import { BIL_TILHØRIGHETER } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
-import { enrichHengereMedPlanner } from "@/lib/maintenance/plannerRessurslisteEnrich";
+import { syncHengereEtterAnsattFastHenger } from "@/lib/kjoretoy/syncFastKjoretoy";
 import { IMPORTERTE_HENGERE_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type HengerStoreValue = {
   hengere: Henger[];
   lagre: (item: Henger) => void;
   slett: (id: string) => void;
+  syncSjåførForAnsatt: (ansattId: string, nyHengerId?: string, gammelHengerId?: string) => void;
 };
 
 const STORAGE_KEY = "bemanning.henger.v1";
@@ -51,7 +52,7 @@ function normalizeLoaded(data: unknown): Henger[] {
       } as Henger;
     })
     .filter(Boolean) as Henger[];
-  return enrichHengereMedPlanner(parsed);
+  return parsed;
 }
 
 function nyId(): string {
@@ -79,7 +80,14 @@ export function HengerStoreProvider({ children }: { children: React.ReactNode })
 
   const slett = (id: string) => setHengere((prev) => prev.filter((h) => h.id !== id));
 
-  const value = useMemo(() => ({ hengere, lagre, slett }), [hengere]);
+  const syncSjåførForAnsatt = (ansattId: string, nyHengerId?: string, gammelHengerId?: string) => {
+    setHengere((prev) => syncHengereEtterAnsattFastHenger(prev, ansattId, nyHengerId, gammelHengerId));
+  };
+
+  const value = useMemo(
+    () => ({ hengere, lagre, slett, syncSjåførForAnsatt }),
+    [hengere],
+  );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

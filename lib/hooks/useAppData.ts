@@ -56,7 +56,7 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
 
     const timer = window.setTimeout(() => {
       void saveAppData(key, data, canEdit);
-    }, 400);
+    }, 150);
 
     return () => window.clearTimeout(timer);
   }, [key, data, loaded, dataReady, canEdit]);

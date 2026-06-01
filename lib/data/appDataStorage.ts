@@ -228,6 +228,8 @@ export async function saveAppData(
     return result;
   }
 
+  skrivLocal(key, value);
+
   const expectedUpdatedAt = getKeyMeta(key) ?? null;
   const { error, updatedAt, conflict } = await saveAppDataToSkyAction(key, value, {
     expectedUpdatedAt,
@@ -244,7 +246,6 @@ export async function saveAppData(
     return result;
   }
 
-  skrivLocal(key, value);
   if (updatedAt) setKeyMeta(key, updatedAt);
   markKeyClean(key);
 

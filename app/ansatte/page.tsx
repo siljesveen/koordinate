@@ -221,8 +221,8 @@ export default function AnsattePage() {
   const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { fravær, slettForAnsatt: slettFraværForAnsatt } = useFraværStore();
-  const { biler } = useBilStore();
-  const { hengere } = useHengerStore();
+  const { biler, syncSjåførForAnsatt: syncBilSjåfør } = useBilStore();
+  const { hengere, syncSjåførForAnsatt: syncHengerSjåfør } = useHengerStore();
   const { masterplan } = useMasterplanStore();
   const { fjernReferanser: fjernTildelingRef } = usePlanRuteTildelingStore();
   const { hentTurnus, setDag: setTurnusDag } = useTurnus4UkerStore();
@@ -443,11 +443,21 @@ export default function AnsattePage() {
       kommentar: skjema.kommentar.trim() ? skjema.kommentar.trim() : undefined,
     };
 
+    const gammelFastBilId = redigerer?.fastBilId;
+    const gammelFastHengerId = redigerer?.fastHengerId;
+
     setAnsatte((prev) => {
       const finnes = prev.some((a) => a.id === oppdatert.id);
       if (finnes) return prev.map((a) => (a.id === oppdatert.id ? oppdatert : a));
       return [oppdatert, ...prev];
     });
+
+    if (gammelFastBilId !== oppdatert.fastBilId) {
+      syncBilSjåfør(oppdatert.id, oppdatert.fastBilId, gammelFastBilId);
+    }
+    if (gammelFastHengerId !== oppdatert.fastHengerId) {
+      syncHengerSjåfør(oppdatert.id, oppdatert.fastHengerId, gammelFastHengerId);
+    }
 
     setModalÅpen(false);
     setRedigererId(null);
