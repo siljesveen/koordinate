@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useContext, useMemo } from "react";
-import type { Bil } from "@/lib/domain";
+import type { Bil, BilTilhørighet } from "@/lib/domain";
+import { BIL_TILHØRIGHETER } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
+import { enrichBilerMedPlanner } from "@/lib/maintenance/plannerRessurslisteEnrich";
 import { IMPORTERTE_BILER_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type BilStoreValue = {
@@ -20,7 +22,7 @@ function standardBiler(): Bil[] {
 
 function normalizeLoaded(data: unknown): Bil[] {
   if (!Array.isArray(data)) return [];
-  return data
+  const parsed = data
     .filter((x) => x && typeof x === "object")
     .map((x) => x as Record<string, unknown>)
     .map((x) => {
@@ -29,11 +31,29 @@ function normalizeLoaded(data: unknown): Bil[] {
       const merke = typeof x.merke === "string" ? x.merke.trim() : undefined;
       const modell = typeof x.modell === "string" ? x.modell.trim() : undefined;
       const aktiv = x.aktiv === false || x.aktiv === "nei" ? false : true;
+      const tilhørighet =
+        typeof x.tilhørighet === "string" &&
+        BIL_TILHØRIGHETER.includes(x.tilhørighet as BilTilhørighet)
+          ? (x.tilhørighet as BilTilhørighet)
+          : undefined;
       const kommentar = typeof x.kommentar === "string" ? x.kommentar : undefined;
+      const fastSjåførAnsattIds = Array.isArray(x.fastSjåførAnsattIds)
+        ? x.fastSjåførAnsattIds.filter((id): id is string => typeof id === "string" && id.length > 0)
+        : undefined;
       if (!id || !kjennemerke) return null;
-      return { id, kjennemerke, merke, modell, aktiv, kommentar } as Bil;
+      return {
+        id,
+        kjennemerke,
+        merke,
+        modell,
+        aktiv,
+        tilhørighet,
+        kommentar,
+        fastSjåførAnsattIds: fastSjåførAnsattIds?.length ? fastSjåførAnsattIds : undefined,
+      } as Bil;
     })
     .filter(Boolean) as Bil[];
+  return enrichBilerMedPlanner(parsed);
 }
 
 function nyId(): string {

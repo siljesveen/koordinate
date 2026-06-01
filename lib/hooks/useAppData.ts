@@ -1,6 +1,8 @@
 "use client";
 
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
+import { markKeyDirty } from "@/lib/data/dirtyKeys";
+import type { AppDataKey } from "@/lib/data/storageKeys";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import { useEffect, useRef, useState } from "react";
@@ -49,6 +51,8 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
       hoppOverNesteLagring.current = false;
       return;
     }
+
+    markKeyDirty(key as AppDataKey);
 
     const timer = window.setTimeout(() => {
       void saveAppData(key, data, canEdit);

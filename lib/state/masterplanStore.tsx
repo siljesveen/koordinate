@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Koblingsgruppe, MasterRuteSlot, MasterRuteplan, Skift, Ansatt } from "@/lib/domain";
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
+import { markKeyDirty } from "@/lib/data/dirtyKeys";
 import {
   mergeUkeMasterplanPatch,
   UKE_MASTERPLAN_PATCHES,
@@ -310,12 +311,15 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
     if (!anyUpdated) return;
 
     brukerHarEndret.current = true;
+    markKeyDirty(STORAGE_KEY);
     setMasterplan(plan);
   }, [dataReady, canEdit, innlogget, masterplan, reloadTick]);
 
   useEffect(() => {
     if (!loadedRef.current || !dataReady || !brukerHarEndret.current) return;
     if (masterplan.slots.length === 0) return;
+
+    markKeyDirty(STORAGE_KEY);
 
     const timer = window.setTimeout(() => {
       void saveAppData(STORAGE_KEY, masterplan, canEdit);

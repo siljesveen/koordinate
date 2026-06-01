@@ -494,6 +494,21 @@
   white-space: nowrap;
 }
 
+.kjoretoyComboTag {
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+  padding: 0.02rem 0.32rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--background-subtle);
+  color: var(--foreground-muted);
+  border: 1px solid var(--border);
+  vertical-align: middle;
+}
+
 .kjoretoyComboStatusOk {
   flex-shrink: 0;
   font-size: 0.65rem;

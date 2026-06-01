@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useContext, useMemo } from "react";
-import type { Henger } from "@/lib/domain";
+import type { Henger, BilTilhørighet } from "@/lib/domain";
+import { BIL_TILHØRIGHETER } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
+import { enrichHengereMedPlanner } from "@/lib/maintenance/plannerRessurslisteEnrich";
 import { IMPORTERTE_HENGERE_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
 type HengerStoreValue = {
@@ -20,7 +22,7 @@ function standardHengere(): Henger[] {
 
 function normalizeLoaded(data: unknown): Henger[] {
   if (!Array.isArray(data)) return [];
-  return data
+  const parsed = data
     .filter((x) => x && typeof x === "object")
     .map((x) => x as Record<string, unknown>)
     .map((x) => {
@@ -28,11 +30,28 @@ function normalizeLoaded(data: unknown): Henger[] {
       const kjennemerke = String(x.kjennemerke ?? "").trim();
       const type = typeof x.type === "string" ? x.type.trim() : undefined;
       const aktiv = x.aktiv === false || x.aktiv === "nei" ? false : true;
+      const tilhørighet =
+        typeof x.tilhørighet === "string" &&
+        BIL_TILHØRIGHETER.includes(x.tilhørighet as BilTilhørighet)
+          ? (x.tilhørighet as BilTilhørighet)
+          : undefined;
       const kommentar = typeof x.kommentar === "string" ? x.kommentar : undefined;
+      const fastSjåførAnsattIds = Array.isArray(x.fastSjåførAnsattIds)
+        ? x.fastSjåførAnsattIds.filter((id): id is string => typeof id === "string" && id.length > 0)
+        : undefined;
       if (!id || !kjennemerke) return null;
-      return { id, kjennemerke, type, aktiv, kommentar } as Henger;
+      return {
+        id,
+        kjennemerke,
+        type,
+        aktiv,
+        tilhørighet,
+        kommentar,
+        fastSjåførAnsattIds: fastSjåførAnsattIds?.length ? fastSjåførAnsattIds : undefined,
+      } as Henger;
     })
     .filter(Boolean) as Henger[];
+  return enrichHengereMedPlanner(parsed);
 }
 
 function nyId(): string {

@@ -2,6 +2,7 @@ export type {
   Ansatt,
   AnsattSelskap,
   Bil,
+  BilTilhørighet,
   BilUtilgjengelig,
   DagEndring,
   Dagsplan,
@@ -21,7 +22,7 @@ export type {
   Rute,
   SkiftTilgjengelighet,
 } from "./types";
-export { FRAVÆR_TYPER } from "./types";
+export { FRAVÆR_TYPER, BIL_TILHØRIGHETER } from "./types";
 export {
   MOCK_ANSATTE,
   MOCK_FRAVÆR,

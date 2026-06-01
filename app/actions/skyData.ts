@@ -68,7 +68,7 @@ export async function fetchProfileAction(): Promise<UserProfile | null> {
 
 export async function loadAppDataFromSkyAction(
   key: string,
-): Promise<{ data: unknown | null; error?: string }> {
+): Promise<{ data: unknown | null; updatedAt?: string; error?: string }> {
   if (!isSupabaseConfigured()) {
     return { data: null };
   }
@@ -84,7 +84,7 @@ export async function loadAppDataFromSkyAction(
 
   const { data, error } = await supabase
     .from("app_data")
-    .select("value")
+    .select("value, updated_at")
     .eq("key", key)
     .maybeSingle();
 
@@ -92,13 +92,14 @@ export async function loadAppDataFromSkyAction(
     return { data: null, error: error.message };
   }
 
-  return { data: data?.value ?? null };
+  return { data: data?.value ?? null, updatedAt: data?.updated_at ?? undefined };
 }
 
 export async function saveAppDataToSkyAction(
   key: string,
   value: unknown,
-): Promise<{ error?: string }> {
+  options?: { expectedUpdatedAt?: string | null },
+): Promise<{ error?: string; updatedAt?: string; conflict?: boolean }> {
   if (!isSupabaseConfigured()) {
     return {};
   }
@@ -117,10 +118,29 @@ export async function saveAppDataToSkyAction(
     return { error: "forbidden" };
   }
 
+  if (options?.expectedUpdatedAt) {
+    const { data: current } = await supabase
+      .from("app_data")
+      .select("updated_at")
+      .eq("key", key)
+      .maybeSingle();
+
+    if (
+      current?.updated_at &&
+      current.updated_at !== options.expectedUpdatedAt
+    ) {
+      return {
+        error: "Noen andre har lagret nyere data. Hent siste versjon fra sky.",
+        conflict: true,
+      };
+    }
+  }
+
+  const updatedAt = new Date().toISOString();
   const { error } = await supabase.from("app_data").upsert({
     key,
     value,
-    updated_at: new Date().toISOString(),
+    updated_at: updatedAt,
     updated_by: user.id,
   });
 
@@ -128,7 +148,7 @@ export async function saveAppDataToSkyAction(
     return { error: error.message };
   }
 
-  return {};
+  return { updatedAt };
 }
 
 /** @deprecated Bruk loadAppDataFromSkyAction i stedet. */
@@ -333,7 +353,7 @@ export async function verifySkySaveAction(): Promise<{ ok: boolean; error?: stri
 }
 
 export async function fetchAllAppDataFromSkyAction(): Promise<{
-  rows: { key: string; value: unknown }[];
+  rows: { key: string; value: unknown; updatedAt: string }[];
   error?: string;
 }> {
   if (!isSupabaseConfigured()) {
@@ -349,13 +369,21 @@ export async function fetchAllAppDataFromSkyAction(): Promise<{
     return { rows: [], error: "not_authenticated" };
   }
 
-  const { data, error } = await supabase.from("app_data").select("key, value");
+  const { data, error } = await supabase
+    .from("app_data")
+    .select("key, value, updated_at");
 
   if (error) {
     return { rows: [], error: error.message };
   }
 
-  return { rows: data ?? [] };
+  return {
+    rows: (data ?? []).map((row) => ({
+      key: row.key,
+      value: row.value,
+      updatedAt: row.updated_at as string,
+    })),
+  };
 }
 
 export async function applyUke1MasterplanAction(): Promise<{
@@ -508,4 +536,93 @@ export async function restoreBaselineToSkyAction(): Promise<{
   }
 
   return { imported: result.imported, summary };
+}
+
+/** Sett biler, hengere og fast sjåfør fra Ringnes-planlegger. */
+export async function applyPlannerRessurslisteToSkyAction(): Promise<{
+  summary: string;
+  ukjenteNavn: { kjennemerke: string; navn: string }[];
+  error?: string;
+}> {
+  if (!isSupabaseConfigured()) {
+    return { summary: "", ukjenteNavn: [], error: "Supabase er ikke konfigurert" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { summary: "", ukjenteNavn: [], error: "Ikke innlogget" };
+  }
+
+  const profile = await hentProfil(supabase, user.id, user.email ?? null);
+  if (!canEditData(profile.role)) {
+    return { summary: "", ukjenteNavn: [], error: "Mangler rettigheter (admin/planlegger)" };
+  }
+
+  const {
+    applyPlannerRessursliste,
+    ryddBilReferanser,
+    formatRessurslisteRapport,
+  } = await import("@/lib/maintenance/applyPlannerRessursliste");
+  const {
+    applyPlannerHengerRessursliste,
+    ryddHengerReferanser,
+    formatHengerRessurslisteRapport,
+  } = await import("@/lib/maintenance/applyPlannerHengerRessursliste");
+  type Ansatt = import("@/lib/domain").Ansatt;
+  type Bil = import("@/lib/domain").Bil;
+  type Henger = import("@/lib/domain").Henger;
+  type MasterRuteplan = import("@/lib/domain").MasterRuteplan;
+  type PlanRuteTildeling = import("@/lib/domain").PlanRuteTildeling;
+
+  async function load<T>(key: string, fallback: T): Promise<T> {
+    const { data } = await supabase.from("app_data").select("value").eq("key", key).maybeSingle();
+    if (!data?.value) return fallback;
+    return data.value as T;
+  }
+
+  const ansatte = await load<Ansatt[]>("bemanning.ansatte.v2", []);
+  const eksisterendeBiler = await load<Bil[]>("bemanning.biler.v1", []);
+  const eksisterendeHengere = await load<Henger[]>("bemanning.henger.v1", []);
+  const masterplan = await load<MasterRuteplan>("bemanning.masterplan.v1", { syklusLengde: 4, slots: [] });
+  const tildelinger = await load<PlanRuteTildeling[]>("bemanning.planRuteTildeling.v2", []);
+
+  const { biler, ansatte: etterBiler, rapport: bilRapport } = applyPlannerRessursliste(
+    ansatte,
+    eksisterendeBiler,
+  );
+  const {
+    hengere,
+    ansatte: nyeAnsatte,
+    rapport: hengerRapport,
+  } = applyPlannerHengerRessursliste(etterBiler, eksisterendeHengere);
+
+  const gyldigeBilIds = new Set(biler.map((b) => b.id));
+  const gyldigeHengerIds = new Set(hengere.map((h) => h.id));
+  let ryddet = ryddBilReferanser(masterplan, tildelinger, gyldigeBilIds);
+  ryddet = {
+    ...ryddet,
+    tildelinger: ryddHengerReferanser(ryddet.tildelinger, gyldigeHengerIds),
+  };
+
+  const summary = `${formatRessurslisteRapport(bilRapport)} ${formatHengerRessurslisteRapport(hengerRapport)}`;
+  const ukjenteNavn = [...bilRapport.ukjenteNavn, ...hengerRapport.ukjenteNavn];
+
+  const payload: Record<string, unknown> = {
+    "bemanning.biler.v1": biler,
+    "bemanning.henger.v1": hengere,
+    "bemanning.ansatte.v2": nyeAnsatte,
+    "bemanning.masterplan.v1": ryddet.masterplan,
+    "bemanning.planRuteTildeling.v2": ryddet.tildelinger,
+  };
+
+  const result = await importAppDataBatchAction(payload);
+  if (result.error) {
+    return { summary, ukjenteNavn, error: result.error };
+  }
+
+  return { summary, ukjenteNavn };
 }

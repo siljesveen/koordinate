@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { fullNavn, type Ansatt, type Bil } from "@/lib/domain";
+import { fullNavn, BIL_TILHØRIGHETER, type Ansatt, type Bil, type BilTilhørighet } from "@/lib/domain";
 import { iDagISO } from "@/lib/dagsoversikt";
 import { erBilUtilgjengeligPåDato } from "@/lib/kjoretoyTilgjengelighet";
 import { useAnsattStore } from "@/lib/state/ansattStore";
@@ -19,6 +19,7 @@ type BilSkjema = {
   merke: string;
   modell: string;
   aktiv: "ja" | "nei";
+  tilhørighet: "" | BilTilhørighet;
   kommentar: string;
 };
 
@@ -30,6 +31,7 @@ function toSkjema(b: Bil | null): BilSkjema {
       merke: "",
       modell: "",
       aktiv: "ja",
+      tilhørighet: "",
       kommentar: "",
     };
   }
@@ -39,6 +41,7 @@ function toSkjema(b: Bil | null): BilSkjema {
     merke: b.merke ?? "",
     modell: b.modell ?? "",
     aktiv: b.aktiv ? "ja" : "nei",
+    tilhørighet: b.tilhørighet ?? "",
     kommentar: b.kommentar ?? "",
   };
 }
@@ -55,6 +58,8 @@ export default function BilerPage() {
   const [redigererId, setRedigererId] = useState<string | null>(null);
   const [skjema, setSkjema] = useState<BilSkjema>(() => toSkjema(null));
 
+  const ansattById = useMemo(() => new Map(ansatte.map((a) => [a.id, a] as const)), [ansatte]);
+
   const ansatteMedFastBil = useMemo(() => {
     const m = new Map<string, Ansatt[]>();
     for (const a of ansatte) {
@@ -66,6 +71,15 @@ export default function BilerPage() {
     return m;
   }, [ansatte]);
 
+  const sjåførerForBil = useMemo(() => {
+    return (b: Bil): Ansatt[] => {
+      if (b.fastSjåførAnsattIds?.length) {
+        return b.fastSjåførAnsattIds.map((id) => ansattById.get(id)).filter(Boolean) as Ansatt[];
+      }
+      return ansatteMedFastBil.get(b.id) ?? [];
+    };
+  }, [ansattById, ansatteMedFastBil]);
+
   const redigerer = useMemo(
     () => (redigererId ? biler.find((b) => b.id === redigererId) ?? null : null),
     [biler, redigererId],
@@ -75,11 +89,11 @@ export default function BilerPage() {
     const q = søk.trim();
     return biler
       .filter((b) => {
-        const sjåfører = (ansatteMedFastBil.get(b.id) ?? []).map((a) => fullNavn(a));
+        const sjåfører = sjåførerForBil(b).map((a) => fullNavn(a));
         return bilMatcherModulSøk(b, q, sjåfører);
       })
       .sort((a, b) => a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }));
-  }, [biler, søk, ansatteMedFastBil]);
+  }, [biler, søk, sjåførerForBil]);
 
   function åpneNy() {
     setRedigererId(null);
@@ -126,7 +140,9 @@ export default function BilerPage() {
       merke: skjema.merke.trim() ? skjema.merke.trim() : undefined,
       modell: skjema.modell.trim() ? skjema.modell.trim() : undefined,
       aktiv: skjema.aktiv === "ja",
+      tilhørighet: skjema.tilhørighet || undefined,
       kommentar: skjema.kommentar.trim() ? skjema.kommentar.trim() : undefined,
+      fastSjåførAnsattIds: redigerer?.fastSjåførAnsattIds,
     };
 
     lagre(item);
@@ -139,7 +155,7 @@ export default function BilerPage() {
         <div>
           <h1 className={styles.title}>Biler</h1>
           <p className={styles.helper}>
-            Registrerte kjøretøy. Fast sjåfør settes under Ansatte.{" "}
+            Registrerte kjøretøy med fast sjåfør fra planlegger-ressurslisten.{" "}
             <Link href="/verksted">Verksted</Link> (kalender og utilgjengelighetsperioder).
           </p>
         </div>
@@ -171,7 +187,7 @@ export default function BilerPage() {
           </thead>
           <tbody>
             {synlige.map((b) => {
-              const sjåfører = ansatteMedFastBil.get(b.id) ?? [];
+              const sjåfører = sjåførerForBil(b);
               const utilgjengeligIDag = erBilUtilgjengeligPåDato(b.id, iDag, bilUtilgjengelig);
               return (
                 <tr
@@ -190,9 +206,26 @@ export default function BilerPage() {
                 >
                   <td className={styles.kjennemerke}>{b.kjennemerke}</td>
                   <td className={styles.sjåfør}>
-                    {sjåfører.length
-                      ? sjåfører.map((a) => fullNavn(a)).join(", ")
-                      : "—"}
+                    {sjåfører.length ? (
+                      sjåfører
+                        .map((a) => {
+                          const navn = fullNavn(a);
+                          return a.selskap && a.selskap !== "Asko" ? `${navn} (${a.selskap})` : navn;
+                        })
+                        .join(", ")
+                    ) : b.kommentar?.trim() ? (
+                      b.kommentar
+                    ) : b.tilhørighet ? (
+                      <span
+                        className={`${styles.tilhorighet} ${
+                          b.tilhørighet === "Reserve" ? styles.tilhorighetReserve : ""
+                        }`}
+                      >
+                        {b.tilhørighet}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td>
                     <span
@@ -278,6 +311,23 @@ export default function BilerPage() {
                   >
                     <option value="ja">Aktiv</option>
                     <option value="nei">Inaktiv</option>
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Tilhørighet / reserve</label>
+                  <select
+                    className={styles.select}
+                    value={skjema.tilhørighet}
+                    onChange={(e) =>
+                      setSkjema((s) => ({ ...s, tilhørighet: e.target.value as "" | BilTilhørighet }))
+                    }
+                  >
+                    <option value="">Vanlig bil (fast sjåfør)</option>
+                    {BIL_TILHØRIGHETER.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className={styles.field} style={{ gridColumn: "1 / -1" }}>

@@ -3,6 +3,12 @@
 import { fetchSkyOverviewAction, restoreBaselineToSkyAction, verifySkySaveAction } from "@/app/actions/skyData";
 import { uploadLocalStorageToSky } from "@/lib/data/appDataStorage";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
+import {
+  applyPlannerRessurslisteLocal,
+  formatPlannerKjøretøyRapport,
+} from "@/lib/maintenance/applyPlannerRessurslisteLocal";
+import { PLANNER_RESSURSLISTE } from "@/lib/imported/plannerRessursliste";
+import { PLANNER_HENGER_RESSURSLISTE } from "@/lib/imported/plannerHengerRessursliste";
 import { clearAllAnsatteData } from "@/lib/maintenance/clearAllAnsatte";
 import { baselineOppsummering, buildBaselineAppDataPayload } from "@/lib/maintenance/restoreBaseline";
 import { gjenopprettStandardKjoretoy } from "@/lib/maintenance/seedKjoretoy";
@@ -193,7 +199,11 @@ export default function InnstillingerPage() {
       }
     }
     setImportData(null);
-    setStatus(`Importert ${importert} nøkler til nettleseren. Klikk «Lagre alt til sky» for å sikre i Supabase.`);
+    const rapport = applyPlannerRessurslisteLocal();
+    setStatus(
+      `Importert ${importert} nøkler og koblet planlegger-ressursliste (${formatPlannerKjøretøyRapport(rapport)}). Laster siden på nytt …`,
+    );
+    window.setTimeout(() => window.location.reload(), 800);
   }
 
   function handleLastInnPåNytt() {
@@ -235,6 +245,20 @@ export default function InnstillingerPage() {
     gjenopprettStandardKjoretoy();
     setStatus("Biler og hengere er gjenopprettet. Husk «Lagre alt til sky» etterpå.");
     window.setTimeout(() => window.location.reload(), 400);
+  }
+
+  function handleApplyPlannerRessursliste() {
+    if (
+      !window.confirm(
+        `Sette bil- og henger-liste fra planlegger (${PLANNER_RESSURSLISTE.length} biler, ${PLANNER_HENGER_RESSURSLISTE.length} hengere)?\n\nAndre kjøretøy fjernes. Fast sjåfør kobles på ansatte. Tilhørighet settes der kommentaren sier Reserve, Bring, GDF eller TF.`,
+      )
+    ) {
+      return;
+    }
+    const rapport = applyPlannerRessurslisteLocal();
+    const tekst = formatPlannerKjøretøyRapport(rapport);
+    setStatus(`${tekst} Laster siden på nytt …`);
+    window.setTimeout(() => window.location.reload(), 600);
   }
 
   function handleSlettAlleAnsatte() {
@@ -342,8 +366,23 @@ export default function InnstillingerPage() {
           ({IMPORTERTE_BILER_REFERANSE_2026.length} biler, {IMPORTERTE_HENGERE_REFERANSE_2026.length}{" "}
           hengere).
         </p>
-        <button type="button" className={styles.primaryBtn} onClick={handleGjenopprettKjoretoy}>
-          Gjenopprett biler og hengere
+        <div className={styles.buttonRow}>
+          <button type="button" className={styles.primaryBtn} onClick={handleGjenopprettKjoretoy}>
+            Gjenopprett biler og hengere
+          </button>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Ressursliste fra planlegger</h2>
+        <p className={styles.info}>
+          Setter {PLANNER_RESSURSLISTE.length} biler og {PLANNER_HENGER_RESSURSLISTE.length} hengere
+          med kommentarer fra Ringnes-planlegger. Fjerner kjøretøy som ikke står på listene.
+          Kobler fast sjåfør på ansatte og setter tilhørighet der kommentaren sier Reserve, Bring,
+          GDF eller TF.
+        </p>
+        <button type="button" className={styles.primaryBtn} onClick={handleApplyPlannerRessursliste}>
+          Bruk planlegger-ressursliste
         </button>
       </section>
 

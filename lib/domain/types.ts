@@ -43,13 +43,25 @@ export type Ansatt = {
   kommentar?: string;
 };
 
+/**
+ * Tilhørighet/kategori for en bil som ikke er knyttet til en fast sjåfør:
+ * «Reserve» = reservebil tilgjengelig for alle, og eksterne operatører.
+ */
+export type BilTilhørighet = "Reserve" | "Bring" | "GDF" | "TF";
+
+export const BIL_TILHØRIGHETER: BilTilhørighet[] = ["Reserve", "Bring", "GDF", "TF"];
+
 export type Bil = {
   id: string;
   kjennemerke: string;
   merke?: string;
   modell?: string;
   aktiv: boolean;
+  /** Reserve eller ekstern operatør (Bring/GDF/TF). Tomt = vanlig bil. */
+  tilhørighet?: BilTilhørighet;
   kommentar?: string;
+  /** Fast sjåfør(er) på bilen (ansatt.id). Støtter flere på samme bil. */
+  fastSjåførAnsattIds?: string[];
 };
 
 export type Henger = {
@@ -58,7 +70,11 @@ export type Henger = {
   /** F.eks. kjøl, container, kapell … */
   type?: string;
   aktiv: boolean;
+  /** Reserve eller ekstern operatør (Bring/GDF/TF). */
+  tilhørighet?: BilTilhørighet;
   kommentar?: string;
+  /** Fast sjåfør(er) på hengeren (ansatt.id). */
+  fastSjåførAnsattIds?: string[];
 };
 
 /** Årsak til at bil/henger ikke kan brukes i en periode (planlagt eller akutt). */

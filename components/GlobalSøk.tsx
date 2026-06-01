@@ -76,12 +76,16 @@ function byggIndeks(
     const sjåfører = ansatte
       .filter((a) => a.fastBilId === b.id)
       .map((a) => fullNavn(a));
-    const blob = [b.kjennemerke, b.merke, b.modell, ...sjåfører].filter(Boolean).join(" ");
+    const blob = [b.kjennemerke, b.merke, b.modell, b.tilhørighet, ...sjåfører]
+      .filter(Boolean)
+      .join(" ");
     treff.push({
       kind: "bil",
       id: b.id,
       label: b.kjennemerke,
-      sublabel: [b.merke, b.modell, sjåfører.join(", ")].filter(Boolean).join(" · ") || undefined,
+      sublabel:
+        [b.merke, b.modell, b.tilhørighet, sjåfører.join(", ")].filter(Boolean).join(" · ") ||
+        undefined,
       href: `/biler?søk=${encodeURIComponent(b.kjennemerke)}`,
       søkBlob: blob,
     });

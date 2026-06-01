@@ -31,12 +31,34 @@ export const BEKREFTET_ALIAS: Record<string, string> = {
   "trond h": "a-trond-hagen",
   "rune b": "a-rune-berntsen",
   "rune be": "a-rune-berntsen",
-  "jorn s": "a-jorn-sanaker",
-  "jørn s": "a-jorn-sanaker",
+  "jorn s": "a-j-rn-erik-sanaker",
+  "jørn s": "a-j-rn-erik-sanaker",
+  jørn: "a-j-rn-erik-sanaker",
+  jorn: "a-j-rn-erik-sanaker",
+  perti: "a-perti-portimo",
+  ansteir: "a-andrius-rukas",
+  "ivan d": "a-ivan-morgan-johansen",
+  bjørnar: "a-bj-rn-luvasen",
+  chien: "a-cien-van-cao",
+  atle: "a-roy-atle-hagen",
+  arnt: "a-r-stum-arnt-georg",
+  amund: "a-amund-nygaard-andersen",
+  "stein arve": "a-stein-arve-lunde",
+  "david b": "a-david-baranowski",
+  "john jevne": "a-john-jevne",
+  johan: "a-johan-kartomten",
+  olav: "a-olav-andreassen",
+  "trond big boss": "a-trond-hagen",
+  "jan morten": "a-jan-morten",
+  pål: "a-thorsen-pal",
+  mats: "a-mats-astr-m",
+  tommy: "a-tommy-iversen",
+  erik: "a-erik-solbakken",
+  trond: "a-trond-hagen",
   andresj: "a-andrejs-seleznovs",
   ruffad: "a-ferad-mehmed-rufad",
-  roger: "a-roger-moseng",
-  thomas: "a-thomas-yen",
+  roger: "a-roger-skogheim",
+  thomas: "a-thomas-oyen",
 };
 
 const IKKE_PERSON = new Set([
@@ -97,6 +119,10 @@ function aliasNøkkel(navn: string): string {
   return normaliserPlanNavn(navn).replace(/\s+/g, " ").trim();
 }
 
+const BEKREFTET_ALIAS_NORMALISERT: Record<string, string> = Object.fromEntries(
+  Object.entries(BEKREFTET_ALIAS).map(([k, v]) => [aliasNøkkel(k), v]),
+);
+
 export function matchPlanNavnTilAnsatt(planNavn: string, ansatte: Ansatt[]): PlanNavnMatch {
   if (erIkkePersonNavn(planNavn)) {
     return { type: "hopp_over", planNavn };
@@ -104,7 +130,7 @@ export function matchPlanNavnTilAnsatt(planNavn: string, ansatte: Ansatt[]): Pla
 
   const rå = String(planNavn).trim();
   const ansattById = new Map(ansatte.map((a) => [a.id, a]));
-  const aliasId = BEKREFTET_ALIAS[aliasNøkkel(rå)];
+  const aliasId = BEKREFTET_ALIAS_NORMALISERT[aliasNøkkel(rå)];
   if (aliasId) {
     const ansatt = ansattById.get(aliasId);
     if (ansatt) {

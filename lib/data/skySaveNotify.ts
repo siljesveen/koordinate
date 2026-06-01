@@ -2,6 +2,7 @@ export type SkySaveResult = {
   key: string;
   savedToSky: boolean;
   error?: string;
+  conflict?: boolean;
 };
 
 type Listener = (result: SkySaveResult) => void;

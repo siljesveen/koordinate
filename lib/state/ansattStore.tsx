@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo } from "react";
 import type { Ansatt } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
+import { enrichAnsatteMedPlanner } from "@/lib/maintenance/plannerRessurslisteEnrich";
 import { IMPORTERTE_ANSATTE_BEMANNING_2026 } from "@/lib/imported/ansatte-bemanning-2026";
 import { IMPORTERTE_RUTER } from "@/lib/imported/ruter-from-ringnes";
 
@@ -35,10 +36,11 @@ function standardAnsatte(): Ansatt[] {
 }
 
 function parseAnsatte(raw: unknown): Ansatt[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
+  if (!Array.isArray(raw)) return enrichAnsatteMedPlanner([]);
+  const parsed = raw
     .filter((x) => x && typeof x === "object")
     .map((x) => migrateAnsatt(x as LagretAnsatt));
+  return enrichAnsatteMedPlanner(parsed);
 }
 
 export function AnsattStoreProvider({ children }: { children: React.ReactNode }) {

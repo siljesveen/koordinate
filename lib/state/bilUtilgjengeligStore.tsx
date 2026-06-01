@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { BilUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
 import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
+import { markKeyDirty } from "@/lib/data/dirtyKeys";
 import { resolveBilPeriodeEtterMerkeTilbake } from "@/lib/kjoretoyTilgjengelighet";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
@@ -123,6 +124,8 @@ export function BilUtilgjengeligStoreProvider({ children }: { children: React.Re
       hopperOverLagring.current = false;
       return;
     }
+    markKeyDirty(STORAGE_KEY);
+
     const timer = window.setTimeout(() => {
       void saveAppData(STORAGE_KEY, poster, canEdit);
     }, 400);
@@ -201,6 +204,7 @@ export function BilUtilgjengeligStoreProvider({ children }: { children: React.Re
     };
 
     hopperOverLagring.current = true;
+    markKeyDirty(STORAGE_KEY);
     void saveAppData(STORAGE_KEY, next, canEdit);
     setPoster(next);
     sendBilTilbakeMelding(fullMelding);

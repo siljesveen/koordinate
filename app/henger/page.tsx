@@ -52,6 +52,8 @@ export default function HengerPage() {
   const [redigererId, setRedigererId] = useState<string | null>(null);
   const [skjema, setSkjema] = useState<HengerSkjema>(() => toSkjema(null));
 
+  const ansattById = useMemo(() => new Map(ansatte.map((a) => [a.id, a] as const)), [ansatte]);
+
   const ansatteMedFastHenger = useMemo(() => {
     const m = new Map<string, Ansatt[]>();
     for (const a of ansatte) {
@@ -63,6 +65,15 @@ export default function HengerPage() {
     return m;
   }, [ansatte]);
 
+  const sjåførerForHenger = useMemo(() => {
+    return (h: Henger): Ansatt[] => {
+      if (h.fastSjåførAnsattIds?.length) {
+        return h.fastSjåførAnsattIds.map((id) => ansattById.get(id)).filter(Boolean) as Ansatt[];
+      }
+      return ansatteMedFastHenger.get(h.id) ?? [];
+    };
+  }, [ansattById, ansatteMedFastHenger]);
+
   const redigerer = useMemo(
     () => (redigererId ? hengere.find((h) => h.id === redigererId) ?? null : null),
     [hengere, redigererId],
@@ -72,11 +83,11 @@ export default function HengerPage() {
     const q = søk.trim();
     return hengere
       .filter((h) => {
-        const sjåfører = (ansatteMedFastHenger.get(h.id) ?? []).map((a) => fullNavn(a));
+        const sjåfører = sjåførerForHenger(h).map((a) => fullNavn(a));
         return hengerMatcherModulSøk(h, q, sjåfører);
       })
       .sort((a, b) => a.kjennemerke.localeCompare(b.kjennemerke, "nb", { numeric: true }));
-  }, [hengere, søk, ansatteMedFastHenger]);
+  }, [hengere, søk, sjåførerForHenger]);
 
   function åpneNy() {
     setRedigererId(null);
@@ -123,6 +134,8 @@ export default function HengerPage() {
       type: skjema.type.trim() ? skjema.type.trim() : undefined,
       aktiv: skjema.aktiv === "ja",
       kommentar: skjema.kommentar.trim() ? skjema.kommentar.trim() : undefined,
+      fastSjåførAnsattIds: redigerer?.fastSjåførAnsattIds,
+      tilhørighet: redigerer?.tilhørighet,
     };
 
     lagre(item);
@@ -135,7 +148,7 @@ export default function HengerPage() {
         <div>
           <h1 className={styles.title}>Henger</h1>
           <p className={styles.helper}>
-            Registrerte hengere. Fast tilknytning settes under Ansatte.{" "}
+            Registrerte hengere med fast sjåfør fra planlegger-ressurslisten.{" "}
             <Link href="/verksted?tab=hengere">Verksted · hengere</Link>.
           </p>
         </div>
@@ -164,7 +177,7 @@ export default function HengerPage() {
           </thead>
           <tbody>
             {synlige.map((h) => {
-              const sjåfører = ansatteMedFastHenger.get(h.id) ?? [];
+              const sjåfører = sjåførerForHenger(h);
               const utilgjengeligIDag = erHengerUtilgjengeligPåDato(h.id, iDag, hengerUtilgjengelig);
               return (
                 <tr
@@ -183,9 +196,26 @@ export default function HengerPage() {
                 >
                   <td className={styles.kjennemerke}>{h.kjennemerke}</td>
                   <td className={styles.sjåfør}>
-                    {sjåfører.length
-                      ? sjåfører.map((a) => fullNavn(a)).join(", ")
-                      : "—"}
+                    {sjåfører.length ? (
+                      sjåfører
+                        .map((a) => {
+                          const navn = fullNavn(a);
+                          return a.selskap && a.selskap !== "Asko" ? `${navn} (${a.selskap})` : navn;
+                        })
+                        .join(", ")
+                    ) : h.kommentar?.trim() ? (
+                      h.kommentar
+                    ) : h.tilhørighet ? (
+                      <span
+                        className={`${styles.tilhorighet} ${
+                          h.tilhørighet === "Reserve" ? styles.tilhorighetReserve : ""
+                        }`}
+                      >
+                        {h.tilhørighet}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td>
                     <span

@@ -15,8 +15,15 @@ export default function SkySaveBanner() {
   if (showError && lastResult?.error) {
     return (
       <div className={styles.error} role="alert">
-        <strong>Data ble ikke lagret i Supabase.</strong> Endringen ligger kun i nettleseren og
-        kan forsvinne. ({lastResult.error})
+        <strong>
+          {lastResult.conflict
+            ? "Konflikt: noen andre har lagret nyere data."
+            : "Data ble ikke lagret i Supabase."}
+        </strong>{" "}
+        {lastResult.conflict
+          ? "Hent siste versjon fra sky (Innstillinger) før du lagrer videre."
+          : "Endringen ligger kun i nettleseren og kan forsvinne."}{" "}
+        ({lastResult.error})
         <button type="button" className={styles.dismiss} onClick={dismissError}>
           Lukk
         </button>

@@ -170,6 +170,23 @@
   color: var(--foreground-muted);
 }
 
+.tilhorighet {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--background-subtle);
+  color: var(--foreground-muted);
+  border: 1px solid var(--border);
+}
+
+.tilhorighetReserve {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
 .empty {
   padding: 2rem 1.25rem !important;
   text-align: center;

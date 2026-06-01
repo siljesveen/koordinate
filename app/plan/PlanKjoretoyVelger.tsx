@@ -8,6 +8,8 @@ import styles from "./page.module.css";
 export type PlanKjoretoyItem = {
   id: string;
   kjennemerke: string;
+  /** Reserve/ekstern operatør (Bring/GDF/TF) – vises som merkelapp. */
+  tilhørighet?: string;
 };
 
 type PlanKjoretoyVelgerProps = {
@@ -193,6 +195,10 @@ export default function PlanKjoretoyVelger({
     return Boolean(fraMasterKjoretoyId && kjoretoyId === fraMasterKjoretoyId);
   }
 
+  function tilhørighetFor(kjoretoyId: string): string | undefined {
+    return byId.get(kjoretoyId)?.tilhørighet;
+  }
+
   useEffect(() => {
     if (!åpen) return;
     const t = window.setTimeout(() => søkRef.current?.focus(), 0);
@@ -269,6 +275,11 @@ export default function PlanKjoretoyVelger({
         >
           {visningLabel}
         </span>
+        {selectValue !== "__ingen__" &&
+          selectValue !== "__baseline__" &&
+          tilhørighetFor(selectValue) && (
+            <span className={styles.kjoretoyComboTag}>{tilhørighetFor(selectValue)}</span>
+          )}
         <span className={styles.kjoretoyComboChevron} aria-hidden>
           ▾
         </span>
@@ -311,6 +322,9 @@ export default function PlanKjoretoyVelger({
                       className={`${styles.kjoretoyComboReg} ${erFraMasterKjoretoy(item.id) ? styles.kjoretoyComboRegMaster : ""}`}
                     >
                       {item.kjennemerke}
+                      {item.tilhørighet && (
+                        <span className={styles.kjoretoyComboTag}>{item.tilhørighet}</span>
+                      )}
                     </span>
                     <span
                       className={
@@ -374,6 +388,9 @@ export default function PlanKjoretoyVelger({
                       className={`${styles.kjoretoyComboReg} ${erFraMasterKjoretoy(valg.id) ? styles.kjoretoyComboRegMaster : ""}`}
                     >
                       {valg.label}
+                      {tilhørighetFor(valg.id) && (
+                        <span className={styles.kjoretoyComboTag}>{tilhørighetFor(valg.id)}</span>
+                      )}
                     </span>
                   </button>
                 );
