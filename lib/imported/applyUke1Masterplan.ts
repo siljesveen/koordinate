@@ -16,7 +16,6 @@ export {
   UKE3_MASTERPLAN_PATCH,
   UKE4_MASTERPLAN_PATCH,
   UKE_MASTERPLAN_PATCHES,
-  type Uke1SlotPatch,
   type UkeMasterplanPatch,
   type UkeNummer,
   type UkeSlotPatch,

@@ -18,6 +18,7 @@ import {
 import { compareNb } from "@/lib/utils/sort";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
+import { merkUkeImportApplied } from "@/lib/masterplan/ukeImportMeta";
 import styles from "./page.module.css";
 
 function sjåførFraMasterSlots(
@@ -334,13 +335,6 @@ export default function MasterplanClient() {
     }
   }
 
-  const UKE_IMPORT_KEYS: Record<UkeNummer, string> = {
-    1: "bemanning.uke1ImportApplied.v2",
-    2: "bemanning.uke2ImportApplied.v1",
-    3: "bemanning.uke3ImportApplied.v1",
-    4: "bemanning.uke4ImportApplied.v2",
-  };
-
   async function leggInnUkeFraPlan(uke: UkeNummer) {
     if (
       !window.confirm(
@@ -359,7 +353,7 @@ export default function MasterplanClient() {
       const { plan, updated } = mergeUkeMasterplanPatchForUke(masterplan, uke, ansattById);
       lagreHel(plan);
       const patchVersjon = String(patch.meta?.generert ?? "1");
-      window.localStorage.setItem(UKE_IMPORT_KEYS[uke], patchVersjon);
+      merkUkeImportApplied(uke, patchVersjon);
       setUkeImportMsg(`Uke ${uke} oppdatert — ${updated} ruter lagt inn. Lagrer til sky…`);
     } finally {
       setUkeImporterer(null);

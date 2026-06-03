@@ -15,7 +15,6 @@ const SKY_SAVE_MS = 500;
 type KeyListener = () => void;
 
 const listeners = new Map<string, Set<KeyListener>>();
-const keyVersions = new Map<string, number>();
 const skySaveTimers = new Map<string, number>();
 const pendingSkyValues = new Map<string, unknown>();
 
@@ -39,12 +38,7 @@ function skrivLocal(key: string, value: unknown): void {
   }
 }
 
-function bumpKeyVersion(key: string): void {
-  keyVersions.set(key, (keyVersions.get(key) ?? 0) + 1);
-}
-
 function notifyKeyListeners(key: string): void {
-  bumpKeyVersion(key);
   const set = listeners.get(key);
   if (!set) return;
   for (const fn of set) {
@@ -89,10 +83,6 @@ export function subscribeAppDataKey(key: AppDataKey, listener: KeyListener): () 
     set?.delete(listener);
     if (set && set.size === 0) listeners.delete(key);
   };
-}
-
-export function getAppDataKeyVersion(key: AppDataKey): number {
-  return keyVersions.get(key) ?? 0;
 }
 
 /** Varsle abonnenter for én eller flere nøkler (f.eks. etter sky-sync). */

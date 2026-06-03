@@ -195,12 +195,3 @@ export function finnSjåførRuterPåDag(args: {
 
   return result;
 }
-
-/** @deprecated Bruk mergeAvspaseringForPlanDag */
-export function resolveAvspaseringForDag(args: {
-  uke: 1 | 2 | 3 | 4;
-  dag: number;
-  ansatte: Ansatt[];
-}): AvspaseringForDag {
-  return resolveSyklusAvspaseringForDag(args);
-}

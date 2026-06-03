@@ -5,11 +5,11 @@ import {
   uploadLocalStorageToSky,
   type UploadToSkyResult,
 } from "@/lib/data/appDataStorage";
-import { notifyAppDataKeysUpdated } from "@/lib/data/appDataEngine";
+import { replaceAppDataLocal } from "@/lib/data/appDataEngine";
 import { clearAllDirtyKeys } from "@/lib/data/dirtyKeys";
 import { forklaringBlokkering } from "@/lib/data/skyUploadGuard";
 import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
-import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
+import { APP_DATA_KEYS, type AppDataKey } from "@/lib/data/storageKeys";
 import { useAuth } from "@/lib/state/authStore";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { useEffect, useRef, useState } from "react";
@@ -210,16 +210,10 @@ export default function InnstillingerPage() {
     setStatus(null);
     try {
       let importert = 0;
-      const importerteNøkler: string[] = [];
       for (const key of STORAGE_KEYS) {
-        if (key in importData) {
-          window.localStorage.setItem(key, JSON.stringify(importData[key]));
-          importerteNøkler.push(key);
-          importert++;
-        }
-      }
-      if (importerteNøkler.length > 0) {
-        notifyAppDataKeysUpdated(importerteNøkler);
+        if (!(key in importData)) continue;
+        replaceAppDataLocal(key as AppDataKey, importData[key], { canEdit, skipSky: true });
+        importert++;
       }
       setImportData(null);
       clearAllDirtyKeys();

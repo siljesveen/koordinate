@@ -46,9 +46,6 @@ export const UKE_MASTERPLAN_PATCHES = {
 
 export type UkeNummer = keyof typeof UKE_MASTERPLAN_PATCHES;
 
-/** @deprecated Bruk UkeSlotPatch */
-export type Uke1SlotPatch = UkeSlotPatch;
-
 function baselineMasterplan(): MasterRuteplan {
   const slotMap = new Map<string, MasterRuteSlot>();
   for (const [ukeStr, dager] of Object.entries(RINGNES_CYCLE.cycle)) {
