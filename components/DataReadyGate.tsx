@@ -17,10 +17,15 @@ export default function DataReadyGate({ children }: { children: React.ReactNode 
     return <>{children}</>;
   }
 
-  if (configured && (loading || !dataReady)) {
+  const venterPåInnlogging = configured && loading && !dataReady;
+  const venterPåSky = configured && !dataReady && !loading;
+
+  if (venterPåInnlogging || venterPåSky) {
     return (
       <div className={styles.wrap} role="status" aria-live="polite">
-        <p className={styles.text}>Laster data …</p>
+        <p className={styles.text}>
+          {venterPåInnlogging ? "Sjekker innlogging …" : "Synkroniserer data …"}
+        </p>
       </div>
     );
   }

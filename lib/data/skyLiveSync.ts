@@ -1,37 +1,22 @@
 "use client";
 
 import { pullRemoteChanges } from "@/lib/data/appDataStorage";
-import { APP_DATA_KEYS, type AppDataKey } from "@/lib/data/storageKeys";
+import { applyRemoteAppDataKey } from "@/lib/data/appDataEngine";
+import type { AppDataKey } from "@/lib/data/storageKeys";
+import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { setKeyMeta } from "@/lib/data/syncMeta";
 import { isKeyDirty } from "@/lib/data/dirtyKeys";
 import { reportSkySyncNotice } from "@/lib/data/skySyncNotify";
 
 const POLL_MS = 30_000;
 
-function skrivLocal(key: string, value: unknown): void {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // ignorer
-  }
+function erAppDataKey(key: string): key is AppDataKey {
+  return (APP_DATA_KEYS as readonly string[]).includes(key);
 }
 
-function dispatchDataSynced(): void {
-  window.dispatchEvent(new CustomEvent("koordinate:dataSynced"));
-}
-
-function applyRemoteRow(key: string, value: unknown, updatedAt: string): boolean {
-  if (!(APP_DATA_KEYS as readonly string[]).includes(key)) return false;
-  if (isKeyDirty(key as AppDataKey)) return false;
-  skrivLocal(key, value);
-  setKeyMeta(key, updatedAt);
-  return true;
-}
-
-/** Periodisk + Realtime henting fra Supabase. */
-export function startSkyLiveSync(onTick: () => void): () => void {
+/** Periodisk + Realtime henting fra Supabase. Oppdaterer kun berørte nøkler via appDataEngine. */
+export function startSkyLiveSync(): () => void {
   if (!isSupabaseConfigured() || typeof window === "undefined") {
     return () => {};
   }
@@ -41,9 +26,7 @@ export function startSkyLiveSync(onTick: () => void): () => void {
 
   const runPoll = () => {
     if (stopped) return;
-    void pullRemoteChanges().then((result) => {
-      if (result.updated > 0) onTick();
-    });
+    void pullRemoteChanges();
   };
 
   const onFocus = () => runPoll();
@@ -62,16 +45,15 @@ export function startSkyLiveSync(onTick: () => void): () => void {
         (payload) => {
           if (stopped) return;
           const row = payload.new as { key?: string; value?: unknown; updated_at?: string };
-          if (!row?.key || !row.updated_at) return;
+          if (!row?.key || !row.updated_at || !erAppDataKey(row.key)) return;
 
-          if (isKeyDirty(row.key as AppDataKey)) {
+          if (isKeyDirty(row.key)) {
             reportSkySyncNotice({ type: "skipped_dirty", keys: [row.key] });
             return;
           }
 
-          if (applyRemoteRow(row.key, row.value, row.updated_at)) {
+          if (applyRemoteAppDataKey(row.key, row.value, row.updated_at)) {
             reportSkySyncNotice({ type: "applied", keys: [row.key] });
-            onTick();
           }
         },
       )

@@ -23,8 +23,11 @@ import { AuthStoreProvider } from "@/lib/state/authStore";
 import { AppDataReloadProvider } from "@/lib/state/appDataReload";
 import { SkySaveStoreProvider } from "@/lib/state/skySaveStore";
 
+let migrationsKjørt = false;
+
 export default function Providers({ children }: { children: React.ReactNode }) {
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && !migrationsKjørt) {
+    migrationsKjørt = true;
     runMigrations();
   }
 

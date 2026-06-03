@@ -5,6 +5,7 @@ import {
   uploadLocalStorageToSky,
   type UploadToSkyResult,
 } from "@/lib/data/appDataStorage";
+import { notifyAppDataKeysUpdated } from "@/lib/data/appDataEngine";
 import { clearAllDirtyKeys } from "@/lib/data/dirtyKeys";
 import { forklaringBlokkering } from "@/lib/data/skyUploadGuard";
 import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
@@ -209,11 +210,16 @@ export default function InnstillingerPage() {
     setStatus(null);
     try {
       let importert = 0;
+      const importerteNøkler: string[] = [];
       for (const key of STORAGE_KEYS) {
         if (key in importData) {
           window.localStorage.setItem(key, JSON.stringify(importData[key]));
+          importerteNøkler.push(key);
           importert++;
         }
+      }
+      if (importerteNøkler.length > 0) {
+        notifyAppDataKeysUpdated(importerteNøkler);
       }
       setImportData(null);
       clearAllDirtyKeys();

@@ -497,12 +497,7 @@ export default function PlanPage() {
         bilId = slot.standardBilId;
         bilFraMaster = true;
       }
-      // Ikke arv fast bil fra manuelt innsatt sjåfør i Plan — bil velges eksplisitt der.
-      if (!bilId && sjåfør?.fastBilId && !planSjåførOverstyrt) {
-        bilId = sjåfør.fastBilId;
-        bilFraMaster = true;
-      }
-      // Arv fra koblet rute
+      // Arv fra koblet rute (kun masterplan-felt, ikke ansatt.fastBilId)
       if (!bilId) {
         for (const kr of kobleteMedRute(slot.rutekode)) {
           const kTil = tildelingMap.get(kr);
@@ -526,11 +521,7 @@ export default function PlanPage() {
         hengerId = slot.standardHengerId;
         hengerFraMaster = true;
       }
-      if (!hengerId && sjåfør?.fastHengerId && !planSjåførOverstyrt) {
-        hengerId = sjåfør.fastHengerId;
-        hengerFraMaster = true;
-      }
-      // Arv fra koblet rute
+      // Arv fra koblet rute (kun masterplan-felt, ikke ansatt.fastHengerId)
       if (!hengerId) {
         for (const kr of kobleteMedRute(slot.rutekode)) {
           const kTil = tildelingMap.get(kr);
@@ -563,36 +554,18 @@ export default function PlanPage() {
   /** Masterplanens kjøretøy for ruten (inkl. arv fra koblede ruter) — uavhengig av «—» på dagen. */
   function masterplanBilIdForSlot(slot: MasterRuteSlot): string | undefined {
     if (slot.standardBilId) return slot.standardBilId;
-    if (slot.standardSjåførAnsattId) {
-      const fast = ansattById.get(slot.standardSjåførAnsattId)?.fastBilId;
-      if (fast) return fast;
-    }
     for (const kr of kobleteMedRute(slot.rutekode)) {
       const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
-      if (!kSlot) continue;
-      if (kSlot.standardBilId) return kSlot.standardBilId;
-      if (kSlot.standardSjåførAnsattId) {
-        const fast = ansattById.get(kSlot.standardSjåførAnsattId)?.fastBilId;
-        if (fast) return fast;
-      }
+      if (kSlot?.standardBilId) return kSlot.standardBilId;
     }
     return undefined;
   }
 
   function masterplanHengerIdForSlot(slot: MasterRuteSlot): string | undefined {
     if (slot.standardHengerId) return slot.standardHengerId;
-    if (slot.standardSjåførAnsattId) {
-      const fast = ansattById.get(slot.standardSjåførAnsattId)?.fastHengerId;
-      if (fast) return fast;
-    }
     for (const kr of kobleteMedRute(slot.rutekode)) {
       const kSlot = effektiveRuter.find((s) => s.rutekode === kr);
-      if (!kSlot) continue;
-      if (kSlot.standardHengerId) return kSlot.standardHengerId;
-      if (kSlot.standardSjåførAnsattId) {
-        const fast = ansattById.get(kSlot.standardSjåførAnsattId)?.fastHengerId;
-        if (fast) return fast;
-      }
+      if (kSlot?.standardHengerId) return kSlot.standardHengerId;
     }
     return undefined;
   }

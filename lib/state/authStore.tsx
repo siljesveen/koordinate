@@ -6,11 +6,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { canEditData, type UserProfile } from "@/lib/auth/types";
 import { fetchProfileAction } from "@/app/actions/skyData";
 import { syncOnLogin } from "@/lib/data/appDataStorage";
+import { notifyAppDataKeysUpdated } from "@/lib/data/appDataEngine";
+import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
 import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -31,6 +34,9 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(configured);
   const [dataReady, setDataReady] = useState(!configured);
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
+  const syncedUserIdRef = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!configured) {
@@ -39,7 +45,9 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setLoading(true);
+    if (profileRef.current === null) {
+      setLoading(true);
+    }
     try {
       const serverProfile = await fetchProfileAction();
       if (serverProfile) {
@@ -86,14 +94,19 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!configured) {
       setDataReady(true);
+      syncedUserIdRef.current = null;
       return;
     }
     if (loading) {
-      setDataReady(false);
       return;
     }
-    // Ikke innlogget: vis login uten å vente på data-migrering
     if (!profile) {
+      setDataReady(true);
+      syncedUserIdRef.current = null;
+      return;
+    }
+
+    if (syncedUserIdRef.current === profile.id) {
       setDataReady(true);
       return;
     }
@@ -105,6 +118,7 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
     const timeoutId = window.setTimeout(() => {
       if (!cancelled) {
         console.warn("[auth] syncOnLogin tok uvanlig lang tid — viser app med lokal cache");
+        syncedUserIdRef.current = profile.id;
         setDataReady(true);
       }
     }, timeoutMs);
@@ -112,10 +126,9 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
     void syncOnLogin().finally(() => {
       window.clearTimeout(timeoutId);
       if (!cancelled) {
+        syncedUserIdRef.current = profile.id;
         setDataReady(true);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("koordinate:dataSynced"));
-        }
+        notifyAppDataKeysUpdated([...APP_DATA_KEYS]);
       }
     });
 
@@ -123,7 +136,7 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [configured, loading, profile]);
+  }, [configured, loading, profile?.id]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

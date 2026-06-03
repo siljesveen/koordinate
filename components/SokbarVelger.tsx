@@ -13,7 +13,9 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
 } from "react";
+import { flushSync } from "react-dom";
 import { createPortal } from "react-dom";
 import styles from "./SokbarVelger.module.css";
 
@@ -75,6 +77,7 @@ export default function SokbarVelger({
   const rotRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const søkRef = useRef<HTMLInputElement>(null);
+  const velgerAktivRef = useRef(false);
 
   const ansatteForSøk = kjoretoySøkMedAnsatte?.ansatte;
   const ekstraSjåførKob = kjoretoySøkMedAnsatte?.ekstraSjåførPerKjoretoy;
@@ -201,15 +204,17 @@ export default function SokbarVelger({
 
   useEffect(() => {
     if (!åpen) return;
-    function lukk(e: MouseEvent) {
+    function lukk(e: PointerEvent) {
+      if (velgerAktivRef.current) return;
       const target = e.target as Node;
       if (rotRef.current?.contains(target)) return;
       if (panelRef.current?.contains(target)) return;
       setÅpen(false);
       setSøk("");
     }
-    document.addEventListener("mousedown", lukk);
-    return () => document.removeEventListener("mousedown", lukk);
+    // pointerup — valg skjer på pointerdown/mousedown uten at lukking kommer først
+    document.addEventListener("pointerup", lukk);
+    return () => document.removeEventListener("pointerup", lukk);
   }, [åpen]);
 
   useEffect(() => {
@@ -230,9 +235,17 @@ export default function SokbarVelger({
     setSøk("");
   }
 
-  function velg(nyVerdi: string) {
-    onChange(nyVerdi);
+  function velg(nyVerdi: string, e?: ReactMouseEvent) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    velgerAktivRef.current = true;
+    flushSync(() => {
+      onChange(nyVerdi);
+    });
     lukkOgNullstill();
+    window.setTimeout(() => {
+      velgerAktivRef.current = false;
+    }, 100);
   }
 
   const panelStyle = useMemo((): CSSProperties | undefined => {
@@ -289,7 +302,7 @@ export default function SokbarVelger({
             role="option"
             aria-selected={value === tomVerdi}
             className={`${styles.item} ${value === tomVerdi ? styles.itemSelected : ""}`}
-            onClick={() => velg(tomVerdi)}
+            onPointerDown={(e) => velg(tomVerdi, e)}
           >
             <span className={styles.label}>{tomLabel}</span>
           </button>
@@ -305,7 +318,7 @@ export default function SokbarVelger({
               role="option"
               aria-selected={value === o.value}
               className={`${styles.item} ${value === o.value ? styles.itemSelected : ""}`}
-              onClick={() => velg(o.value)}
+              onPointerDown={(e) => velg(o.value, e)}
             >
               <span className={styles.label}>{o.label}</span>
               {o.hint ? <span className={styles.hint}>{o.hint}</span> : null}

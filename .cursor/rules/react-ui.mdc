@@ -11,10 +11,12 @@ alwaysApply: false
 - Søkbare lister for navn/reg.nr: bruk `components/SokbarVelger.tsx` (alfabetisk, norsk sortering via `lib/utils/sort.ts`).
 - Plan bil/henger: `app/plan/PlanKjoretoyVelger.tsx` — ikke dupliser uten grunn.
 
-## Stores
+## Stores og persistens
 
-- Persistens: `useAppData` eller `loadAppData` / `saveAppData` fra `lib/data/appDataStorage.ts`.
-- Nye stores: følg eksisterende mønster; ikke introduser ny lagringsmekanisme i samme PR som en UI-fiks.
+- **Standard:** `useAppData` (`lib/hooks/useAppData.ts`) — leser cache, skriver via `patchAppData`.
+- **Komplekse stores** (masterplan, bilUtilgjengelig): `patchAppData` + `subscribeAppDataKey` fra `lib/data/appDataEngine.ts`.
+- **Ikke** introduser `loadAppData`, debounced save, eller `reloadTick` i nye stores.
+- Sky-sync og manuell «hent fra sky»: `useAppDataReload().reloadFromCloud` — ikke reload alle stores manuelt.
 
 ## Stil
 

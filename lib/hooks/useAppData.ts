@@ -1,10 +1,12 @@
 "use client";
 
-import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
-import { markKeyDirty } from "@/lib/data/dirtyKeys";
+import {
+  patchAppData,
+  readAppDataLocal,
+  subscribeAppDataKey,
+} from "@/lib/data/appDataEngine";
 import type { AppDataKey } from "@/lib/data/storageKeys";
 import { useAuth } from "@/lib/state/authStore";
-import { useAppDataReload } from "@/lib/state/appDataReload";
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
 type UseAppDataOptions<T> = {
@@ -13,61 +15,41 @@ type UseAppDataOptions<T> = {
 };
 
 export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
-  const { dataReady, canEdit, configured, profile } = useAuth();
-  const { reloadTick } = useAppDataReload();
-  const innlogget = configured && !!profile;
+  const { dataReady, canEdit } = useAuth();
+  const appKey = key as AppDataKey;
   const [data, setData] = useState<T>(options.getDefault);
   const [loaded, setLoaded] = useState(false);
-  const hoppOverNesteLagring = useRef(true);
+  const parseRef = useRef(options.parse);
+  parseRef.current = options.parse;
+
+  const syncFraCache = useCallback(() => {
+    const raw = readAppDataLocal(appKey);
+    setData(parseRef.current(raw ?? null));
+    setLoaded(true);
+  }, [appKey]);
+
+  useEffect(() => {
+    if (!dataReady) return;
+    syncFraCache();
+    return subscribeAppDataKey(appKey, syncFraCache);
+  }, [appKey, dataReady, syncFraCache]);
 
   const setDataGuarded = useCallback<Dispatch<SetStateAction<T>>>(
     (updater) => {
       if (!canEdit) return;
-      setData(updater);
+      patchAppData<T>(
+        appKey,
+        (previous) => {
+          const prev = parseRef.current(previous ?? null);
+          return typeof updater === "function"
+            ? (updater as (value: T) => T)(prev)
+            : updater;
+        },
+        { canEdit },
+      );
     },
-    [canEdit],
+    [appKey, canEdit],
   );
-
-  useEffect(() => {
-    if (!dataReady) return;
-
-    let cancelled = false;
-    hoppOverNesteLagring.current = true;
-
-    void (async () => {
-      try {
-        const raw = await loadAppData(key, innlogget);
-        if (cancelled) return;
-        setData(options.parse(raw));
-      } catch {
-        if (!cancelled) setData(options.getDefault());
-      } finally {
-        if (!cancelled) {
-          setLoaded(true);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [key, dataReady, reloadTick, innlogget]);
-
-  useEffect(() => {
-    if (!loaded || !dataReady || !canEdit) return;
-    if (hoppOverNesteLagring.current) {
-      hoppOverNesteLagring.current = false;
-      return;
-    }
-
-    markKeyDirty(key as AppDataKey);
-
-    const timer = window.setTimeout(() => {
-      void saveAppData(key, data, canEdit);
-    }, 150);
-
-    return () => window.clearTimeout(timer);
-  }, [key, data, loaded, dataReady, canEdit]);
 
   return { data, setData: setDataGuarded, loaded: loaded && dataReady, canEdit };
 }

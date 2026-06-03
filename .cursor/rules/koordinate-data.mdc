@@ -1,5 +1,5 @@
 ---
-description: Datalagring – Supabase, masterplan, backup (ikke overskriv ved load)
+description: Datalagring – appDataEngine, Supabase, backup
 alwaysApply: true
 ---
 
@@ -7,20 +7,39 @@ alwaysApply: true
 
 ## Lagring
 
-- Masterdata speiles i Supabase-tabellen `app_data` (nøkler som `bemanning.masterplan.v1`, `bemanning.ansatte.v2`, osv.).
-- `localStorage` er cache; ved innlogging leses **Supabase først** (når konfigurert).
+- Masterdata speiles i Supabase-tabellen `app_data` (nøkler i `lib/data/storageKeys.ts`).
+- `localStorage` er **cache**. Ved innlogging fylles cache fra sky via `syncOnLogin` / live-sync.
 
-## Kritiske regler (koblingsgrupper)
+## Eneste skrivevei (kritisk)
 
-- **Masterplan** har `koblingsgrupper` og `slot.koblingsgruppe` — begge må bevares ved load/save.
-- **Ikke** trigge `saveAppData` for masterplan rett etter innlasting; kun etter **bruker** endrer masterplan (lagre slot, kobl ruter, osv.).
-- Ved migrering localStorage → Supabase: ikke overskriv sky hvis remote har **flere** `koblingsgrupper` enn local.
+**Stores og hooks skal aldri** kalle `saveAppData`, skrive `localStorage` direkte, eller bruke debounced save-effekter.
+
+| Operasjon | API |
+|-----------|-----|
+| Les | `readAppDataLocal(key)` + `subscribeAppDataKey(key, sync)` |
+| Skriv (bruker) | `patchAppData(key, updater, { canEdit })` |
+| Enkel store | `useAppData` fra `lib/hooks/useAppData.ts` |
+| Sky inn (trygt) | `applyRemoteAppDataKey` — hopper over dirty nøkler |
+| Manuell sky-sync | `reloadFromCloud()` fra `useAppDataReload` |
+
+`saveAppData` i `appDataStorage.ts` er **intern** — kalles kun fra `appDataEngine` etter debounce.
+
+## Forbudt (gir race/overskriving)
+
+- Global `reloadTick` eller `koordinate:dataSynced` som laster alle stores på nytt
+- Egen `loadAppData` + `useEffect` + debounced `saveAppData` per store
+- `brukerHarEndret`-flagg som plaster over reload-konflikter
+
+## Masterplan
+
+- Bevar `koblingsgrupper` og `slot.koblingsgruppe` ved alle oppdateringer.
+- Mutasjoner via `patchMasterplan` / `masterplanStore` — ikke direkte sky-kall.
 
 ## Backup
 
 - Bruker tar backup: **Innstillinger** → «Last ned backup» (JSON fra nettleser).
-- Import skriver `localStorage`; etter import på Vercel kan sky trenge manuell sync — ikke anta at import alene er nok uten å verifisere.
+- Import skriver cache og laster trygt opp til sky; etter import varsles nøkler via `notifyAppDataKeysUpdated`.
 
 ## SQL
 
-- Nye tabeller/policies: legg fil i `supabase/migrations/` og si at bruker må kjøre i **SQL Editor** (ikke forvent at de forstår CLI).
+- Nye tabeller/policies: legg fil i `supabase/migrations/` og si at bruker må kjøre i **SQL Editor**.

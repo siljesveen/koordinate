@@ -6,6 +6,7 @@ import {
   type SkyRowSnapshot,
   type UploadBlockReason,
 } from "@/lib/data/skyUploadGuard";
+import { applyRemoteAppDataKey, notifyAppDataKeysUpdated } from "@/lib/data/appDataEngine";
 import { reportSkySyncNotice } from "@/lib/data/skySyncNotify";
 import { getKeyMeta, mergeSyncMeta, setKeyMeta } from "@/lib/data/syncMeta";
 import {
@@ -75,11 +76,6 @@ function erAppDataKey(key: string): key is AppDataKey {
   return (APP_DATA_KEYS as readonly string[]).includes(key);
 }
 
-function dispatchDataSynced(): void {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("koordinate:dataSynced"));
-}
-
 /** Hent alt fra sky og oppdater localStorage + sync-meta. Respekterer ulagrede lokale endringer. */
 export async function syncLocalCacheFromSky(
   options: SkySyncOptions = {},
@@ -101,6 +97,8 @@ export async function syncLocalCacheFromSky(
   const skippedDirty: string[] = [];
   const metaBatch: Record<string, string> = {};
 
+  const oppdaterteNøkler: string[] = [];
+
   for (const key of APP_DATA_KEYS) {
     if (!force && isKeyDirty(key)) {
       skippedDirty.push(key);
@@ -109,10 +107,11 @@ export async function syncLocalCacheFromSky(
 
     const row = rowMap.get(key);
     if (row) {
-      skrivLocal(key, row.value);
-      metaBatch[key] = row.updatedAt;
-      markKeyClean(key);
-      updated++;
+      if (applyRemoteAppDataKey(key, row.value, row.updatedAt)) {
+        metaBatch[key] = row.updatedAt;
+        updated++;
+        oppdaterteNøkler.push(key);
+      }
     } else if (removeMissing) {
       window.localStorage.removeItem(key);
       missing.push(key);
@@ -123,6 +122,9 @@ export async function syncLocalCacheFromSky(
 
   mergeSyncMeta(metaBatch);
 
+  if (updated > 0) {
+    notifyAppDataKeysUpdated(oppdaterteNøkler);
+  }
   if (skippedDirty.length > 0) {
     reportSkySyncNotice({ type: "skipped_dirty", keys: skippedDirty });
   }
@@ -165,15 +167,14 @@ export async function pullRemoteChanges(): Promise<SkySyncResult> {
       continue;
     }
 
-    skrivLocal(row.key, row.value);
-    setKeyMeta(row.key, row.updatedAt);
-    updated++;
-    applied.push(row.key);
+    if (applyRemoteAppDataKey(row.key, row.value, row.updatedAt)) {
+      updated++;
+      applied.push(row.key);
+    }
   }
 
   if (updated > 0) {
     reportSkySyncNotice({ type: "applied", keys: applied });
-    dispatchDataSynced();
   }
   if (skippedDirty.length > 0) {
     reportSkySyncNotice({ type: "skipped_dirty", keys: skippedDirty });
@@ -183,40 +184,9 @@ export async function pullRemoteChanges(): Promise<SkySyncResult> {
 }
 
 /**
- * Les data etter innlogging: cache er fylt fra sky via syncOnLogin.
- * Uten innlogging: kun localStorage.
+ * Sky-lagring — kalles kun fra `patchAppData` (appDataEngine).
+ * Stores skal aldri kalle dette direkte; bruk `patchAppData` / `useAppData`.
  */
-export async function loadAppData(key: string, innlogget = false): Promise<unknown | null> {
-  if (!innlogget || !isSupabaseConfigured()) {
-    return lesLocal(key);
-  }
-
-  const cached = lesLocal(key);
-  if (cached !== null) {
-    return cached;
-  }
-
-  const { data, updatedAt, error } = await loadAppDataFromSkyAction(key);
-
-  if (error === "not_authenticated") {
-    return null;
-  }
-
-  if (error) {
-    console.warn("[app_data] load feilet:", key, error);
-    return null;
-  }
-
-  if (data !== undefined && data !== null) {
-    skrivLocal(key, data);
-    if (updatedAt) setKeyMeta(key, updatedAt);
-    return data;
-  }
-
-  return null;
-}
-
-/** Lagre data: sky først ved redigering, deretter lokal cache + sync-meta. */
 export async function saveAppData(
   key: string,
   value: unknown,
@@ -358,7 +328,6 @@ export async function uploadLocalStorageToSky(): Promise<UploadToSkyResult> {
 
   if (!result.error) {
     await syncLocalCacheFromSky({ force: false });
-    dispatchDataSynced();
   }
 
   return {

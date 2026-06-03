@@ -1,9 +1,8 @@
-import type { Ansatt, MasterRuteSlot } from "@/lib/domain";
+import type { MasterRuteSlot } from "@/lib/domain";
 
 export function slotMedSjåførOgKjoretoy(
   slot: MasterRuteSlot,
   ansattId: string | undefined,
-  ansattById: Map<string, Ansatt>,
 ): MasterRuteSlot {
   if (!ansattId) {
     return {
@@ -13,11 +12,9 @@ export function slotMedSjåførOgKjoretoy(
       standardHengerId: undefined,
     };
   }
-  const ansatt = ansattById.get(ansattId);
   return {
     ...slot,
     standardSjåførAnsattId: ansattId,
-    standardBilId: ansatt?.fastBilId,
-    standardHengerId: ansatt?.fastHengerId,
+    // Bil/henger settes eksplisitt per rute i masterplan — ikke fra ansatt.fastBilId/fastHengerId.
   };
 }

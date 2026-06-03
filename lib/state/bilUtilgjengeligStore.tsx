@@ -2,11 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { BilUtilgjengelig, KjøretøyUtilgjengeligType } from "@/lib/domain";
-import { loadAppData, saveAppData } from "@/lib/data/appDataStorage";
-import { markKeyDirty } from "@/lib/data/dirtyKeys";
+import { patchAppData, readAppDataLocal, subscribeAppDataKey } from "@/lib/data/appDataEngine";
+import type { AppDataKey } from "@/lib/data/storageKeys";
 import { resolveBilPeriodeEtterMerkeTilbake } from "@/lib/kjoretoyTilgjengelighet";
 import { useAuth } from "@/lib/state/authStore";
-import { useAppDataReload } from "@/lib/state/appDataReload";
 import {
   abonnerBilUtilgjengelig,
   sendBilTilbakeMelding,
@@ -27,7 +26,7 @@ type BilUtilgjengeligStoreValue = {
   lastInnFraLagring: () => void;
 };
 
-const STORAGE_KEY = "bemanning.bilUtilgjengelig.v1";
+const STORAGE_KEY = "bemanning.bilUtilgjengelig.v1" as AppDataKey;
 const Ctx = createContext<BilUtilgjengeligStoreValue | null>(null);
 
 const TYPER: KjøretøyUtilgjengeligType[] = [
@@ -82,14 +81,19 @@ function normalizeLoaded(data: unknown): BilUtilgjengelig[] {
     .filter(Boolean) as BilUtilgjengelig[];
 }
 
-async function lesFraLagring(innlogget = false): Promise<BilUtilgjengelig[]> {
-  try {
-    const raw = await loadAppData(STORAGE_KEY, innlogget);
-    if (raw === null || raw === undefined) return [];
-    return normalizeLoaded(raw);
-  } catch {
-    return [];
-  }
+function lesFraLocal(): BilUtilgjengelig[] {
+  return normalizeLoaded(readAppDataLocal(STORAGE_KEY));
+}
+
+function patchPoster(
+  updater: (prev: BilUtilgjengelig[]) => BilUtilgjengelig[],
+  canEdit: boolean,
+): BilUtilgjengelig[] {
+  return patchAppData<BilUtilgjengelig[]>(
+    STORAGE_KEY,
+    (raw) => updater(normalizeLoaded(raw)),
+    { canEdit },
+  );
 }
 
 function nyId(): string {
@@ -98,61 +102,28 @@ function nyId(): string {
 }
 
 export function BilUtilgjengeligStoreProvider({ children }: { children: React.ReactNode }) {
-  const { dataReady, canEdit, configured, profile } = useAuth();
-  const { reloadTick } = useAppDataReload();
-  const innlogget = configured && !!profile;
-  const [poster, setPoster] = useState<BilUtilgjengelig[]>([]);
-  const loaded = useRef(false);
-  const hopperOverLagring = useRef(false);
+  const { dataReady, canEdit } = useAuth();
+  const [poster, setPoster] = useState<BilUtilgjengelig[]>(() => lesFraLocal());
+  const canEditRef = useRef(canEdit);
+  canEditRef.current = canEdit;
 
-  const lastInnFraLagring = useCallback(() => {
-    void lesFraLagring(innlogget).then(setPoster);
-  }, [innlogget]);
+  const syncFraCache = useCallback(() => {
+    setPoster(lesFraLocal());
+  }, []);
 
   useEffect(() => {
     if (!dataReady) return;
-    hopperOverLagring.current = true;
-    void lesFraLagring(innlogget).then((data) => {
-      setPoster(data);
-      loaded.current = true;
-    });
-  }, [dataReady, reloadTick, innlogget]);
+    syncFraCache();
+    return subscribeAppDataKey(STORAGE_KEY, syncFraCache);
+  }, [dataReady, syncFraCache]);
 
   useEffect(() => {
-    if (!loaded.current || !dataReady) return;
-    if (hopperOverLagring.current) {
-      hopperOverLagring.current = false;
-      return;
-    }
-    markKeyDirty(STORAGE_KEY);
+    return abonnerBilUtilgjengelig(syncFraCache);
+  }, [syncFraCache]);
 
-    const timer = window.setTimeout(() => {
-      void saveAppData(STORAGE_KEY, poster, canEdit);
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [poster, dataReady, canEdit]);
-
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== STORAGE_KEY) return;
-      hopperOverLagring.current = true;
-      lastInnFraLagring();
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [lastInnFraLagring]);
-
-  useEffect(() => {
-    return abonnerBilUtilgjengelig(() => {
-      hopperOverLagring.current = true;
-      lastInnFraLagring();
-    });
-  }, [lastInnFraLagring]);
-
-  const lagre = (item: BilUtilgjengelig) => {
-    if (!canEdit) return;
-    setPoster((prev) => {
+  const lagre = useCallback((item: BilUtilgjengelig) => {
+    if (!canEditRef.current) return;
+    patchPoster((prev) => {
       const i = prev.findIndex((p) => p.id === item.id);
       if (i >= 0) {
         const old = prev[i];
@@ -167,59 +138,59 @@ export function BilUtilgjengeligStoreProvider({ children }: { children: React.Re
         return copy;
       }
       return [{ ...item, id: item.id || nyId() }, ...prev];
-    });
-  };
+    }, canEditRef.current);
+  }, []);
 
-  const slett = (id: string) => {
-    if (!canEdit) return;
-    setPoster((prev) => prev.filter((p) => p.id !== id));
-  };
+  const slett = useCallback((id: string) => {
+    if (!canEditRef.current) return;
+    patchPoster((prev) => prev.filter((p) => p.id !== id), canEditRef.current);
+  }, []);
 
-  const merkTilbake = (id: string, meta?: MerkBilTilbakeMeta): BilTilbakeMelding | null => {
-    if (!canEdit) return null;
-    const post = poster.find((p) => p.id === id);
-    if (!post) return null;
+  const merkTilbake = useCallback(
+    (id: string, meta?: MerkBilTilbakeMeta): BilTilbakeMelding | null => {
+      if (!canEditRef.current) return null;
+      const post = poster.find((p) => p.id === id);
+      if (!post) return null;
 
-    const kjennemerke = meta?.kjennemerke?.trim() || post.bilId;
-    const resolved = resolveBilPeriodeEtterMerkeTilbake(post, meta?.tilDato);
+      const kjennemerke = meta?.kjennemerke?.trim() || post.bilId;
+      const resolved = resolveBilPeriodeEtterMerkeTilbake(post, meta?.tilDato);
 
-    if (resolved.kind === "ingen") return null;
+      if (resolved.kind === "ingen") return null;
 
-    let next: BilUtilgjengelig[];
-    let tilDatoMelding: string;
+      let next: BilUtilgjengelig[];
+      let tilDatoMelding: string;
 
-    if (resolved.kind === "slett") {
-      next = poster.filter((p) => p.id !== id);
-      tilDatoMelding = post.tilDato ?? post.fraDato;
-    } else {
-      next = poster.map((p) =>
-        p.id === id
-          ? { ...p, tilDato: resolved.tilDato, tilbakeIDriftDato: resolved.tilDato }
-          : p,
-      );
-      tilDatoMelding = resolved.tilDato;
-    }
+      if (resolved.kind === "slett") {
+        next = poster.filter((p) => p.id !== id);
+        tilDatoMelding = post.tilDato ?? post.fraDato;
+      } else {
+        next = poster.map((p) =>
+          p.id === id
+            ? { ...p, tilDato: resolved.tilDato, tilbakeIDriftDato: resolved.tilDato }
+            : p,
+        );
+        tilDatoMelding = resolved.tilDato;
+      }
 
-    const fullMelding: BilTilbakeMelding = {
-      type: "bil-tilbake",
-      bilId: post.bilId,
-      kjennemerke,
-      tilDato: tilDatoMelding,
-      tidspunkt: new Date().toISOString(),
-    };
+      const fullMelding: BilTilbakeMelding = {
+        type: "bil-tilbake",
+        bilId: post.bilId,
+        kjennemerke,
+        tilDato: tilDatoMelding,
+        tidspunkt: new Date().toISOString(),
+      };
 
-    hopperOverLagring.current = true;
-    markKeyDirty(STORAGE_KEY);
-    void saveAppData(STORAGE_KEY, next, canEdit);
-    setPoster(next);
-    sendBilTilbakeMelding(fullMelding);
+      patchPoster(() => next, canEditRef.current);
+      sendBilTilbakeMelding(fullMelding);
 
-    return fullMelding;
-  };
+      return fullMelding;
+    },
+    [poster],
+  );
 
   const value = useMemo(
-    () => ({ poster, lagre, slett, merkTilbake, lastInnFraLagring }),
-    [poster, lastInnFraLagring],
+    () => ({ poster, lagre, slett, merkTilbake, lastInnFraLagring: syncFraCache }),
+    [poster, lagre, slett, merkTilbake, syncFraCache],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
