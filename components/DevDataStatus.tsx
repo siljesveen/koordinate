@@ -5,6 +5,7 @@ import {
   importAppDataBatchAction,
   testSkyTilkoblingAction,
 } from "@/app/actions/skyData";
+import { listDirtyKeys } from "@/lib/data/dirtyKeys";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import { useCallback, useEffect, useState } from "react";
@@ -85,20 +86,36 @@ export default function DevDataStatus() {
   const kanHente = skyOk && dataReady && !loading && skyStatus !== "sjekker";
 
   const handleHent = async () => {
+    const dirty = listDirtyKeys();
+    let force = false;
+    if (dirty.length > 0) {
+      if (
+        !window.confirm(
+          `Ulagrede lokale endringer (${dirty.join(", ")}). Forkaste og hente alt fra sky?`,
+        )
+      ) {
+        return;
+      }
+      force = true;
+    }
     setHenter(true);
     setSyncMsg(null);
     try {
-      const result = await reloadFromCloud();
+      const result = await reloadFromCloud({ force });
       if (result.error) {
         setSyncMsg(`Feil ved henting: ${result.error}`);
-      } else if (result.updated === 0) {
+      } else if (result.updated === 0 && (result.skippedDirty?.length ?? 0) === 0) {
         setSyncMsg(
           "Sky er tom. Data på Vercel ligger sannsynligvis kun i nettleseren der — bruk «Importer fra Vercel» under.",
         );
       } else {
         const ansatte =
           result.ansatteCount != null ? `, ${result.ansatteCount} ansatte` : "";
-        setSyncMsg(`Hentet ${result.updated} datasett fra sky${ansatte}. Siden viser nå Supabase-data.`);
+        const hoppet =
+          result.skippedDirty && result.skippedDirty.length > 0
+            ? ` (beholdt lokalt: ${result.skippedDirty.map((k) => k.replace("bemanning.", "")).join(", ")})`
+            : "";
+        setSyncMsg(`Hentet ${result.updated} datasett fra sky${ansatte}${hoppet}.`);
       }
       await lastOppSky();
     } finally {

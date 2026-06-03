@@ -1,18 +1,7 @@
-import { clearAllAnsatteData } from "./clearAllAnsatte";
 import { migratePlanAvspaseringToFravær } from "./migratePlanAvspasering";
-import { seedKjoretoyHvisTomt } from "./seedKjoretoy";
 
-const CLEAR_ANSATTE_MIGRATION = "bemanning.migration.clearAnsatte20260515";
-/** Engangsmigreringer som kjøres én gang per nettleser. */
+/** Engangsmigreringer som ikke sletter eller overskriver masterdata. */
 export function runMigrations(): void {
   if (typeof window === "undefined") return;
-
-  if (!window.localStorage.getItem(CLEAR_ANSATTE_MIGRATION)) {
-    clearAllAnsatteData();
-    window.localStorage.setItem(CLEAR_ANSATTE_MIGRATION, "1");
-  }
-
-  /* Hver oppstart: fyll inn bil/henger hvis listen i localStorage er tom/ugyldig. */
-  seedKjoretoyHvisTomt();
   migratePlanAvspaseringToFravær();
 }

@@ -1,7 +1,13 @@
 "use client";
 
 import { fetchSkyOverviewAction, verifySkySaveAction } from "@/app/actions/skyData";
-import { uploadLocalStorageToSky } from "@/lib/data/appDataStorage";
+import {
+  uploadLocalStorageToSky,
+  type UploadToSkyResult,
+} from "@/lib/data/appDataStorage";
+import { clearAllDirtyKeys } from "@/lib/data/dirtyKeys";
+import { forklaringBlokkering } from "@/lib/data/skyUploadGuard";
+import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
 import { useAuth } from "@/lib/state/authStore";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -50,38 +56,65 @@ function tellPoster(data: ExportData): { nøkler: number; poster: number } {
   return { nøkler: Object.keys(data).length, poster };
 }
 
+function formatUploadMelding(result: UploadToSkyResult, prefiks: string): string {
+  if (result.error && result.imported === 0) {
+    return `${prefiks} ${result.error}`;
+  }
+  let melding = `${prefiks} ${result.imported} datasett i Supabase.`;
+  if (result.blocked.length > 0) {
+    const hoppet = result.blocked
+      .map((b) => `${b.key.replace("bemanning.", "")} (${forklaringBlokkering(b.reason)})`)
+      .join(", ");
+    melding += ` Hoppet over (for å beskytte eksisterende data): ${hoppet}.`;
+  }
+  if (result.skipped.length > 0) {
+    melding += ` Server hoppet over: ${result.skipped.map((k) => k.replace("bemanning.", "")).join(", ")}.`;
+  }
+  return melding;
+}
+
 export default function InnstillingerPage() {
   const { profile, canEdit, configured } = useAuth();
   const supabaseAktiv = configured || isSupabaseConfigured();
+  const visAvansert = isDevEnvironment();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [importData, setImportData] = useState<ExportData | null>(null);
   const [skyOverview, setSkyOverview] = useState<string | null>(null);
+  const [skyAntallNøkler, setSkyAntallNøkler] = useState<number | null>(null);
   const [lasterSky, setLasterSky] = useState(false);
   const [lasterOpp, setLasterOpp] = useState(false);
   const [testerLagring, setTesterLagring] = useState(false);
+  const [importerer, setImporterer] = useState(false);
+
+  const skyTom = !lasterSky && skyAntallNøkler === 0;
+  const skyHarData = !lasterSky && skyAntallNøkler !== null && skyAntallNøkler > 0;
+
+  async function oppdaterSkyOversikt() {
+    const result = await fetchSkyOverviewAction();
+    if (result.error) {
+      setSkyOverview(`Feil: ${result.error}`);
+      setSkyAntallNøkler(null);
+      return;
+    }
+    setSkyAntallNøkler(result.rows.length);
+    if (result.rows.length === 0) {
+      setSkyOverview("Supabase er tom — data i denne nettleseren er ikke i sky ennå.");
+      return;
+    }
+    setSkyOverview(
+      result.rows.map((r) => `${r.key.replace("bemanning.", "")}: ${r.summary}`).join(" · "),
+    );
+  }
 
   useEffect(() => {
     if (!supabaseAktiv || !profile) {
       setSkyOverview(null);
+      setSkyAntallNøkler(null);
       return;
     }
     setLasterSky(true);
-    void fetchSkyOverviewAction()
-      .then((result) => {
-        if (result.error) {
-          setSkyOverview(`Feil: ${result.error}`);
-          return;
-        }
-        if (result.rows.length === 0) {
-          setSkyOverview("Supabase er tom — data ligger kun i denne nettleseren.");
-          return;
-        }
-        setSkyOverview(
-          result.rows.map((r) => `${r.key.replace("bemanning.", "")}: ${r.summary}`).join(" · "),
-        );
-      })
-      .finally(() => setLasterSky(false));
+    void oppdaterSkyOversikt().finally(() => setLasterSky(false));
   }, [supabaseAktiv, profile]);
 
   function handleEksport() {
@@ -109,7 +142,7 @@ export default function InnstillingerPage() {
   async function handleLagreTilSky() {
     if (
       !window.confirm(
-        "Lagre all data fra denne nettleseren til Supabase? Dette er den sikre kopien som localhost og andre enheter kan hente.",
+        "Overføre data fra denne nettleseren til Supabase?\n\nNøkler der sky allerede har nyere eller mer komplett data hoppes over automatisk.",
       )
     ) {
       return;
@@ -117,18 +150,10 @@ export default function InnstillingerPage() {
     setLasterOpp(true);
     setStatus(null);
     try {
+      clearAllDirtyKeys();
       const result = await uploadLocalStorageToSky();
-      if (result.error) {
-        setStatus(`Klarte ikke lagre til sky: ${result.error}`);
-        return;
-      }
-      setStatus(`Lagret ${result.imported} datasett til Supabase. Data er trygg i skyen nå.`);
-      const overview = await fetchSkyOverviewAction();
-      if (!overview.error && overview.rows.length > 0) {
-        setSkyOverview(
-          overview.rows.map((r) => `${r.key.replace("bemanning.", "")}: ${r.summary}`).join(" · "),
-        );
-      }
+      setStatus(formatUploadMelding(result, "Overført"));
+      await oppdaterSkyOversikt();
     } finally {
       setLasterOpp(false);
     }
@@ -156,7 +181,11 @@ export default function InnstillingerPage() {
         }
         setImportData(parsed as ExportData);
         const { nøkler, poster } = tellPoster(parsed);
-        setStatus(`Klar til import: ${nøkler} nøkler, ${poster} poster. Bekreft nedenfor.`);
+        setStatus(
+          `Klar til import: ${nøkler} nøkler, ${poster} poster. Etter bekreftelse importeres filen${
+            supabaseAktiv && canEdit ? " og trygg del lastes opp til sky" : ""
+          }.`,
+        );
       } catch {
         setStatus("Kunne ikke lese filen. Er det en gyldig JSON-fil?");
         setImportData(null);
@@ -166,20 +195,42 @@ export default function InnstillingerPage() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  function bekreftImport() {
-    if (!importData) return;
-    if (!window.confirm("Importere data? Eksisterende data overskrives for nøklene som finnes i filen.")) return;
-
-    let importert = 0;
-    for (const key of STORAGE_KEYS) {
-      if (key in importData) {
-        window.localStorage.setItem(key, JSON.stringify(importData[key]));
-        importert++;
-      }
+  async function bekreftImport() {
+    if (!importData || !canEdit) return;
+    if (
+      !window.confirm(
+        "Importere backup? Lokale nøkler i filen erstattes. Eksisterende sky-data overskrives bare der det er trygt.",
+      )
+    ) {
+      return;
     }
-    setImportData(null);
-    setStatus(`Importert ${importert} nøkler. Husk «Lagre alt til sky» etterpå. Laster siden på nytt …`);
-    window.setTimeout(() => window.location.reload(), 800);
+
+    setImporterer(true);
+    setStatus(null);
+    try {
+      let importert = 0;
+      for (const key of STORAGE_KEYS) {
+        if (key in importData) {
+          window.localStorage.setItem(key, JSON.stringify(importData[key]));
+          importert++;
+        }
+      }
+      setImportData(null);
+      clearAllDirtyKeys();
+
+      if (supabaseAktiv && profile) {
+        setStatus(`Importert ${importert} nøkler. Laster trygt opp til sky …`);
+        const result = await uploadLocalStorageToSky();
+        setStatus(formatUploadMelding(result, "Import ferdig:"));
+        await oppdaterSkyOversikt();
+      } else {
+        setStatus(`Importert ${importert} nøkler lokalt.`);
+      }
+
+      window.setTimeout(() => window.location.reload(), 1200);
+    } finally {
+      setImporterer(false);
+    }
   }
 
   function handleLastInnPåNytt() {
@@ -194,47 +245,85 @@ export default function InnstillingerPage() {
       <h1 className={styles.title}>Innstillinger</h1>
 
       {supabaseAktiv && profile ? (
-        <section className={styles.alertBox}>
-          <h2 className={styles.alertTitle}>Viktig: Lagring i sky</h2>
-          <p className={styles.info}>
-            Endringer lagres i Supabase når du er innlogget. Hvis skyen er tom, har tidligere
-            versjoner kun lagret i nettleseren — da må du trykke «Lagre alt til sky» én gang.
-          </p>
-          <p className={styles.stats}>
-            {lasterSky ? "Sjekker Supabase …" : skyOverview ?? "—"}
-          </p>
-          <div className={styles.buttonRow}>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              disabled={!canEdit || lasterOpp}
-              onClick={handleLagreTilSky}
-            >
-              {lasterOpp ? "Lagrer …" : "Lagre alt til sky"}
-            </button>
-            <button
-              type="button"
-              className={styles.secondaryBtn}
-              disabled={!canEdit || testerLagring}
-              onClick={handleTestLagring}
-            >
-              {testerLagring ? "Tester …" : "Test sky-lagring"}
-            </button>
-            <button type="button" className={styles.secondaryBtn} onClick={handleEksport}>
-              Last ned backup (sikkerhetskopi)
-            </button>
-          </div>
-          {!canEdit ? (
-            <p className={styles.info}>Du har kun lesetilgang — kontakt admin for å lagre til sky.</p>
-          ) : null}
-        </section>
+        skyTom ? (
+          <section className={styles.alertBox}>
+            <h2 className={styles.alertTitle}>Sky er tom</h2>
+            <p className={styles.info}>
+              Du er innlogget, men Supabase har ingen data ennå. Endringer i appen lagres
+              automatisk til sky når du jobber — eller overfør alt fra denne nettleseren én gang
+              nå.
+            </p>
+            <p className={styles.stats}>
+              {lasterSky ? "Sjekker Supabase …" : skyOverview ?? "—"}
+            </p>
+            {canEdit ? (
+              <div className={styles.buttonRow}>
+                <button
+                  type="button"
+                  className={styles.primaryBtn}
+                  disabled={lasterOpp}
+                  onClick={handleLagreTilSky}
+                >
+                  {lasterOpp ? "Overfører …" : "Overfør nettleser-data til sky"}
+                </button>
+                <button type="button" className={styles.secondaryBtn} onClick={handleEksport}>
+                  Last ned backup
+                </button>
+              </div>
+            ) : (
+              <p className={styles.info}>Du har kun lesetilgang — kontakt admin for overføring.</p>
+            )}
+          </section>
+        ) : (
+          <section className={skyHarData ? styles.okBox : styles.section}>
+            <h2 className={skyHarData ? styles.okTitle : styles.sectionTitle}>Lagring i sky</h2>
+            <p className={styles.info}>
+              {canEdit
+                ? "Endringer lagres automatisk i Supabase når du redigerer i appen. Du trenger normalt ikke å lagre manuelt."
+                : "Du har lesetilgang. Data hentes fra Supabase."}
+            </p>
+            <p className={styles.stats}>
+              {lasterSky ? "Sjekker Supabase …" : skyOverview ?? "—"}
+            </p>
+            <div className={styles.buttonRow}>
+              <button type="button" className={styles.primaryBtn} onClick={handleEksport}>
+                Last ned backup (sikkerhetskopi)
+              </button>
+            </div>
+            {canEdit ? (
+              <details className={styles.advanced}>
+                <summary>Avansert</summary>
+                <div className={styles.advancedBody}>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    disabled={lasterOpp}
+                    onClick={handleLagreTilSky}
+                  >
+                    {lasterOpp ? "Overfører …" : "Overfør alt fra nettleser til sky"}
+                  </button>
+                  {visAvansert ? (
+                    <button
+                      type="button"
+                      className={styles.secondaryBtn}
+                      disabled={testerLagring}
+                      onClick={handleTestLagring}
+                    >
+                      {testerLagring ? "Tester …" : "Test sky-lagring"}
+                    </button>
+                  ) : null}
+                </div>
+              </details>
+            ) : null}
+          </section>
+        )
       ) : null}
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Datagrunnlag i nettleseren</h2>
         <p className={styles.info}>
-          {supabaseAktiv
-            ? "Nettleseren har en lokal kopi. Supabase er den sikre master-kilden når du er innlogget."
+          {supabaseAktiv && profile
+            ? "Nettleseren har en lokal kopi for hurtig visning. Supabase er master når du er innlogget."
             : "All data lagres lokalt i nettleseren (localStorage)."}
         </p>
         <p className={styles.stats}>
@@ -252,40 +341,50 @@ export default function InnstillingerPage() {
         </section>
       ) : null}
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Importer fra fil</h2>
-        <p className={styles.info}>
-          Last opp en tidligere eksportert backup-fil. Husk «Lagre alt til sky» etterpå.
-        </p>
-        <label className={styles.fileLabel}>
-          Velg fil
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".json"
-            className={styles.fileInput}
-            onChange={handleFilValgt}
-          />
-        </label>
+      {canEdit ? (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Gjenopprett fra backup-fil</h2>
+          <p className={styles.info}>
+            Kun ved behov (feil, ny maskin). Filen importeres og lastes deretter trygt opp til sky
+            der det ikke ville overskrive nyere data.
+          </p>
+          <label className={styles.fileLabel}>
+            Velg fil
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".json"
+              className={styles.fileInput}
+              onChange={handleFilValgt}
+              disabled={importerer}
+            />
+          </label>
 
-        {importData ? (
-          <div className={styles.confirmRow}>
-            <button type="button" className={styles.dangerBtn} onClick={bekreftImport}>
-              Bekreft import
-            </button>
-            <button
-              type="button"
-              className={styles.secondaryBtn}
-              onClick={() => {
-                setImportData(null);
-                setStatus(null);
-              }}
-            >
-              Avbryt
-            </button>
-          </div>
-        ) : null}
-      </section>
+          {importData ? (
+            <div className={styles.confirmRow}>
+              <button
+                type="button"
+                className={styles.dangerBtn}
+                disabled={importerer}
+                onClick={() => void bekreftImport()}
+              >
+                {importerer ? "Importerer …" : "Bekreft import"}
+              </button>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                disabled={importerer}
+                onClick={() => {
+                  setImportData(null);
+                  setStatus(null);
+                }}
+              >
+                Avbryt
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {status ? (
         <div className={styles.statusBox}>

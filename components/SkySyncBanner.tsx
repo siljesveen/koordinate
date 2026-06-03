@@ -1,5 +1,6 @@
 "use client";
 
+import { listDirtyKeys } from "@/lib/data/dirtyKeys";
 import { onSkySyncNotice, type SkySyncNotice } from "@/lib/data/skySyncNotify";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
@@ -33,7 +34,7 @@ function meldingFor(notice: SkySyncNotice): { text: string; kind: "info" | "warn
 }
 
 export default function SkySyncBanner() {
-  const { profile, configured } = useAuth();
+  const { profile, configured, canEdit } = useAuth();
   const { reloadFromCloud } = useAppDataReload();
   const [notice, setNotice] = useState<SkySyncNotice | null>(null);
   const [henter, setHenter] = useState(false);
@@ -56,9 +57,21 @@ export default function SkySyncBanner() {
   const className = kind === "info" ? styles.ok : styles.error;
 
   async function handleHentFraSky() {
+    const dirty = listDirtyKeys();
+    const force = dirty.length > 0;
+    if (force) {
+      const navn = dirty.map(kortNøkkel).join(", ");
+      if (
+        !window.confirm(
+          `Forkaste ulagrede lokale endringer (${navn}) og hente alt fra sky?\n\nDette kan ikke angres.`,
+        )
+      ) {
+        return;
+      }
+    }
     setHenter(true);
     try {
-      await reloadFromCloud();
+      await reloadFromCloud({ force });
       setNotice(null);
     } finally {
       setHenter(false);
@@ -68,7 +81,7 @@ export default function SkySyncBanner() {
   return (
     <div className={className} role="status">
       <span>{text}</span>
-      {notice.type !== "applied" ? (
+      {notice.type !== "applied" && canEdit ? (
         <>
           <button type="button" className={styles.dismiss} onClick={handleHentFraSky} disabled={henter}>
             {henter ? "Henter …" : "Hent fra sky"}

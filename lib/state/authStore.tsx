@@ -11,6 +11,7 @@ import {
 import { canEditData, type UserProfile } from "@/lib/auth/types";
 import { fetchProfileAction } from "@/app/actions/skyData";
 import { syncOnLogin } from "@/lib/data/appDataStorage";
+import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -100,9 +101,12 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     setDataReady(false);
 
-    const timeoutMs = 12_000;
+    const timeoutMs = 45_000;
     const timeoutId = window.setTimeout(() => {
-      if (!cancelled) setDataReady(true);
+      if (!cancelled) {
+        console.warn("[auth] syncOnLogin tok uvanlig lang tid — viser app med lokal cache");
+        setDataReady(true);
+      }
     }, timeoutMs);
 
     void syncOnLogin().finally(() => {
@@ -127,7 +131,10 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       loading,
       configured,
       dataReady,
-      canEdit: !configured || (profile ? canEditData(profile.role) : false),
+      canEdit:
+        configured && profile
+          ? canEditData(profile.role)
+          : !configured && isDevEnvironment(),
       refresh,
     }),
     [profile, loading, configured, dataReady, refresh],

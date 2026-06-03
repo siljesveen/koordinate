@@ -1,5 +1,11 @@
 import { reportSkySave } from "@/lib/data/skySaveNotify";
 import { isKeyDirty, markKeyClean } from "@/lib/data/dirtyKeys";
+import {
+  forklaringBlokkering,
+  grunnTilUploadBlokkering,
+  type SkyRowSnapshot,
+  type UploadBlockReason,
+} from "@/lib/data/skyUploadGuard";
 import { reportSkySyncNotice } from "@/lib/data/skySyncNotify";
 import { getKeyMeta, mergeSyncMeta, setKeyMeta } from "@/lib/data/syncMeta";
 import {
@@ -32,6 +38,19 @@ export type SkySyncResult = {
   skippedDirty?: string[];
 };
 
+export type SkySyncOptions = {
+  /** Overskriv også nøkler med ulagrede lokale endringer (krever eksplisitt bekreftelse). */
+  force?: boolean;
+  removeMissing?: boolean;
+};
+
+export type UploadToSkyResult = {
+  imported: number;
+  skipped: string[];
+  blocked: { key: string; reason: UploadBlockReason }[];
+  error?: string;
+};
+
 function lesLocal(key: string): unknown | null {
   if (typeof window === "undefined") return null;
   try {
@@ -61,8 +80,12 @@ function dispatchDataSynced(): void {
   window.dispatchEvent(new CustomEvent("koordinate:dataSynced"));
 }
 
-/** Hent alt fra sky og oppdater localStorage + sync-meta. */
-export async function syncLocalCacheFromSky(removeMissing = false): Promise<SkySyncResult> {
+/** Hent alt fra sky og oppdater localStorage + sync-meta. Respekterer ulagrede lokale endringer. */
+export async function syncLocalCacheFromSky(
+  options: SkySyncOptions = {},
+): Promise<SkySyncResult> {
+  const { force = false, removeMissing = false } = options;
+
   if (!isSupabaseConfigured() || typeof window === "undefined") {
     return { updated: 0, missing: [...APP_DATA_KEYS] };
   }
@@ -75,13 +98,20 @@ export async function syncLocalCacheFromSky(removeMissing = false): Promise<SkyS
   const rowMap = new Map(rows.map((row) => [row.key, row] as const));
   let updated = 0;
   const missing: string[] = [];
+  const skippedDirty: string[] = [];
   const metaBatch: Record<string, string> = {};
 
   for (const key of APP_DATA_KEYS) {
+    if (!force && isKeyDirty(key)) {
+      skippedDirty.push(key);
+      continue;
+    }
+
     const row = rowMap.get(key);
     if (row) {
       skrivLocal(key, row.value);
       metaBatch[key] = row.updatedAt;
+      markKeyClean(key);
       updated++;
     } else if (removeMissing) {
       window.localStorage.removeItem(key);
@@ -93,13 +123,17 @@ export async function syncLocalCacheFromSky(removeMissing = false): Promise<SkyS
 
   mergeSyncMeta(metaBatch);
 
+  if (skippedDirty.length > 0) {
+    reportSkySyncNotice({ type: "skipped_dirty", keys: skippedDirty });
+  }
+
   let ansatteCount: number | undefined;
   const ansatte = rowMap.get("bemanning.ansatte.v2")?.value;
   if (Array.isArray(ansatte)) {
     ansatteCount = ansatte.length;
   }
 
-  return { updated, missing, ansatteCount };
+  return { updated, missing, ansatteCount, skippedDirty };
 }
 
 /**
@@ -260,21 +294,79 @@ function lesLocalPayload(): Record<string, unknown> {
   return payload;
 }
 
-/** Last opp all localStorage til Supabase (nød-/synk-knapp). */
-export async function uploadLocalStorageToSky(): Promise<{ imported: number; error?: string }> {
+/** Last opp localStorage til Supabase — hopper over nøkler som ville overskrive nyere sky-data. */
+export async function uploadLocalStorageToSky(): Promise<UploadToSkyResult> {
   if (!isSupabaseConfigured() || typeof window === "undefined") {
-    return { imported: 0, error: "Supabase er ikke konfigurert" };
+    return { imported: 0, skipped: [], blocked: [], error: "Supabase er ikke konfigurert" };
   }
-  const payload = lesLocalPayload();
+
+  const { rows, error } = await fetchAllAppDataFromSkyAction();
+  if (error) {
+    return { imported: 0, skipped: [], blocked: [], error };
+  }
+
+  const remoteByKey = new Map<string, SkyRowSnapshot>(
+    rows.map((row) => [row.key, { key: row.key, value: row.value, updatedAt: row.updatedAt }]),
+  );
+
+  const payload: Record<string, unknown> = {};
+  const blocked: { key: string; reason: UploadBlockReason }[] = [];
+  const skipped: string[] = [];
+
+  for (const key of APP_DATA_KEYS) {
+    const local = lesLocal(key);
+    if (local === null) continue;
+
+    if (isKeyDirty(key)) {
+      blocked.push({ key, reason: "ulagrede_lokale_endringer" });
+      continue;
+    }
+
+    const remote = remoteByKey.get(key);
+    const blockReason = grunnTilUploadBlokkering(key, local, remote, getKeyMeta(key));
+    if (blockReason) {
+      blocked.push({ key, reason: blockReason });
+      continue;
+    }
+
+    payload[key] = local;
+  }
+
   if (Object.keys(payload).length === 0) {
-    return { imported: 0, error: "Ingen data i nettleseren å laste opp" };
+    const forklaring =
+      blocked.length > 0
+        ? blocked
+            .map((b) => `${b.key.replace("bemanning.", "")} (${forklaringBlokkering(b.reason)})`)
+            .join(", ")
+        : "ingen data";
+    return {
+      imported: 0,
+      skipped,
+      blocked,
+      error: `Ingen nøkler trygt å laste opp: ${forklaring}`,
+    };
   }
+
   const result = await importAppDataBatchAction(payload);
+  if (result.skipped) {
+    for (const key of result.skipped) {
+      if (!blocked.some((b) => b.key === key)) {
+        skipped.push(key);
+      }
+    }
+  }
+
   if (!result.error) {
-    await syncLocalCacheFromSky(false);
+    await syncLocalCacheFromSky({ force: false });
     dispatchDataSynced();
   }
-  return result;
+
+  return {
+    imported: result.imported,
+    skipped,
+    blocked,
+    error: result.error,
+  };
 }
 
 /**
@@ -292,7 +384,7 @@ export async function syncOnLogin(): Promise<SkySyncResult> {
   }
 
   if (rows.length > 0) {
-    return syncLocalCacheFromSky(false);
+    return syncLocalCacheFromSky({ force: false });
   }
 
   return { updated: 0, missing: [...APP_DATA_KEYS] };

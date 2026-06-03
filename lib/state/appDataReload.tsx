@@ -1,6 +1,11 @@
 "use client";
 
-import { syncLocalCacheFromSky, type SkySyncResult } from "@/lib/data/appDataStorage";
+import {
+  syncLocalCacheFromSky,
+  type SkySyncOptions,
+  type SkySyncResult,
+} from "@/lib/data/appDataStorage";
+import { clearAllDirtyKeys } from "@/lib/data/dirtyKeys";
 import { startSkyLiveSync } from "@/lib/data/skyLiveSync";
 import { useAuth } from "@/lib/state/authStore";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -8,7 +13,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 type AppDataReloadValue = {
   reloadTick: number;
   lastSync: SkySyncResult | null;
-  reloadFromCloud: () => Promise<SkySyncResult>;
+  reloadFromCloud: (options?: SkySyncOptions) => Promise<SkySyncResult>;
 };
 
 const Ctx = createContext<AppDataReloadValue | null>(null);
@@ -18,8 +23,11 @@ export function AppDataReloadProvider({ children }: { children: React.ReactNode 
   const [reloadTick, setReloadTick] = useState(0);
   const [lastSync, setLastSync] = useState<SkySyncResult | null>(null);
 
-  const reloadFromCloud = useCallback(async () => {
-    const result = await syncLocalCacheFromSky();
+  const reloadFromCloud = useCallback(async (options?: SkySyncOptions) => {
+    if (options?.force) {
+      clearAllDirtyKeys();
+    }
+    const result = await syncLocalCacheFromSky(options);
     setLastSync(result);
     setReloadTick((n) => n + 1);
     return result;

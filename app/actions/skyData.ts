@@ -1,6 +1,7 @@
 "use server";
 
 import { canEditData, type AppRole, type UserProfile } from "@/lib/auth/types";
+import { grunnTilUploadBlokkering, type SkyRowSnapshot } from "@/lib/data/skyUploadGuard";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -268,9 +269,9 @@ export async function fetchSkyOverviewAction(): Promise<{
 
 export async function importAppDataBatchAction(
   payload: Record<string, unknown>,
-): Promise<{ imported: number; error?: string }> {
+): Promise<{ imported: number; skipped: string[]; error?: string }> {
   if (!isSupabaseConfigured()) {
-    return { imported: 0, error: "Supabase er ikke konfigurert" };
+    return { imported: 0, skipped: [], error: "Supabase er ikke konfigurert" };
   }
 
   const supabase = await createClient();
@@ -279,17 +280,39 @@ export async function importAppDataBatchAction(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { imported: 0, error: "not_authenticated" };
+    return { imported: 0, skipped: [], error: "not_authenticated" };
   }
 
   const profile = await hentProfil(supabase, user.id, user.email ?? null);
   if (!canEditData(profile.role)) {
-    return { imported: 0, error: "Mangler rettigheter (trenger admin/planlegger)" };
+    return { imported: 0, skipped: [], error: "Mangler rettigheter (trenger admin/planlegger)" };
   }
 
   let imported = 0;
+  const skipped: string[] = [];
+
   for (const [key, value] of Object.entries(payload)) {
     if (!key.startsWith("bemanning.")) continue;
+
+    const { data: current } = await supabase
+      .from("app_data")
+      .select("value, updated_at")
+      .eq("key", key)
+      .maybeSingle();
+
+    if (current) {
+      const remote: SkyRowSnapshot = {
+        key,
+        value: current.value,
+        updatedAt: current.updated_at as string,
+      };
+      const blockReason = grunnTilUploadBlokkering(key, value, remote, undefined);
+      if (blockReason) {
+        skipped.push(key);
+        continue;
+      }
+    }
+
     const { error } = await supabase.from("app_data").upsert({
       key,
       value,
@@ -297,9 +320,10 @@ export async function importAppDataBatchAction(
       updated_by: user.id,
     });
     if (!error) imported++;
+    else skipped.push(key);
   }
 
-  return { imported };
+  return { imported, skipped };
 }
 
 export async function verifySkySaveAction(): Promise<{ ok: boolean; error?: string }> {

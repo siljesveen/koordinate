@@ -21,7 +21,7 @@ export default function SkySaveBanner() {
             : "Data ble ikke lagret i Supabase."}
         </strong>{" "}
         {lastResult.conflict
-          ? "Hent siste versjon fra sky (Innstillinger) før du lagrer videre."
+          ? "Bruk «Hent fra sky» i banneret over før du lagrer videre."
           : "Endringen ligger kun i nettleseren og kan forsvinne."}{" "}
         ({lastResult.error})
         <button type="button" className={styles.dismiss} onClick={dismissError}>

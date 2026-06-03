@@ -9,6 +9,7 @@ import {
   UKE_MASTERPLAN_PATCHES,
   type UkeNummer,
 } from "@/lib/imported/applyUkeMasterplan";
+import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import {
@@ -283,8 +284,9 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
     };
   }, [dataReady, reloadTick, innlogget]);
 
-  /** Engangsimport av uke-patch (per patch-generert tidspunkt). */
+  /** Engangsimport av uke-patch — kun lokal utvikling (ikke auto-skriv til prod-sky). */
   useEffect(() => {
+    if (!isDevEnvironment()) return;
     if (!dataReady || !canEdit || !loadedRef.current || !innlogget) return;
     if (masterplan.slots.length === 0) return;
 
