@@ -44,6 +44,10 @@
   /* ── Shadows ── */
   --shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.1);
+
+  /* ── Lag (modaler over TopNav/status) ── */
+  --z-chrome: 50;
+  --z-modal: 200;
 }
 
 html {

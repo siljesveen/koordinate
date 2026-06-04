@@ -6,7 +6,7 @@
   background: var(--surface);
   box-shadow: var(--shadow);
   position: relative;
-  z-index: 50;
+  z-index: var(--z-chrome);
 }
 
 .nav {
