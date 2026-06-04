@@ -21,6 +21,8 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
   const [loaded, setLoaded] = useState(false);
   const parseRef = useRef(options.parse);
   parseRef.current = options.parse;
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   const syncFraCache = useCallback(() => {
     const raw = readAppDataLocal(appKey);
@@ -39,11 +41,13 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
       if (!canEdit) return;
       patchAppData<T>(
         appKey,
-        (previous) => {
-          const prev = parseRef.current(previous ?? null);
-          return typeof updater === "function"
-            ? (updater as (value: T) => T)(prev)
-            : updater;
+        () => {
+          const prev = dataRef.current;
+          const next =
+            typeof updater === "function"
+              ? (updater as (value: T) => T)(prev)
+              : updater;
+          return next;
         },
         { canEdit },
       );

@@ -883,6 +883,9 @@
 }
 
 .modalFooterBar {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
   padding: 0.85rem 1rem;
   border: 1px solid var(--border);
   display: flex;

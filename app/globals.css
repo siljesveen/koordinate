@@ -48,6 +48,7 @@
   /* ── Lag (modaler over TopNav/status) ── */
   --z-chrome: 50;
   --z-modal: 200;
+  --z-dialog: 300;
 }
 
 html {

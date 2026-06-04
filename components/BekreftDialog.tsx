@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./BekreftDialog.module.css";
 
 type Props = {
@@ -18,27 +19,67 @@ export default function BekreftDialog({
   onBekreft,
   onAvbryt,
 }: Props) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const bekreftRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const el = dialogRef.current;
-    el?.showModal();
-    return () => {
-      el?.close();
-    };
+    setMounted(true);
   }, []);
 
-  return (
-    <dialog ref={dialogRef} className={styles.dialog} onClose={onAvbryt}>
-      <p className={styles.melding}>{melding}</p>
-      <div className={styles.knapper}>
-        <button type="button" onClick={onAvbryt} className={styles.avbryt}>
-          {avbrytTekst}
-        </button>
-        <button type="button" onClick={onBekreft} className={styles.bekreft}>
-          {bekreftTekst}
-        </button>
+  useEffect(() => {
+    if (!mounted) return;
+    bekreftRef.current?.focus();
+  }, [mounted]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      onAvbryt();
+    }
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [onAvbryt]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className={styles.overlay}
+      role="presentation"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onAvbryt();
+      }}
+    >
+      <div
+        className={styles.dialog}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="bekreft-dialog-melding"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <form
+          className={styles.form}
+          onSubmit={(e) => {
+            e.preventDefault();
+            onBekreft();
+          }}
+        >
+          <p id="bekreft-dialog-melding" className={styles.melding}>
+            {melding}
+          </p>
+          <div className={styles.knapper}>
+            <button type="button" onClick={onAvbryt} className={styles.avbryt}>
+              {avbrytTekst}
+            </button>
+            <button ref={bekreftRef} type="submit" className={styles.bekreft}>
+              {bekreftTekst}
+            </button>
+          </div>
+        </form>
       </div>
-    </dialog>
+    </div>,
+    document.body,
   );
 }

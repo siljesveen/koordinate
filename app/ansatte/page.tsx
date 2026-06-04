@@ -16,6 +16,7 @@ import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useAuth } from "@/lib/state/authStore";
 import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
+import ModalPortal from "@/components/ModalPortal";
 import styles from "./page.module.css";
 
 const TURNUS_REKKEFØLGE: TurnusSkiftType[] = ["Ingen", "Dag", "Kveld", "Begge"];
@@ -585,6 +586,7 @@ export default function AnsattePage() {
 
 
       {modalÅpen ? (
+        <ModalPortal>
         <div
           className={styles.modalOverlay}
           role="dialog"
@@ -834,9 +836,11 @@ export default function AnsattePage() {
             </form>
           </div>
         </div>
+        </ModalPortal>
       ) : null}
 
       {visId && visAnsatt ? (
+        <ModalPortal>
         <div
           className={styles.modalOverlay}
           role="dialog"
@@ -940,7 +944,10 @@ export default function AnsattePage() {
               <button
                 type="button"
                 className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
+                disabled={!canEdit}
+                title={canEdit ? undefined : "Kun lesetilgang"}
                 onClick={async () => {
+                  if (!canEdit) return;
                   const ok = await requestBekreft(
                     `Er du sikker på at du vil slette oppføringen for ${fullNavn(visAnsatt)}? Fravær og tildelinger knyttet til denne personen fjernes også.`,
                     { bekreftTekst: "Slett" },
@@ -959,12 +966,22 @@ export default function AnsattePage() {
               <button type="button" className={styles.secondaryBtn} onClick={lukkVisning}>
                 Lukk
               </button>
-              <button type="button" className={styles.primaryBtn} onClick={redigerFraVisning}>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                disabled={!canEdit}
+                title={canEdit ? undefined : "Kun lesetilgang"}
+                onClick={() => {
+                  if (!canEdit) return;
+                  redigerFraVisning();
+                }}
+              >
                 Rediger
               </button>
             </div>
           </div>
         </div>
+        </ModalPortal>
       ) : null}
       {bekreftDialog}
     </div>

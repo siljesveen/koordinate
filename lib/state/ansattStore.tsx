@@ -36,11 +36,12 @@ function standardAnsatte(): Ansatt[] {
 }
 
 function parseAnsatte(raw: unknown): Ansatt[] {
-  if (!Array.isArray(raw)) return mergeTilleggAnsatte([]);
+  if (!Array.isArray(raw)) return [];
   const parsed = raw
     .filter((x) => x && typeof x === "object")
     .map((x) => migrateAnsatt(x as LagretAnsatt));
-  return mergeTilleggAnsatte(parsed);
+  if (parsed.length === 0) return mergeTilleggAnsatte([]);
+  return parsed;
 }
 
 export function AnsattStoreProvider({ children }: { children: React.ReactNode }) {
