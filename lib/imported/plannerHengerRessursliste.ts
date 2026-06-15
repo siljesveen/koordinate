@@ -83,7 +83,7 @@ export const PLANNER_HENGER_RESSURSLISTE: PlannerHengerRessurs[] = [
   {
     kjennemerke: "TP8410",
     kommentar: "Roger S / Vebjørn",
-    sjåførAnsattIds: ["a-roger-skogheim", "a-vebj-rn-sveum"],
+    sjåførAnsattIds: ["a-roger-haug-skogheim", "a-vebj-rn-sveum"],
   },
   {
     kjennemerke: "TP8412",
@@ -127,7 +127,7 @@ export const PLANNER_HENGER_RESSURSLISTE: PlannerHengerRessurs[] = [
   {
     kjennemerke: "UV4371",
     kommentar: "Roger/John Olav",
-    sjåførAnsattIds: ["a-roger-skogheim", "a-john-olav-lundstad"],
+    sjåførAnsattIds: ["a-roger-haug-skogheim", "a-john-olav-lundstad"],
   },
   {
     kjennemerke: "UV8695",

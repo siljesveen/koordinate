@@ -150,7 +150,7 @@ const BEKREFTET_ALIAS = {
   arturs: "a-arturs-dambrovskis",
   "ivan j": "a-ivan-morgan-johansen",
   "roger m": "a-roger-moseng",
-  "roger s": "a-roger-skogheim",
+  "roger s": "a-roger-haug-skogheim",
   "john o": "a-john-olav-lundstad",
   pelle: "a-per-ola-ake-lundgren",
   frode: "a-frode-degardstuen",

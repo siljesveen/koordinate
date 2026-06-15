@@ -337,8 +337,648 @@
   flex-wrap: wrap;
 }
 
+.importStatusOk,
+.importStatusError {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.92rem;
+}
+
+.importStatusOk {
+  background: var(--status-success-bg, #ecfdf5);
+  color: var(--status-success-text, #065f46);
+  border: 1px solid var(--status-success-border, #a7f3d0);
+}
+
+.importStatusError {
+  background: var(--status-error-bg);
+  color: var(--status-error-text, #991b1b);
+  border: 1px solid var(--status-error-border, #fecaca);
+}
+
 .helper {
   font-size: 0.9rem;
   color: var(--brand-muted);
+}
+
+.planPanel {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.planPanelTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.planPanelMeta {
+  font-size: 0.9rem;
+  color: var(--brand-muted);
+}
+
+.planPanelActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.fileLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fileLabel:hover {
+  border-color: var(--brand-primary);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.koblingStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.koblingStatOk {
+  color: var(--status-success-text, #065f46);
+  font-weight: 600;
+}
+
+.koblingStatWarn {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.koblingListe {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.88rem;
+  color: var(--foreground);
+}
+
+.koblingListe li {
+  margin-bottom: 0.25rem;
+}
+
+.koblingRad {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+@media (min-width: 768px) {
+  .koblingRad {
+    grid-template-columns: 1.2fr 1fr auto;
+    align-items: center;
+  }
+}
+
+.koblingPlanNavn {
+  font-weight: 600;
+}
+
+.koblingSelect {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.45rem;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.88rem;
+}
+
+/* ── Fravær-tidslinje (Gantt) ── */
+
+.timelineSection {
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.timelineToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--background-subtle);
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.monthBtn {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.45rem;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.monthBtn:hover {
+  background: var(--surface-raised);
+}
+
+.monthLabel {
+  min-width: 9rem;
+  text-align: center;
+  font-weight: 800;
+  color: var(--foreground);
+  text-transform: capitalize;
+}
+
+.kunMedAktivitet {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  color: var(--foreground-muted);
+  cursor: pointer;
+}
+
+.periodeTeller {
+  font-size: 0.88rem;
+  color: var(--foreground-muted);
+}
+
+.dagVelger {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dagVelgerInput {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.45rem;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.88rem;
+  min-width: 9.5rem;
+}
+
+.dagVelgerInput:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.dagOversikt {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  background: #eff6ff;
+}
+
+.dagOversiktHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.dagOversiktDato {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--foreground);
+  text-transform: capitalize;
+}
+
+.dagOversiktAntall {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.dagOversiktTabellWrap {
+  border: 1px solid var(--border-strong);
+  border-radius: 0.55rem;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.dagOversiktTabell {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dagOversiktTabell th,
+.dagOversiktTabell td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+
+.dagOversiktTabell th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-muted);
+  background: var(--background-subtle);
+}
+
+.dagOversiktTabell tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dagOversiktRad {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.dagOversiktRad:hover,
+.dagOversiktRad:focus-visible {
+  background: var(--surface-raised);
+  outline: none;
+}
+
+.dagOversiktRad:focus-visible {
+  box-shadow: inset 0 0 0 2px #2563eb;
+}
+
+.dagOversiktNavn {
+  font-weight: 700;
+  color: var(--foreground);
+  font-size: 0.88rem;
+}
+
+.dagOversiktType {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgb(15 23 42 / 82%);
+  border: 1px solid rgb(15 23 42 / 12%);
+  white-space: nowrap;
+}
+
+.dagOversiktKommentar {
+  color: var(--foreground-muted);
+  font-size: 0.84rem;
+  max-width: 24rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--brand-muted);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 0.15rem;
+  flex-shrink: 0;
+  border: 1px solid rgb(15 23 42 / 18%);
+}
+
+.swatchSyk {
+  background: #fecaca;
+}
+
+.swatchFerie {
+  background: #bfdbfe;
+}
+
+.swatchFri {
+  background: #bbf7d0;
+}
+
+.swatchPermisjon {
+  background: #ddd6fe;
+}
+
+.swatchAvspasering {
+  background: #a5f3fc;
+}
+
+.swatchAnnet {
+  background: #e2e8f0;
+}
+
+.timelineScroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(75vh, 48rem);
+}
+
+.gantt {
+  min-width: max(100%, 42rem);
+  border-top: 1px solid var(--border-strong);
+}
+
+.ganttHeader {
+  display: grid;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.ganttLabelCol {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: var(--surface-raised);
+  border-right: 1px solid var(--border);
+  padding: 0.4rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: flex-end;
+}
+
+.dayHead {
+  padding: 0.3rem 0.1rem;
+  text-align: center;
+  border: none;
+  border-right: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 0.7rem;
+  background: var(--surface-raised);
+  cursor: pointer;
+  appearance: none;
+  color: inherit;
+}
+
+.dayHead:hover {
+  background: var(--surface-hover, var(--background-subtle));
+}
+
+.dayHeadValgt {
+  background: #dbeafe !important;
+  box-shadow: inset 0 -3px 0 #2563eb;
+}
+
+.dayHeadValgt .dayNum {
+  color: #1d4ed8;
+}
+
+.dayHead:last-child {
+  border-right: none;
+}
+
+.dayHeadWeekend {
+  background: #f8fafc;
+}
+
+.dayHeadToday:not(.dayHeadValgt) {
+  background: #f0f9ff;
+}
+
+.dayHeadToday .dayNum {
+  color: #0369a1;
+}
+
+.dayNum {
+  font-weight: 800;
+  color: var(--foreground-muted);
+  line-height: 1.1;
+}
+
+.dayWd {
+  font-size: 0.6rem;
+  color: var(--foreground-muted);
+  text-transform: lowercase;
+  margin-top: 0.05rem;
+}
+
+.ganttRow {
+  display: grid;
+  border-bottom: 1px solid var(--border);
+  min-height: 2.35rem;
+}
+
+.ganttRow:hover {
+  background: var(--background-subtle);
+}
+
+.ansattLabel {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: inherit;
+  border-right: 1px solid var(--border);
+  padding: 0.35rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  max-width: 7.5rem;
+}
+
+.ansattNavn {
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ganttRow:hover .ansattLabel {
+  background: var(--background-subtle);
+}
+
+.celleGrid {
+  display: grid;
+  min-height: 2.1rem;
+  border-left: 1px solid var(--border-strong);
+}
+
+.dagCelle {
+  width: 100%;
+  height: 100%;
+  min-height: 2.1rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-right: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+  cursor: pointer;
+  appearance: none;
+}
+
+.dagCelleTom {
+  background: #ffffff;
+}
+
+.dagCelleTomHelg {
+  background: #f8fafc;
+}
+
+.dagKolonneValgt {
+  box-shadow: inset 0 0 0 2px #2563eb;
+  z-index: 1;
+}
+
+.dagCelle:hover {
+  filter: brightness(0.97);
+}
+
+.dagFyllSyk {
+  background: #fecaca;
+}
+
+.dagFyllFerie {
+  background: #bfdbfe;
+}
+
+.dagFyllFri {
+  background: #bbf7d0;
+}
+
+.dagFyllPermisjon {
+  background: #ddd6fe;
+}
+
+.dagFyllAvspasering {
+  background: #a5f3fc;
+}
+
+.dagFyllAnnet {
+  background: #e2e8f0;
+}
+
+.dagFyllSyk:hover,
+.dagFyllFerie:hover,
+.dagFyllFri:hover,
+.dagFyllPermisjon:hover,
+.dagFyllAvspasering:hover,
+.dagFyllAnnet:hover {
+  filter: brightness(0.95);
+}
+
+.periodeEtikett {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  padding: 0 0.2rem;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+  text-align: center;
+}
+
+.etikettSyk .periodeType,
+.etikettSyk .periodeKommentar {
+  color: #7f1d1d;
+}
+
+.etikettFerie .periodeType,
+.etikettFerie .periodeKommentar {
+  color: #1e3a8a;
+}
+
+.etikettFri .periodeType,
+.etikettFri .periodeKommentar {
+  color: #14532d;
+}
+
+.etikettPermisjon .periodeType,
+.etikettPermisjon .periodeKommentar {
+  color: #5b21b6;
+}
+
+.etikettAvspasering .periodeType,
+.etikettAvspasering .periodeKommentar {
+  color: #155e75;
+}
+
+.etikettAnnet .periodeType,
+.etikettAnnet .periodeKommentar {
+  color: #334155;
+}
+
+.periodeType {
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.periodeKommentar {
+  font-size: 0.55rem;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  opacity: 0.9;
+}
+
+.ganttEmpty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--brand-muted);
+  font-size: 0.9375rem;
 }
 

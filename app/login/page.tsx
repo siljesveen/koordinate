@@ -42,7 +42,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             (lokalt) og under Environment Variables på Vercel.
           </p>
         ) : (
-          <LoginForm nextPath={nextPath} />
+          <>
+            <p className={styles.hint}>
+              Får du ikke logget inn? Tøm informasjonskapsler for{" "}
+              <code>localhost</code> (søk etter <code>sb-</code> i nettleseren) og
+              prøv på nytt.
+            </p>
+            <LoginForm nextPath={nextPath} />
+          </>
         )}
       </div>
     </main>

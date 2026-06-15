@@ -16,7 +16,7 @@ export const PLANNER_RESSURSLISTE: PlannerRessurs[] = [
   {
     kjennemerke: "EH73079",
     kommentar: "Roger S / Vebjørn",
-    sjåførAnsattIds: ["a-roger-skogheim", "a-vebj-rn-sveum"],
+    sjåførAnsattIds: ["a-roger-haug-skogheim", "a-vebj-rn-sveum"],
   },
   {
     kjennemerke: "EH73080",
@@ -131,7 +131,7 @@ export const PLANNER_RESSURSLISTE: PlannerRessurs[] = [
   {
     kjennemerke: "GA13799",
     kommentar: "Roger/John Olav",
-    sjåførAnsattIds: ["a-roger-skogheim", "a-john-olav-lundstad"],
+    sjåførAnsattIds: ["a-roger-haug-skogheim", "a-john-olav-lundstad"],
   },
   {
     kjennemerke: "GA14224",

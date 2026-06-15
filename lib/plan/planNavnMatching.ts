@@ -14,7 +14,7 @@ export const BEKREFTET_ALIAS: Record<string, string> = {
   arturs: "a-arturs-dambrovskis",
   "ivan j": "a-ivan-morgan-johansen",
   "roger m": "a-roger-moseng",
-  "roger s": "a-roger-skogheim",
+  "roger s": "a-roger-haug-skogheim",
   "john o": "a-john-olav-lundstad",
   "john olav": "a-john-olav-lundstad",
   pelle: "a-per-ola-ake-lundgren",
@@ -57,7 +57,7 @@ export const BEKREFTET_ALIAS: Record<string, string> = {
   trond: "a-trond-hagen",
   andresj: "a-andrejs-seleznovs",
   ruffad: "a-ferad-mehmed-rufad",
-  roger: "a-roger-skogheim",
+  roger: "a-roger-haug-skogheim",
   thomas: "a-thomas-oyen",
 };
 

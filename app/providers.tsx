@@ -19,6 +19,7 @@ import { PlanRuteTildelingStoreProvider } from "@/lib/state/planRuteTildelingSto
 
 import { Turnus4UkerStoreProvider } from "@/lib/state/turnus4ukerStore";
 import { FraværStoreProvider } from "@/lib/state/fravaerStore";
+import { BemanningsplanStoreProvider } from "@/lib/state/bemanningsplanStore";
 import { AuthStoreProvider } from "@/lib/state/authStore";
 import { AppDataReloadProvider } from "@/lib/state/appDataReload";
 import { SkySaveStoreProvider } from "@/lib/state/skySaveStore";
@@ -47,6 +48,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     <HentingStoreProvider>
                     <PlanRuteTildelingStoreProvider>
                       <Turnus4UkerStoreProvider>
+                        <BemanningsplanStoreProvider>
                         <FraværStoreProvider>
                           <DataReadyGate>
                             <BilTilbakeVarsler />
@@ -54,6 +56,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                             <ToastViewport />
                           </DataReadyGate>
                         </FraværStoreProvider>
+                        </BemanningsplanStoreProvider>
                       </Turnus4UkerStoreProvider>
                     </PlanRuteTildelingStoreProvider>
                     </HentingStoreProvider>

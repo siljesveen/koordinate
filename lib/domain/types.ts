@@ -41,6 +41,8 @@ export type Ansatt = {
   fastHengerId?: string;
   aktiv: boolean;
   kommentar?: string;
+  /** Eksakt navn i kolonne A i bemanningsplan-Excel — sikrer korrekt fravær-import. */
+  planExcelNavn?: string;
 };
 
 /**
@@ -147,6 +149,8 @@ export type Fravær = {
   /** Planlagt fravær (f.eks. ferie) vs uplanlagt (f.eks. syk). */
   planlagt?: boolean;
   kommentar?: string;
+  /** Opprinnelig Excel-kode (A, T, K …) ved import fra bemanningsplan. */
+  excelKode?: string;
 };
 
 /**

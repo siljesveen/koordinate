@@ -70,14 +70,14 @@
       "skift": "Dag",
       "rutekode": "1110-1",
       "startTid": "07:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 1,
       "skift": "Dag",
       "rutekode": "1110-2",
       "startTid": "08:30",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 1,
@@ -476,7 +476,7 @@
       "skift": "Dag",
       "rutekode": "2151",
       "startTid": "07:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 2,
@@ -763,7 +763,7 @@
       "skift": "Dag",
       "rutekode": "3130",
       "startTid": "07:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 3,
@@ -1169,7 +1169,7 @@
       "skift": "Dag",
       "rutekode": "4161",
       "startTid": "07:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 4,
@@ -1519,7 +1519,7 @@
       "skift": "Dag",
       "rutekode": "5161",
       "startTid": "07:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 5,

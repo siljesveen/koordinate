@@ -22,9 +22,22 @@ export async function signIn(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  let signInError: { message: string; status?: number } | null = null;
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    signInError = error;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/fetch failed|network|ENOTFOUND|ETIMEDOUT/i.test(msg)) {
+      return {
+        error:
+          "Kunne ikke nå innloggingstjenesten. Sjekk nettverk/VPN og prøv igjen.",
+      };
+    }
+    return { error: "Innlogging feilet. Prøv igjen." };
+  }
 
-  if (error) {
+  if (signInError) {
     return { error: "Feil e-post eller passord." };
   }
 

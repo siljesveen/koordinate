@@ -159,11 +159,6 @@ function FraværListeBlokk({ rader }: { rader: Fravær[] }) {
                 <tr key={f.id}>
                   <td>
                     <span className={styles.typePill}>{f.type}</span>
-                    {f.planlagt ? (
-                      <span className={styles.helper} style={{ marginLeft: "0.35rem" }}>
-                        (planlagt)
-                      </span>
-                    ) : null}
                   </td>
                   <td className={styles.muted}>
                     {formatIsoDato(f.fraDato)}

@@ -6,6 +6,12 @@ alwaysApply: false
 
 # UI i KOordinate
 
+## Lister
+
+- **Ansatte** og **biler** skal alltid vises alfabetisk (norsk, numerisk) via `sorterAnsatte` / `sorterBiler` i `lib/utils/sort.ts`.
+- Stores (`ansattStore`, `bilStore`) returnerer allerede sorterte lister — ikke introduser usorterte varianter uten grunn.
+- Underlister av ansatte (f.eks. sjåfører på en bil) sorteres også alfabetisk på navn.
+
 ## Komponenter
 
 - Søkbare lister for navn/reg.nr: bruk `components/SokbarVelger.tsx` (alfabetisk, norsk sortering via `lib/utils/sort.ts`).

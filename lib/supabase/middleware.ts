@@ -4,6 +4,21 @@ import { isSupabaseConfigured } from "./env";
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"];
 
+function erSupabaseAuthCookie(navn: string): boolean {
+  return navn.startsWith("sb-") && navn.includes("auth-token");
+}
+
+function fjernSupabaseAuthCookies(
+  request: NextRequest,
+  response: NextResponse,
+): void {
+  for (const cookie of request.cookies.getAll()) {
+    if (erSupabaseAuthCookie(cookie.name)) {
+      response.cookies.delete(cookie.name);
+    }
+  }
+}
+
 export async function updateSession(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.next({ request });
@@ -32,9 +47,23 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { id: string } | null = null;
+
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        fjernSupabaseAuthCookies(request, supabaseResponse);
+      }
+    } else {
+      user = data.user;
+    }
+  } catch {
+    // Nettverksfeil mot Supabase — behandle som utlogget, ikke krasj middleware.
+    user = null;
+  }
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
@@ -43,7 +72,9 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
-    return NextResponse.redirect(url);
+    const redirect = NextResponse.redirect(url);
+    fjernSupabaseAuthCookies(request, redirect);
+    return redirect;
   }
 
   if (user && path === "/login") {

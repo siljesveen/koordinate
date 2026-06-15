@@ -10,6 +10,7 @@ import { useBilStore } from "@/lib/state/bilStore";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { bilMatcherModulSøk } from "@/lib/utils/søkMatch";
+import { sorterAnsatte } from "@/lib/utils/sort";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
 import { useAuth } from "@/lib/state/authStore";
 import styles from "./page.module.css";
@@ -75,10 +76,13 @@ export default function BilerPage() {
 
   const sjåførerForBil = useMemo(() => {
     return (b: Bil): Ansatt[] => {
+      let list: Ansatt[];
       if (b.fastSjåførAnsattIds?.length) {
-        return b.fastSjåførAnsattIds.map((id) => ansattById.get(id)).filter(Boolean) as Ansatt[];
+        list = b.fastSjåførAnsattIds.map((id) => ansattById.get(id)).filter(Boolean) as Ansatt[];
+      } else {
+        list = ansatteMedFastBil.get(b.id) ?? [];
       }
-      return ansatteMedFastBil.get(b.id) ?? [];
+      return sorterAnsatte(list);
     };
   }, [ansattById, ansatteMedFastBil]);
 

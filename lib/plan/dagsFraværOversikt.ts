@@ -10,6 +10,7 @@ import {
 import { formatUtilgjengeligPeriode, overlapperUtilgjengeligPeriodeDisponibilitet } from "@/lib/kjoretoyTilgjengelighet";
 import { mergeAvspaseringForPlanDag } from "@/lib/plan/avspasering";
 import { overlapperFraværDato } from "@/lib/plan/fraværPlan";
+import { compareNb } from "@/lib/utils/sort";
 
 export type DagsFraværAnsattRad = {
   id: string;
@@ -37,20 +38,6 @@ export type DagsFraværOversikt = {
 function fraværPeriodeTekst(f: Fravær): string {
   if (f.fraDato === f.tilDato) return f.fraDato;
   return `${f.fraDato} → ${f.tilDato}`;
-}
-
-/** Dag-til-dag-relevant fravær først; langvarig (permisjon) nederst. */
-const FRAVÆR_TYPE_PRIORITET: Record<string, number> = {
-  Avspasering: 0,
-  Syk: 1,
-  Fri: 2,
-  Ferie: 3,
-  Permisjon: 4,
-  Annet: 5,
-};
-
-function fraværTypePrioritet(type: string): number {
-  return FRAVÆR_TYPE_PRIORITET[type] ?? 6;
 }
 
 export function byggDagsFraværOversikt(args: {
@@ -119,11 +106,7 @@ export function byggDagsFraværOversikt(args: {
     });
   }
 
-  ansatte.sort((a, b) => {
-    const typeDiff = fraværTypePrioritet(a.type) - fraværTypePrioritet(b.type);
-    if (typeDiff !== 0) return typeDiff;
-    return a.navn.localeCompare(b.navn, "nb");
-  });
+  ansatte.sort((a, b) => compareNb(a.navn, b.navn));
 
   const biler: DagsFraværKjøretøyRad[] = args.bilUtilgjengelig
     .filter((p) => overlapperUtilgjengeligPeriodeDisponibilitet(args.dato, p))
@@ -137,7 +120,7 @@ export function byggDagsFraværOversikt(args: {
         planlagt: p.planlagt === true,
       };
     })
-    .sort((a, b) => a.etikett.localeCompare(b.etikett, "nb"));
+    .sort((a, b) => compareNb(a.etikett, b.etikett));
 
   const hengere: DagsFraværKjøretøyRad[] = args.hengerUtilgjengelig
     .filter((p) => overlapperUtilgjengeligPeriodeDisponibilitet(args.dato, p))
@@ -151,7 +134,7 @@ export function byggDagsFraværOversikt(args: {
         planlagt: p.planlagt === true,
       };
     })
-    .sort((a, b) => a.etikett.localeCompare(b.etikett, "nb"));
+    .sort((a, b) => compareNb(a.etikett, b.etikett));
 
   return { ansatte, biler, hengere };
 }

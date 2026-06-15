@@ -1,0 +1,364 @@
+.page {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2rem;
+}
+
+.banner {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--status-info-bg);
+  color: var(--foreground-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  line-height: 1.15;
+}
+
+.subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  color: var(--brand-muted);
+}
+
+.primaryBtn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 0.45rem;
+  border: 1px solid var(--brand-primary);
+  background: var(--brand-primary);
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.primaryBtn:hover {
+  background: var(--brand-primary-hover);
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow);
+}
+
+.cardGreen { border-left: 4px solid var(--status-ok); }
+.cardRed { border-left: 4px solid var(--status-error); background: var(--status-error-bg); }
+.cardYellow { border-left: 4px solid var(--status-warn); background: var(--status-warn-bg); }
+.cardBlue { border-left: 4px solid var(--status-info); background: var(--status-info-bg); }
+
+.cardValue {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--foreground);
+  line-height: 1.1;
+}
+
+.cardLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--brand-muted);
+  margin-top: 0.15rem;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 860px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.badge {
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--status-error-bg);
+  color: var(--status-error);
+}
+
+.tableWrap {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.table th,
+.table td {
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table th {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-muted);
+  background: var(--surface-raised);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rowWarn {
+  background: var(--status-warn-bg);
+}
+
+.rute {
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.muted {
+  color: var(--brand-muted);
+  font-weight: 600;
+}
+
+.problem {
+  font-weight: 700;
+  color: var(--status-error);
+  font-size: 0.78rem;
+}
+
+.actionLink {
+  color: var(--brand-primary);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.actionLink:hover {
+  text-decoration: underline;
+}
+
+.sideStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.panelHead {
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.panelRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.panelRow:last-child {
+  border-bottom: none;
+}
+
+.panelName {
+  flex: 1;
+  font-weight: 700;
+}
+
+.tag {
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.tagWarn {
+  background: var(--status-warn-bg);
+  color: #a16207;
+}
+
+.tagError {
+  background: var(--status-error-bg);
+  color: var(--status-error);
+}
+
+.tagInfo {
+  background: var(--status-info-bg);
+  color: var(--status-info);
+}
+
+.planNote {
+  font-size: 0.72rem;
+  color: var(--brand-muted);
+  font-weight: 600;
+}
+
+.shiftGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .shiftGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shiftCard {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.shiftHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.shiftBody {
+  padding: 0.75rem 0.85rem;
+}
+
+.shiftStats {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 0.65rem;
+}
+
+.shiftStatLabel {
+  font-size: 0.72rem;
+  color: var(--brand-muted);
+  font-weight: 600;
+}
+
+.shiftStatValue {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.shiftStatBad {
+  color: var(--status-error);
+}
+
+.shiftLink {
+  color: var(--brand-primary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.shiftLink:hover {
+  text-decoration: underline;
+}
+
+.tomorrow {
+  padding: 0.85rem 1rem;
+  border-radius: 0.6rem;
+  border: 1px solid #fde68a;
+  background: var(--status-warn-bg);
+}
+
+.tomorrowTitle {
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: #92400e;
+  margin-bottom: 0.35rem;
+}
+
+.tomorrowText {
+  font-size: 0.84rem;
+  color: #78350f;
+  font-weight: 600;
+}
+
+.tomorrowLink {
+  display: inline-block;
+  margin-top: 0.45rem;
+  color: var(--brand-primary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.tomorrowLink:hover {
+  text-decoration: underline;
+}

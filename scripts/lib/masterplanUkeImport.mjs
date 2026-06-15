@@ -38,7 +38,7 @@ export const BEKREFTET_ALIAS = {
   arturs: "a-arturs-dambrovskis",
   "ivan j": "a-ivan-morgan-johansen",
   "roger m": "a-roger-moseng",
-  "roger s": "a-roger-skogheim",
+  "roger s": "a-roger-haug-skogheim",
   "john o": "a-john-olav-lundstad",
   "john olav": "a-john-olav-lundstad",
   pelle: "a-per-ola-ake-lundgren",
@@ -222,8 +222,7 @@ export function createMatchAnsatt(ansatte) {
       if (pdfFn === "hakon" && fn.startsWith("hakon")) return true;
       if (pdfFn === "morten" && initial === "B" && en.startsWith("bak")) return true;
       if (pdfFn === "roger" && initial === "M" && en === "moseng") return true;
-      if (pdfFn === "roger" && initial === "S" && en === "skogheim" && !fn.includes("haug"))
-        return true;
+      if (pdfFn === "roger" && initial === "S" && en === "skogheim") return true;
       if (pdfFn === "thomas" && (initial === "O" || initial === "Ø") && en.startsWith("oy"))
         return true;
       if (pdfFn === "andre" && (initial === "O" || initial === "Ø") && en.startsWith("ost"))

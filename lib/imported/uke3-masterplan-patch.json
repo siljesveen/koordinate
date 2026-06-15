@@ -266,7 +266,7 @@
       "skift": "Kveld",
       "rutekode": "1233",
       "startTid": "15:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 1,
@@ -637,7 +637,7 @@
       "skift": "Kveld",
       "rutekode": "2252",
       "startTid": "16:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 2,
@@ -1001,7 +1001,7 @@
       "skift": "Kveld",
       "rutekode": "3250",
       "startTid": "16:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 3,
@@ -1316,7 +1316,7 @@
       "skift": "Kveld",
       "rutekode": "4250",
       "startTid": "16:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 4,
@@ -1610,7 +1610,7 @@
       "skift": "Kveld",
       "rutekode": "5252",
       "startTid": "18:00",
-      "standardSjåførAnsattId": "a-roger-skogheim"
+      "standardSjåførAnsattId": "a-roger-haug-skogheim"
     },
     {
       "dag": 5,

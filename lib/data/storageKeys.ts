@@ -5,6 +5,7 @@ export const APP_DATA_KEYS = [
   "bemanning.planRuteTildeling.v2",
   "bemanning.dagendring.v1",
   "bemanning.fravaer.v1",
+  "bemanning.plan.v1",
   "bemanning.biler.v1",
   "bemanning.henger.v1",
   "bemanning.bilUtilgjengelig.v1",

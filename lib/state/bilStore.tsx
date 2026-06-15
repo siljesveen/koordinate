@@ -5,6 +5,7 @@ import type { Bil, BilTilhørighet } from "@/lib/domain";
 import { BIL_TILHØRIGHETER } from "@/lib/domain";
 import { useAppData } from "@/lib/hooks/useAppData";
 import { syncBilerEtterAnsattFastBil } from "@/lib/kjoretoy/syncFastKjoretoy";
+import { sorterBiler } from "@/lib/utils/sort";
 import { useAuth } from "@/lib/state/authStore";
 import { IMPORTERTE_BILER_REFERANSE_2026 } from "@/lib/imported/kjoretoy-referanse-2026";
 
@@ -94,7 +95,12 @@ export function BilStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = useMemo(
-    () => ({ biler, lagre, slett, syncSjåførForAnsatt }),
+    () => ({
+      biler: sorterBiler(biler),
+      lagre,
+      slett,
+      syncSjåførForAnsatt,
+    }),
     [biler],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

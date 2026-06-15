@@ -1,0 +1,47 @@
+---
+description: Import av Bemanning 2026.xlsx — sjekk endringer og spør før nye ansatte
+globs: scripts/import-ansatte-bemanning2026.mjs,lib/imported/ansatte-bemanning-2026.ts
+alwaysApply: false
+---
+
+# Import av bemanningsfil (Bemanning 2026.xlsx)
+
+**Fravær:** Brukeren laster opp Excel på Fravær-siden. Plan lagres i `bemanning.plan.v1` og kobles via `planExcelNavn` på hver ansatt.
+
+**Ansattliste:** Når brukeren ber om import/oppdatering av ansattliste: **aldri skriv til `ansatte-bemanning-2026.ts` uten diff og godkjenning først.**
+
+## Steg 1 — Kjør diff
+
+```bash
+node scripts/import-ansatte-bemanning2026.mjs --diff [sti-til-Bemanning-2026.xlsx]
+```
+
+## Steg 2 — Rapportér endringer på norsk
+
+Presenter tydelig:
+
+- **Mulige duplikater** (samme etternavn + førstenavn, f.eks. «Roger Skogheim» = «Roger Haug Skogheim») — ikke importer, bare informer
+- **Nye ansatte** (finnes i Excel, ikke i appen, og ikke duplikat)
+- **Fjernet fra Excel** (finnes i appen, ikke lenger i Excel — ikke slett automatisk)
+- **Endringer** (f.eks. selskap, navn, kommentar)
+
+## Steg 3 — Spør om nye ansatte
+
+For **hver ny ansatt** (ikke duplikater): bruk `AskQuestion` og spør om personen skal importeres. Importer **kun** de brukeren godkjenner.
+
+Ikke bruk `--with-all-new` med mindre brukeren eksplisitt ber om å importere alle nye.
+
+## Steg 4 — Skriv kun etter godkjenning
+
+```bash
+node scripts/import-ansatte-bemanning2026.mjs --merge --add-new=nøkkel1,nøkkel2 [excel-sti]
+```
+
+- `--merge` beholder eksisterende ansatte og manuelle felt (telefon, epost, ruteIds, fastBilId, osv.)
+- `--add-new` tar dedup-nøkler fra diff-output (små bokstaver, sorterte navnedeler)
+
+Full erstatning (`--write`) bare når brukeren eksplisitt ber om det.
+
+## Steg 5 — Oppsummer
+
+Etter import: antall ansatte, hvem som ble lagt til, og eventuelle endringer som ble tatt inn.
