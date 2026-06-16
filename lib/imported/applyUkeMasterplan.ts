@@ -75,7 +75,12 @@ function baselineMasterplan(): MasterRuteplan {
       }
     }
   }
-  return { syklusLengde: 4, slots: [...slotMap.values()] };
+  return {
+    syklusLengde: 4,
+    slots: [...slotMap.values()],
+    referanseDato: "2026-06-16",
+    aktivUkeVedReferanse: 2,
+  };
 }
 
 export function normalizeMasterplan(data: unknown): MasterRuteplan | null {
@@ -91,6 +96,15 @@ export function normalizeMasterplan(data: unknown): MasterRuteplan | null {
       obj.koblingsgrupper && typeof obj.koblingsgrupper === "object"
         ? (obj.koblingsgrupper as MasterRuteplan["koblingsgrupper"])
         : undefined,
+    referanseDato:
+      typeof obj.referanseDato === "string" ? obj.referanseDato : "2026-06-16",
+    aktivUkeVedReferanse:
+      obj.aktivUkeVedReferanse === 1 ||
+      obj.aktivUkeVedReferanse === 2 ||
+      obj.aktivUkeVedReferanse === 3 ||
+      obj.aktivUkeVedReferanse === 4
+        ? obj.aktivUkeVedReferanse
+        : 2,
   };
 }
 

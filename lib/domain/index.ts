@@ -21,6 +21,9 @@ export type {
   PlanRuteTildeling,
   Rute,
   SkiftTilgjengelighet,
+  Turnus,
+  TurnusUke,
+  TurnusUkedag,
 } from "./types";
 export { FRAVÆR_TYPER, BIL_TILHØRIGHETER } from "./types";
 export {

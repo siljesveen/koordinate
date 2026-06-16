@@ -10,29 +10,15 @@ import { useFraværStore } from "@/lib/state/fravaerStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
-import { useTurnus4UkerStore, type TurnusSkiftType } from "@/lib/state/turnus4ukerStore";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useAuth } from "@/lib/state/authStore";
 import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
 import ModalPortal from "@/components/ModalPortal";
+import TurnusKort from "@/components/TurnusKort";
+import TurnusEditor from "@/components/TurnusEditor";
 import styles from "./page.module.css";
-
-const TURNUS_REKKEFØLGE: TurnusSkiftType[] = ["Ingen", "Dag", "Kveld", "Begge"];
-const TURNUS_UKEDAGER = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"];
-
-function nesteTurnusSkift(s: TurnusSkiftType): TurnusSkiftType {
-  const idx = TURNUS_REKKEFØLGE.indexOf(s);
-  return TURNUS_REKKEFØLGE[(idx + 1) % TURNUS_REKKEFØLGE.length];
-}
-
-function turnusPillClass(skift: TurnusSkiftType): string {
-  if (skift === "Dag") return `${styles.turnusPill} ${styles.turnusDay}`;
-  if (skift === "Kveld") return `${styles.turnusPill} ${styles.turnusEvening}`;
-  if (skift === "Begge") return `${styles.turnusPill} ${styles.turnusBoth}`;
-  return `${styles.turnusPill} ${styles.turnusNone}`;
-}
 
 type AktivFilter = "alle" | "aktiv" | "inaktiv";
 
@@ -223,8 +209,8 @@ export default function AnsattePage() {
   const { hengere, syncSjåførForAnsatt: syncHengerSjåfør } = useHengerStore();
   const { masterplan } = useMasterplanStore();
   const { fjernReferanser: fjernTildelingRef } = usePlanRuteTildelingStore();
-  const { hentTurnus, setDag: setTurnusDag } = useTurnus4UkerStore();
-  const [turnusUke, setTurnusUke] = useState<0 | 1 | 2 | 3>(0);
+  const [turnusUke, setTurnusUke] = useState<1 | 2>(1);
+  const [turnusEditorÅpen, setTurnusEditorÅpen] = useState<string | null>(null);
   const [søk, setSøk] = useModulSøkFraUrl();
   const [filter, setFilter] = useState<AktivFilter>("aktiv");
 
@@ -771,53 +757,42 @@ export default function AnsattePage() {
               </div>
 
               {/* Turnus-editor */}
-              {redigererId && (
-                <div className={styles.turnusSection}>
-                  <div className={styles.turnusHeader}>
-                    <span className={styles.turnusTitle}>Turnus (4 uker)</span>
-                    <div className={styles.turnusUkeTabs}>
-                      {([0, 1, 2, 3] as const).map((idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          className={`${styles.turnusUkeTab} ${turnusUke === idx ? styles.turnusUkeTabActive : ""}`}
-                          onClick={() => setTurnusUke(idx)}
-                        >
-                          U{idx + 1}
-                        </button>
-                      ))}
+              {redigererId && (() => {
+                const ansatt = ansatte.find((a) => a.id === redigererId);
+                if (!ansatt?.turnus) return null;
+                return (
+                  <div className={styles.turnusSection}>
+                    <div className={styles.turnusHeader}>
+                      <span className={styles.turnusTitle}>Turnus</span>
+                      <div className={styles.turnusUkeTabs}>
+                        {([1, 2] as const)
+                          .filter((uke) => {
+                            const ansatt = redigererId
+                              ? ansatte.find((a) => a.id === redigererId)
+                              : visAnsatt;
+                            if (uke === 2 && !ansatt?.turnus?.uke2) return false;
+                            return true;
+                          })
+                          .map((uke) => (
+                            <button
+                              key={uke}
+                              type="button"
+                              className={`${styles.turnusUkeTab} ${turnusUke === uke ? styles.turnusUkeTabActive : ""}`}
+                              onClick={() => setTurnusUke(uke)}
+                            >
+                              U{uke}
+                            </button>
+                          ))}
+                      </div>
                     </div>
+                    <TurnusKort
+                      turnus={ansatt.turnus}
+                      visUke={turnusUke}
+                      dagsDato={new Date().toISOString().slice(0, 10)}
+                    />
                   </div>
-                  <div className={styles.turnusGrid}>
-                    {TURNUS_UKEDAGER.map((dag, dagIndex) => {
-                      const turnus = hentTurnus(redigererId);
-                      const skift = turnus.plan[turnusUke]?.[dagIndex] ?? "Ingen";
-                      return (
-                        <button
-                          key={dag}
-                          type="button"
-                          className={styles.turnusDagBtn}
-                          title={`Klikk for å endre: ${TURNUS_REKKEFØLGE.join(" → ")}`}
-                          onClick={() =>
-                            setTurnusDag({
-                              ansattId: redigererId,
-                              ukeIndex: turnusUke,
-                              dagIndex,
-                              skift: nesteTurnusSkift(skift),
-                            })
-                          }
-                        >
-                          <span className={styles.turnusDagLabel}>{dag}</span>
-                          <span className={turnusPillClass(skift)}>{skift}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className={styles.turnusHint}>
-                    Følger masterplan automatisk. Klikk en dag og velg «Ingen» for manuell fri.
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               </div>
               <div className={styles.formActionsSticky}>
@@ -904,35 +879,47 @@ export default function AnsattePage() {
               <FraværListeBlokk rader={fraværForDetaljAnsatt} />
 
               {/* Turnus (read-only visning) */}
-              <div className={styles.turnusSection}>
-                <div className={styles.turnusHeader}>
-                  <span className={styles.turnusTitle}>Turnus (4 uker)</span>
-                  <div className={styles.turnusUkeTabs}>
-                    {([0, 1, 2, 3] as const).map((idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className={`${styles.turnusUkeTab} ${turnusUke === idx ? styles.turnusUkeTabActive : ""}`}
-                        onClick={() => setTurnusUke(idx)}
-                      >
-                        U{idx + 1}
-                      </button>
-                    ))}
+              {visAnsatt.turnus && (
+                <div className={styles.turnusSection}>
+                  <div className={styles.turnusHeader}>
+                    <span className={styles.turnusTitle}>Turnus</span>
+                    <div className={styles.turnusUkeTabs}>
+                      {([1, 2] as const)
+                        .filter((uke) => {
+                          const ansatt = redigererId
+                            ? ansatte.find((a) => a.id === redigererId)
+                            : visAnsatt;
+                          if (uke === 2 && !ansatt?.turnus?.uke2) return false;
+                          return true;
+                        })
+                        .map((uke) => (
+                          <button
+                            key={uke}
+                            type="button"
+                            className={`${styles.turnusUkeTab} ${turnusUke === uke ? styles.turnusUkeTabActive : ""}`}
+                            onClick={() => setTurnusUke(uke)}
+                          >
+                            U{uke}
+                          </button>
+                        ))}
+                    </div>
                   </div>
+                  <TurnusKort
+                    turnus={visAnsatt.turnus}
+                    visUke={turnusUke}
+                    dagsDato={new Date().toISOString().slice(0, 10)}
+                  />
+                  {canEdit && (
+                    <button
+                      type="button"
+                      className={styles.secondaryBtn}
+                      onClick={() => setTurnusEditorÅpen(visAnsatt.id)}
+                    >
+                      Rediger turnus
+                    </button>
+                  )}
                 </div>
-                <div className={styles.turnusGrid}>
-                  {TURNUS_UKEDAGER.map((dag, dagIndex) => {
-                    const turnus = hentTurnus(visAnsatt.id);
-                    const skift = turnus.plan[turnusUke]?.[dagIndex] ?? "Ingen";
-                    return (
-                      <div key={dag} className={styles.turnusDagReadonly}>
-                        <span className={styles.turnusDagLabel}>{dag}</span>
-                        <span className={turnusPillClass(skift)}>{skift}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              )}
             </div>
 
             <div className={styles.modalFooterBar}>
@@ -978,6 +965,25 @@ export default function AnsattePage() {
         </div>
         </ModalPortal>
       ) : null}
+      {turnusEditorÅpen && (() => {
+        const ansatt = ansatte.find((a) => a.id === turnusEditorÅpen);
+        if (!ansatt) return null;
+        return (
+          <TurnusEditor
+            ansattNavn={fullNavn(ansatt)}
+            turnus={ansatt.turnus}
+            onLukk={() => setTurnusEditorÅpen(null)}
+            onLagre={(nyTurnus) => {
+              setAnsatte((prev) =>
+                prev.map((a) =>
+                  a.id === turnusEditorÅpen ? { ...a, turnus: nyTurnus } : a,
+                ),
+              );
+              setTurnusEditorÅpen(null);
+            }}
+          />
+        );
+      })()}
       {bekreftDialog}
     </div>
   );

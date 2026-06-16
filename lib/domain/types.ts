@@ -20,6 +20,33 @@ export const FRAVÆR_TYPER: FraværType[] = [
 
 export type AnsattSelskap = "Asko" | "Bring" | "TF" | "GDF" | "Kjørekontor";
 
+/* ─── Turnus (2-ukers rotasjon med arbeidstid per dag) ─── */
+/* Lørdag (dag 6): arbeidstid når arbeidshelg treffer. Hvilke lørdager som gjelder
+   styres av masterplan (4-ukers syklus), ikke av turnus-uke 1/2 alene. */
+
+export type TurnusUkedag = {
+  /** HH:mm – sjåførens arbeidstidsstart */
+  startTid: string;
+  /** HH:mm – sjåførens arbeidstidsslutt */
+  sluttTid: string;
+};
+
+export type TurnusUke = {
+  skift: Skift;
+  dager: Partial<Record<"1" | "2" | "3" | "4" | "5" | "6" | "7", TurnusUkedag>>;
+};
+
+export type Turnus = {
+  /** ISO yyyy-mm-dd — datoen vi vet hvilken uke som er aktiv */
+  referanseDato: string;
+  /** Hvilken turnus-uke (1 eller 2) som var aktiv på referanseDato */
+  aktivUkeVedReferanse: 1 | 2;
+  uke1: TurnusUke;
+  /** Utelatt for sjåfører uten rotasjon */
+  uke2?: TurnusUke;
+  kommentar?: string;
+};
+
 export type Ansatt = {
   id: string;
   fornavn: string;
@@ -39,6 +66,8 @@ export type Ansatt = {
   fastBilId?: string;
   /** Fast henger (henger.id). */
   fastHengerId?: string;
+  /** Fast turnus — arbeidstider per dag i 2-ukers rotasjon. */
+  turnus?: Turnus;
   aktiv: boolean;
   kommentar?: string;
   /** Eksakt navn i kolonne A i bemanningsplan-Excel — sikrer korrekt fravær-import. */
@@ -213,6 +242,10 @@ export type MasterRuteplan = {
   slots: MasterRuteSlot[];
   /** Definerer hvilke rutekoder som deler ressurser. Nøkkel = gruppenavn. */
   koblingsgrupper?: Record<string, Koblingsgruppe>;
+  /** ISO yyyy-mm-dd — datoen vi vet hvilken syklus-uke som er aktiv */
+  referanseDato: string;
+  /** Hvilken syklus-uke (1–4) som var aktiv på referanseDato */
+  aktivUkeVedReferanse: 1 | 2 | 3 | 4;
 };
 
 /* ─── Dynamisk dag-endring (avvik fra master for én dato) ─── */

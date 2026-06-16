@@ -1,7 +1,8 @@
 import type { Ansatt } from "@/lib/domain";
+import { TURNUS_JANUAR_2026 } from "@/lib/imported/turnus-januar-2026";
 
 /** Ansatte importert fra Bemanning 2026.xlsx (113 personer). */
-export const IMPORTERTE_ANSATTE_BEMANNING_2026: Ansatt[] = [
+const ANSATTE_GRUNNDATA = [
   {
     "id": "a-barberi-abbas",
     "fornavn": "Barberi",
@@ -1712,4 +1713,19 @@ export const IMPORTERTE_ANSATTE_BEMANNING_2026: Ansatt[] = [
     "aktiv": true,
     "kommentar": "Importert fra Bemanning 2026.xlsx"
   }
-];
+].map((a) => {
+  const ansatt = a as Ansatt;
+  const planExcelNavn =
+    ansatt.planExcelNavn ??
+    (TURNUS_JANUAR_2026[`${ansatt.etternavn}, ${ansatt.fornavn}`]
+      ? `${ansatt.etternavn}, ${ansatt.fornavn}`
+      : TURNUS_JANUAR_2026[`${ansatt.fornavn} ${ansatt.etternavn}`.trim()]
+        ? `${ansatt.fornavn} ${ansatt.etternavn}`.trim()
+        : undefined);
+  if (!planExcelNavn) return ansatt;
+  const turnus = TURNUS_JANUAR_2026[planExcelNavn];
+  if (!turnus) return ansatt;
+  return { ...ansatt, planExcelNavn, turnus };
+});
+
+export const IMPORTERTE_ANSATTE_BEMANNING_2026: Ansatt[] = ANSATTE_GRUNNDATA;

@@ -17,7 +17,6 @@ import { HengerUtilgjengeligStoreProvider } from "@/lib/state/hengerUtilgjengeli
 import { MasterplanStoreProvider } from "@/lib/state/masterplanStore";
 import { PlanRuteTildelingStoreProvider } from "@/lib/state/planRuteTildelingStore";
 
-import { Turnus4UkerStoreProvider } from "@/lib/state/turnus4ukerStore";
 import { FraværStoreProvider } from "@/lib/state/fravaerStore";
 import { BemanningsplanStoreProvider } from "@/lib/state/bemanningsplanStore";
 import { AuthStoreProvider } from "@/lib/state/authStore";
@@ -47,7 +46,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     <SkiftTilgjengelighetStoreProvider>
                     <HentingStoreProvider>
                     <PlanRuteTildelingStoreProvider>
-                      <Turnus4UkerStoreProvider>
                         <BemanningsplanStoreProvider>
                         <FraværStoreProvider>
                           <DataReadyGate>
@@ -57,7 +55,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                           </DataReadyGate>
                         </FraværStoreProvider>
                         </BemanningsplanStoreProvider>
-                      </Turnus4UkerStoreProvider>
                     </PlanRuteTildelingStoreProvider>
                     </HentingStoreProvider>
                     </SkiftTilgjengelighetStoreProvider>

@@ -790,12 +790,12 @@
 }
 
 .turnusUkeTabActive {
-  background: var(--surface);
+  background: var(--brand-primary);
   color: #ffffff;
 }
 
 .turnusUkeTabActive:hover {
-  background: var(--surface-hover);
+  background: var(--brand-primary-hover);
 }
 
 .turnusGrid {

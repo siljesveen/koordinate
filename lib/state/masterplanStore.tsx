@@ -27,7 +27,14 @@ import { erUkeImportApplied, merkUkeImportApplied } from "@/lib/masterplan/ukeIm
 const STORAGE_KEY = MASTERPLAN_STORAGE_KEY as AppDataKey;
 
 function planFraRaw(raw: unknown): MasterRuteplan {
-  return processMasterplanRaw(raw) ?? { syklusLengde: 4, slots: [] };
+  return (
+    processMasterplanRaw(raw) ?? {
+      syklusLengde: 4,
+      slots: [],
+      referanseDato: "2026-06-16",
+      aktivUkeVedReferanse: 2,
+    }
+  );
 }
 
 function patchMasterplan(
@@ -111,7 +118,13 @@ function ansattMapFraLocalStorage(): Map<string, Ansatt> {
 export function MasterplanStoreProvider({ children }: { children: React.ReactNode }) {
   const { dataReady, canEdit } = useAuth();
   const [masterplan, setMasterplan] = useState<MasterRuteplan>(
-    () => readMasterplanFromLocalCache() ?? { syklusLengde: 4, slots: [] },
+    () =>
+      readMasterplanFromLocalCache() ?? {
+        syklusLengde: 4,
+        slots: [],
+        referanseDato: "2026-06-16",
+        aktivUkeVedReferanse: 2,
+      },
   );
   const loadedRef = useRef(
     typeof window !== "undefined" && (readMasterplanFromLocalCache()?.slots.length ?? 0) > 0,

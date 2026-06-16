@@ -20,7 +20,6 @@ const VERCEL_EKSPORT_SCRIPT = `copy(JSON.stringify(Object.fromEntries(
     "bemanning.henger.v1",
     "bemanning.masterplan.v1",
     "bemanning.fravaer.v1",
-    "bemanning.turnus4uker.v1",
     "bemanning.planRuteTildeling.v2",
     "bemanning.dagendring.v1",
     "bemanning.bilUtilgjengelig.v1",

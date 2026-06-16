@@ -131,7 +131,20 @@ export function normalizeLoaded(data: unknown): MasterRuteplan | null {
     }
     if (Object.keys(koblingsgrupper).length === 0) koblingsgrupper = undefined;
   }
-  return { syklusLengde, slots, koblingsgrupper };
+  return {
+    syklusLengde,
+    slots,
+    koblingsgrupper,
+    referanseDato:
+      typeof obj.referanseDato === "string" ? obj.referanseDato : "2026-06-16",
+    aktivUkeVedReferanse:
+      obj.aktivUkeVedReferanse === 1 ||
+      obj.aktivUkeVedReferanse === 2 ||
+      obj.aktivUkeVedReferanse === 3 ||
+      obj.aktivUkeVedReferanse === 4
+        ? obj.aktivUkeVedReferanse
+        : 2,
+  };
 }
 
 export function processMasterplanRaw(data: unknown): MasterRuteplan | null {

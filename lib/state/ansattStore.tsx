@@ -6,6 +6,7 @@ import { useAppData } from "@/lib/hooks/useAppData";
 import { mergeTilleggAnsatte } from "@/lib/maintenance/plannerRessurslisteEnrich";
 import { sorterAnsatte } from "@/lib/utils/sort";
 import { IMPORTERTE_ANSATTE_BEMANNING_2026 } from "@/lib/imported/ansatte-bemanning-2026";
+import { TURNUS_JANUAR_2026 } from "@/lib/imported/turnus-januar-2026";
 import { IMPORTERTE_RUTER } from "@/lib/imported/ruter-from-ringnes";
 
 type LagretAnsatt = Ansatt & { fastRute?: string };
@@ -47,13 +48,31 @@ function mergeImportertTelefon(ansatte: Ansatt[]): Ansatt[] {
   });
 }
 
+function mergeImportertTurnus(ansatte: Ansatt[]): Ansatt[] {
+  return ansatte.map((a) => {
+    if (a.turnus) return a; // allerede satt, ikke overskriv
+    // Prøv planExcelNavn først
+    const viaPlanNavn = a.planExcelNavn ? TURNUS_JANUAR_2026[a.planExcelNavn] : undefined;
+    if (viaPlanNavn) return { ...a, turnus: viaPlanNavn };
+    // Fallback: "Etternavn, Fornavn"
+    const etternavn_fornavn = `${a.etternavn}, ${a.fornavn}`;
+    const viaEtternavn = TURNUS_JANUAR_2026[etternavn_fornavn];
+    if (viaEtternavn) return { ...a, turnus: viaEtternavn, planExcelNavn: a.planExcelNavn ?? etternavn_fornavn };
+    // Fallback: "Fornavn Etternavn" (for navn uten komma)
+    const fornavn_etternavn = `${a.fornavn} ${a.etternavn}`.trim();
+    const viaFornavn = TURNUS_JANUAR_2026[fornavn_etternavn];
+    if (viaFornavn) return { ...a, turnus: viaFornavn, planExcelNavn: a.planExcelNavn ?? fornavn_etternavn };
+    return a;
+  });
+}
+
 function parseAnsatte(raw: unknown): Ansatt[] {
   if (!Array.isArray(raw)) return standardAnsatte();
   const parsed = raw
     .filter((x) => x && typeof x === "object")
     .map((x) => migrateAnsatt(x as LagretAnsatt));
   if (parsed.length === 0) return standardAnsatte();
-  return sorterAnsatte(mergeTilleggAnsatte(mergeImportertTelefon(parsed)));
+  return sorterAnsatte(mergeImportertTurnus(mergeTilleggAnsatte(mergeImportertTelefon(parsed))));
 }
 
 export function AnsattStoreProvider({ children }: { children: React.ReactNode }) {
