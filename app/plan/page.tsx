@@ -47,6 +47,7 @@ import PlanKjoretoyVelger from "./PlanKjoretoyVelger";
 import PlanSkiftMenu from "./PlanSkiftMenu";
 import DagsFraværOversiktModal from "./DagsFraværOversiktModal";
 import PlanSjåførVelger, { type PlanSjåførVelg } from "./PlanSjåførVelger";
+import { sorterMasterSlots, sorterRutekoder } from "@/lib/utils/sort";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
 import {
@@ -233,7 +234,7 @@ export default function PlanPage() {
       if (e.type !== "kobling_opphevet") continue;
       if (e.koblingsgruppe) set.add(e.koblingsgruppe);
       if (e.rutekoder && e.rutekoder.length >= 2) {
-        set.add([...e.rutekoder].sort().join("|"));
+        set.add(sorterRutekoder(e.rutekoder).join("|"));
       }
     }
     return set;
@@ -256,13 +257,13 @@ export default function PlanPage() {
         rutekode: e.rutekode,
         rutenavn: e.rutenavn,
       }));
-    return [...fra_master, ...lagtTil];
+    return sorterMasterSlots([...fra_master, ...lagtTil]);
   }, [masterSlotsForDag, dagEndringerForDag, uke, dayNo, skift]);
 
   function erKoblingOpphevetForDag(gruppeKey: string, rutekoder: string[]): boolean {
     if (gruppeKey && opphevedeKoblinger.has(gruppeKey)) return true;
     if (rutekoder.length >= 2) {
-      return opphevedeKoblinger.has([...rutekoder].sort().join("|"));
+      return opphevedeKoblinger.has(sorterRutekoder(rutekoder).join("|"));
     }
     return false;
   }
@@ -286,7 +287,7 @@ export default function PlanPage() {
   }
 
   function koblingLagringsNøkkel(info: { gruppeKey: string; rutekoder: string[] }): string {
-    return info.gruppeKey || [...info.rutekoder].sort().join("|");
+    return info.gruppeKey || sorterRutekoder(info.rutekoder).join("|");
   }
 
   function kobleteMedRute(rutekode: string): string[] {
@@ -311,7 +312,7 @@ export default function PlanPage() {
     const info = finnKoblingForRute(rutekode);
     if (!info) return;
     const nøkkel = koblingLagringsNøkkel(info);
-    const liste = info.rutekoder.join(", ");
+    const liste = sorterRutekoder(info.rutekoder).join(", ");
     const ok = await requestBekreft(
       `Oppheve kobling mellom ${liste} for ${dato} (${skift})?\n\nRutene kan planlegges separat denne dagen. Masterplan endres ikke.`,
     );
@@ -331,7 +332,7 @@ export default function PlanPage() {
     const info = finnKoblingForRute(rutekode);
     if (!info) return;
     const nøkkel = koblingLagringsNøkkel(info);
-    const liste = info.rutekoder.join(", ");
+    const liste = sorterRutekoder(info.rutekoder).join(", ");
     const ok = await requestBekreft(
       `Gjenopprette kobling mellom ${liste} for ${dato} (${skift})?\n\nSjåfør, bil og henger deles igjen mellom rutene.`,
     );
@@ -1618,8 +1619,8 @@ export default function PlanPage() {
                           className={`${styles.linkIconBtn} ${koblingOpphevet ? styles.linkIconBtnOpphevet : ""}`}
                           title={
                             koblingOpphevet
-                              ? `Kobling opphevet for ${dato}. Klikk for å koble ${kobling.rutekoder.join(" ⟷ ")} igjen.`
-                              : `Koblet med ${kobleteMedRute(slot.rutekode).join(", ") || kobling.rutekoder.filter((k) => k !== slot.rutekode).join(", ")}. Klikk for å oppheve kobling denne dagen.`
+                              ? `Kobling opphevet for ${dato}. Klikk for å koble ${sorterRutekoder(kobling.rutekoder).join(" ⟷ ")} igjen.`
+                              : `Koblet med ${sorterRutekoder(kobleteMedRute(slot.rutekode)).join(", ") || sorterRutekoder(kobling.rutekoder.filter((k) => k !== slot.rutekode)).join(", ")}. Klikk for å oppheve kobling denne dagen.`
                           }
                           aria-label={
                             koblingOpphevet

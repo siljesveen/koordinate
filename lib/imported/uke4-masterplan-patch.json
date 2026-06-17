@@ -60,6 +60,13 @@
     },
     {
       "dag": 1,
+      "skift": "Dag",
+      "rutekode": "1127-2",
+      "startTid": "10:00",
+      "standardSjåførAnsattId": "a-olav-andreassen"
+    },
+    {
+      "dag": 1,
       "skift": "Kveld",
       "rutekode": "1227-2",
       "startTid": "10:00",
@@ -707,7 +714,7 @@
       "skift": "Dag",
       "rutekode": "3172",
       "startTid": "07:00",
-      "standardSjåførAnsattId": "a-j-rn-erik-sanaker"
+      "standardSjåførAnsattId": "a-andre-stli"
     },
     {
       "dag": 3,

@@ -1,0 +1,1434 @@
+{
+  "generert": "2026-06-17T07:32:29.482Z",
+  "oppsummering": {
+    "slots": 1203,
+    "medSjåfør": 943,
+    "medTurnus": 913,
+    "arbeidstidKonflikter": 3,
+    "skiftKonflikter": 31,
+    "dobbelRute": 87,
+    "utenTurnus": 30,
+    "utenStartTid": 0
+  },
+  "konflikter": {
+    "arbeidstid": [
+      {
+        "type": "for_sent",
+        "uke": 2,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "rutekode": "4227-1",
+        "startTid": "14:00",
+        "turnus": "06:00–13:30",
+        "navn": "Olav Andreassen",
+        "msg": "Rute 14:00 · turnus til 13:30"
+      },
+      {
+        "type": "for_tidlig",
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Dag",
+        "rutekode": "1122",
+        "startTid": "07:00",
+        "turnus": "14:00–22:00",
+        "navn": "Mohammad Bakhshi",
+        "msg": "Rute 07:00 · turnus fra 14:00"
+      },
+      {
+        "type": "for_sent",
+        "uke": 4,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "rutekode": "4227-1",
+        "startTid": "14:00",
+        "turnus": "06:00–13:30",
+        "navn": "Olav Andreassen",
+        "msg": "Rute 14:00 · turnus til 13:30"
+      }
+    ],
+    "skift": [
+      {
+        "uke": 1,
+        "dag": "Tor",
+        "rutekode": "4123",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Roger Moseng",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 1,
+        "dag": "Tor",
+        "rutekode": "4233",
+        "ruteSkift": "Kveld",
+        "turnusSkift": "Dag",
+        "navn": "John Olav Lundstad",
+        "startTid": "15:00"
+      },
+      {
+        "uke": 1,
+        "dag": "Fre",
+        "rutekode": "5133",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Roger Moseng",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 1,
+        "dag": "Lør",
+        "rutekode": "6130",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Trond Hagen",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 1,
+        "dag": "Lør",
+        "rutekode": "6131",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Tommy Iversen",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Tor",
+        "rutekode": "4123",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "John Olav Lundstad",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Tor",
+        "rutekode": "4227-1",
+        "ruteSkift": "Kveld",
+        "turnusSkift": "Dag",
+        "navn": "Olav Andreassen",
+        "startTid": "14:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Tor",
+        "rutekode": "4233",
+        "ruteSkift": "Kveld",
+        "turnusSkift": "Dag",
+        "navn": "Roger Moseng",
+        "startTid": "15:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Fre",
+        "rutekode": "5133",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "John Olav Lundstad",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Lør",
+        "rutekode": "6110-1",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Christian Elvestad",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Lør",
+        "rutekode": "6110-2",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Christian Elvestad",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Lør",
+        "rutekode": "6130",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Thomas Øyen",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 2,
+        "dag": "Lør",
+        "rutekode": "6131",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "John Arne Johnsen",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "rutekode": "1122",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Mohammad Bakhshi",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Tor",
+        "rutekode": "4123",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Roger Moseng",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Tor",
+        "rutekode": "4233",
+        "ruteSkift": "Kveld",
+        "turnusSkift": "Dag",
+        "navn": "John Olav Lundstad",
+        "startTid": "15:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Fre",
+        "rutekode": "5133",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Roger Moseng",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "rutekode": "6110-1",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Røstum Arnt Georg",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "rutekode": "6110-2",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Røstum Arnt Georg",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "rutekode": "6120",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Frode Ødegårdstuen",
+        "startTid": "06:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "rutekode": "6130",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Pål Westerhaug",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "rutekode": "6131",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Per Ola Åke Lundgren",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "rutekode": "4123",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "John Olav Lundstad",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "rutekode": "4227-1",
+        "ruteSkift": "Kveld",
+        "turnusSkift": "Dag",
+        "navn": "Olav Andreassen",
+        "startTid": "14:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "rutekode": "4233",
+        "ruteSkift": "Kveld",
+        "turnusSkift": "Dag",
+        "navn": "Roger Moseng",
+        "startTid": "15:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Fre",
+        "rutekode": "5133",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "John Olav Lundstad",
+        "startTid": "07:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Lør",
+        "rutekode": "6110-1",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Øyvind Hagen",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Lør",
+        "rutekode": "6110-2",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Øyvind Hagen",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Lør",
+        "rutekode": "6120",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Erik Solbakken",
+        "startTid": "06:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Lør",
+        "rutekode": "6130",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Andrejs Seleznovs",
+        "startTid": "10:00"
+      },
+      {
+        "uke": 4,
+        "dag": "Lør",
+        "rutekode": "6131",
+        "ruteSkift": "Dag",
+        "turnusSkift": "Kveld",
+        "navn": "Madelen Åsen Slåen",
+        "startTid": "10:00"
+      }
+    ],
+    "ingen_turnus": [
+      {
+        "uke": 1,
+        "dag": "Man",
+        "skift": "Kveld",
+        "rutekode": "1233",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 1,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "rutekode": "2236",
+        "navn": "Sørbye Ronny"
+      },
+      {
+        "uke": 1,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "rutekode": "2252",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 1,
+        "dag": "Ons",
+        "skift": "Kveld",
+        "rutekode": "3250",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 1,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "rutekode": "4250",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 1,
+        "dag": "Fre",
+        "skift": "Kveld",
+        "rutekode": "5252",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 2,
+        "dag": "Man",
+        "skift": "Dag",
+        "rutekode": "1110-1",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 2,
+        "dag": "Man",
+        "skift": "Dag",
+        "rutekode": "1110-2",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 2,
+        "dag": "Tir",
+        "skift": "Dag",
+        "rutekode": "2151",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 2,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "rutekode": "2236",
+        "navn": "Sørbye Ronny"
+      },
+      {
+        "uke": 2,
+        "dag": "Ons",
+        "skift": "Dag",
+        "rutekode": "3130",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 2,
+        "dag": "Tor",
+        "skift": "Dag",
+        "rutekode": "4161",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 2,
+        "dag": "Fre",
+        "skift": "Dag",
+        "rutekode": "5161",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Dag",
+        "rutekode": "1560",
+        "navn": "Hilafu Mentay"
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Kveld",
+        "rutekode": "1232",
+        "navn": "Hilafu Mentay"
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Kveld",
+        "rutekode": "1233",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 3,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "rutekode": "2236",
+        "navn": "Sørbye Ronny"
+      },
+      {
+        "uke": 3,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "rutekode": "2252",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 3,
+        "dag": "Ons",
+        "skift": "Kveld",
+        "rutekode": "3250",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 3,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "rutekode": "4250",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 3,
+        "dag": "Fre",
+        "skift": "Kveld",
+        "rutekode": "5252",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "skift": "Dag",
+        "rutekode": "6121-11",
+        "navn": "Hilafu Mentay"
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "skift": "Dag",
+        "rutekode": "6152-12",
+        "navn": "Hilafu Mentay"
+      },
+      {
+        "uke": 4,
+        "dag": "Man",
+        "skift": "Dag",
+        "rutekode": "1110-1",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 4,
+        "dag": "Man",
+        "skift": "Dag",
+        "rutekode": "1110-2",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 4,
+        "dag": "Tir",
+        "skift": "Dag",
+        "rutekode": "2151",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 4,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "rutekode": "2236",
+        "navn": "Sørbye Ronny"
+      },
+      {
+        "uke": 4,
+        "dag": "Ons",
+        "skift": "Dag",
+        "rutekode": "3130",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "skift": "Dag",
+        "rutekode": "4161",
+        "navn": "Roger Haug Skogheim"
+      },
+      {
+        "uke": 4,
+        "dag": "Fre",
+        "skift": "Dag",
+        "rutekode": "5161",
+        "navn": "Roger Haug Skogheim"
+      }
+    ],
+    "mangler_starttid": [],
+    "dobbel_rute": [
+      {
+        "uke": 1,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Håkon Amb",
+        "ruter": [
+          "1112@06:30",
+          "1520@09:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "1128-1@07:00",
+          "1128-2@11:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "1127-1@07:00",
+          "1127-2@10:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Vebjørn Sveum",
+        "ruter": [
+          "1110-1@07:00",
+          "1110-2@08:30"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "1168-1@06:30",
+          "1168-2@11:30"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Man",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "1227-1@14:00",
+          "1227-2@17:00",
+          "1227-3@20:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "2127-1@07:00",
+          "2127-2@10:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "2128-1@07:00",
+          "2128-2@11:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "2168-1@06:30",
+          "2168-2@11:30"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "2227-1@14:00",
+          "2227-2@17:00",
+          "2227-3@20:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "3127-1@07:00",
+          "3127-2@10:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "3128-1@07:00",
+          "3128-2@11:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "3168-1@06:30",
+          "3168-2@11:30"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Ons",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "3227-1@14:00",
+          "3227-2@17:00",
+          "3227-3@20:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "4127-1@07:00",
+          "4127-2@10:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "4128-1@07:00",
+          "4128-2@11:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "4168-1@06:30",
+          "4168-2@11:30"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "4227-1@14:00",
+          "4227-2@17:00",
+          "4227-3@20:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "5127-1@07:00",
+          "5127-2@10:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "5128-1@07:00",
+          "5128-2@11:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "5168-1@06:30",
+          "5168-2@11:30"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Fre",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "5227-1@14:00",
+          "5227-2@17:00",
+          "5227-3@20:00"
+        ]
+      },
+      {
+        "uke": 1,
+        "dag": "Lør",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "6121-11@07:00",
+          "6152-12@10:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "1127-1@07:00",
+          "1127-2@10:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Roger Haug Skogheim",
+        "ruter": [
+          "1110-1@07:00",
+          "1110-2@08:30"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "1168-1@06:30",
+          "1168-2@11:30"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Man",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "1227-1@14:00",
+          "1227-2@17:00",
+          "1227-3@20:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "2127-1@07:00",
+          "2127-2@10:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "2168-1@06:30",
+          "2168-2@11:30"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "2227-1@14:00",
+          "2227-2@17:00",
+          "2227-3@20:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "3127-1@07:00",
+          "3127-2@10:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "3168-1@06:30",
+          "3168-2@11:30"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Ons",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "3227-1@14:00",
+          "3227-2@17:00",
+          "3227-3@20:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "4127-1@07:00",
+          "4127-2@10:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "4168-1@06:30",
+          "4168-2@11:30"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "4227-2@17:00",
+          "4227-3@20:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "5127-1@07:00",
+          "5127-2@10:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "5168-1@06:30",
+          "5168-2@11:30"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Fre",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "5227-1@14:00",
+          "5227-2@17:00",
+          "5227-3@20:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Lør",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "6110-1@10:00",
+          "6110-2@10:00"
+        ]
+      },
+      {
+        "uke": 2,
+        "dag": "Lør",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "6121-11@07:00",
+          "6152-12@10:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "1128-1@07:00",
+          "1128-2@11:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "1127-1@07:00",
+          "1127-2@10:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Vebjørn Sveum",
+        "ruter": [
+          "1110-1@07:00",
+          "1110-2@08:30"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "1168-1@06:30",
+          "1168-2@11:30"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Man",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "1227-1@14:00",
+          "1227-2@17:00",
+          "1227-3@20:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "2127-1@07:00",
+          "2127-2@10:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "2128-1@07:00",
+          "2128-2@11:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "2168-1@06:30",
+          "2168-2@11:30"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "2227-1@14:00",
+          "2227-2@17:00",
+          "2227-3@20:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "3127-1@07:00",
+          "3127-2@10:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "3128-1@07:00",
+          "3128-2@11:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "3168-1@06:30",
+          "3168-2@11:30"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Ons",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "3227-1@14:00",
+          "3227-2@17:00",
+          "3227-3@20:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "4127-1@07:00",
+          "4127-2@10:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "4128-1@07:00",
+          "4128-2@11:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "4168-1@06:30",
+          "4168-2@11:30"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "4227-1@14:00",
+          "4227-2@17:00",
+          "4227-3@20:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "5127-1@07:00",
+          "5127-2@10:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Christian Elvestad",
+        "ruter": [
+          "5128-1@07:00",
+          "5128-2@11:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Cien Van Cao",
+        "ruter": [
+          "5168-1@06:30",
+          "5168-2@11:30"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Fre",
+        "skift": "Kveld",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "5227-1@14:00",
+          "5227-2@17:00",
+          "5227-3@20:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "skift": "Dag",
+        "navn": "Røstum Arnt Georg",
+        "ruter": [
+          "6110-1@10:00",
+          "6110-2@10:00"
+        ]
+      },
+      {
+        "uke": 3,
+        "dag": "Lør",
+        "skift": "Dag",
+        "navn": "Hilafu Mentay",
+        "ruter": [
+          "6121-11@07:00",
+          "6152-12@10:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Mohammad Bakhshi",
+        "ruter": [
+          "1122@07:00",
+          "1560@09:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Jack Petersen",
+        "ruter": [
+          "1128-1@07:00",
+          "1128-2@11:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Roger Haug Skogheim",
+        "ruter": [
+          "1110-1@07:00",
+          "1110-2@08:30"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Man",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "1168-1@06:30",
+          "1168-2@11:30"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Man",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "1227-1@14:00",
+          "1227-2@17:00",
+          "1227-3@20:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "2127-1@07:00",
+          "2127-2@10:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Jack Petersen",
+        "ruter": [
+          "2128-1@07:00",
+          "2128-2@11:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tir",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "2168-1@06:30",
+          "2168-2@11:30"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tir",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "2227-1@14:00",
+          "2227-2@17:00",
+          "2227-3@20:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "3127-1@07:00",
+          "3127-2@10:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Jack Petersen",
+        "ruter": [
+          "3128-1@07:00",
+          "3128-2@11:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Ons",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "3168-1@06:30",
+          "3168-2@11:30"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Ons",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "3227-1@14:00",
+          "3227-2@17:00",
+          "3227-3@20:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "4127-1@07:00",
+          "4127-2@10:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Jack Petersen",
+        "ruter": [
+          "4128-1@07:00",
+          "4128-2@11:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "4168-1@06:30",
+          "4168-2@11:30"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Tor",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "4227-2@17:00",
+          "4227-3@20:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Olav Andreassen",
+        "ruter": [
+          "5127-1@07:00",
+          "5127-2@10:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Jack Petersen",
+        "ruter": [
+          "5128-1@07:00",
+          "5128-2@11:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Fre",
+        "skift": "Dag",
+        "navn": "Morten Bakken",
+        "ruter": [
+          "5168-1@06:30",
+          "5168-2@11:30"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Fre",
+        "skift": "Kveld",
+        "navn": "Ivan Djordjevic",
+        "ruter": [
+          "5227-1@14:00",
+          "5227-2@17:00",
+          "5227-3@20:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Lør",
+        "skift": "Dag",
+        "navn": "Øyvind Hagen",
+        "ruter": [
+          "6110-1@10:00",
+          "6110-2@10:00"
+        ]
+      },
+      {
+        "uke": 4,
+        "dag": "Lør",
+        "skift": "Dag",
+        "navn": "Mohammad Bakhshi",
+        "ruter": [
+          "6121-11@07:00",
+          "6152-12@10:00"
+        ]
+      }
+    ]
+  }
+}

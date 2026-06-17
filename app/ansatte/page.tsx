@@ -14,6 +14,7 @@ import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoret
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { useAuth } from "@/lib/state/authStore";
 import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
+import { sorterRutekoder } from "@/lib/utils/sort";
 import { useBekreftDialog } from "@/components/useBekreftDialog";
 import ModalPortal from "@/components/ModalPortal";
 import TurnusKort from "@/components/TurnusKort";
@@ -303,6 +304,9 @@ export default function AnsattePage() {
       const liste = m.get(id) ?? [];
       if (!liste.includes(slot.rutekode)) liste.push(slot.rutekode);
       m.set(id, liste);
+    }
+    for (const [id, liste] of m) {
+      m.set(id, sorterRutekoder(liste));
     }
     return m;
   }, [masterplan.slots]);
@@ -847,7 +851,7 @@ export default function AnsattePage() {
                 <DetailPair term="Faste ruter (fra masterplan)">
                   {fasteRuterPerAnsatt.has(visAnsatt.id) ? (
                     <ul className={styles.ruteBulletList}>
-                      {[...fasteRuterPerAnsatt.get(visAnsatt.id)!].sort((a, b) => a.localeCompare(b, "nb", { numeric: true })).map((kode) => (
+                      {sorterRutekoder([...fasteRuterPerAnsatt.get(visAnsatt.id)!]).map((kode) => (
                         <li key={kode}>{kode}</li>
                       ))}
                     </ul>

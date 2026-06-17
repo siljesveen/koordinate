@@ -22,9 +22,13 @@ import {
   readMasterplanFromLocalCache,
   masterSlotId,
 } from "@/lib/masterplan/masterplanCache";
+import { sorterRutekoder } from "@/lib/utils/sort";
 import { erUkeImportApplied, merkUkeImportApplied } from "@/lib/masterplan/ukeImportMeta";
 
 const STORAGE_KEY = MASTERPLAN_STORAGE_KEY as AppDataKey;
+
+/** Synkroniser React-state etter vellykket patch (satt av provider). */
+let syncMasterplanState: ((plan: MasterRuteplan) => void) | undefined;
 
 function planFraRaw(raw: unknown): MasterRuteplan {
   return (
@@ -41,7 +45,14 @@ function patchMasterplan(
   updater: (prev: MasterRuteplan) => MasterRuteplan,
   canEdit: boolean,
 ): void {
-  patchAppData<MasterRuteplan>(STORAGE_KEY, (raw) => updater(planFraRaw(raw)), { canEdit });
+  const next = patchAppData<MasterRuteplan>(
+    STORAGE_KEY,
+    (raw) => updater(planFraRaw(raw)),
+    { canEdit },
+  );
+  if (canEdit && syncMasterplanState) {
+    syncMasterplanState(processMasterplanRaw(next) ?? next);
+  }
 }
 
 export { masterSlotId };
@@ -138,6 +149,13 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
       setMasterplan(loaded);
       loadedRef.current = true;
     }
+  }, []);
+
+  useEffect(() => {
+    syncMasterplanState = setMasterplan;
+    return () => {
+      syncMasterplanState = undefined;
+    };
   }, []);
 
   useEffect(() => {
@@ -248,10 +266,12 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
     (gruppenavn: string, rutekoder: string[], opts?: { skift?: Skift; dag?: 1|2|3|4|5|6|7 }) => {
       if (!canEditRef.current) return;
       patchMasterplan((prev) => {
-        const nyGruppe: Koblingsgruppe = { rutekoder, dag: opts?.dag, skift: opts?.skift };
+        const koder = sorterRutekoder(rutekoder);
+        const nyGruppe: Koblingsgruppe = { rutekoder: koder, dag: opts?.dag, skift: opts?.skift };
         const grupper = { ...(prev.koblingsgrupper ?? {}), [gruppenavn]: nyGruppe };
+        const kodSet = new Set(koder);
         const nyeSlots = prev.slots.map((s) => {
-          if (!rutekoder.includes(s.rutekode)) return s;
+          if (!kodSet.has(s.rutekode)) return s;
           if (opts?.skift && s.skift !== opts.skift) return s;
           if (opts?.dag && s.dag !== opts.dag) return s;
           return { ...s, koblingsgruppe: gruppenavn };

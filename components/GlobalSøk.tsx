@@ -17,6 +17,7 @@ import { useBilStore } from "@/lib/state/bilStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { navnMatcherSøk } from "@/lib/utils/kjoretoySjaførSøk";
+import { compareRutekode } from "@/lib/utils/sort";
 import { kjoretoyMatcherSøk, tekstMatcherSøk } from "@/lib/utils/søkMatch";
 import styles from "./GlobalSøk.module.css";
 
@@ -137,7 +138,7 @@ function byggIndeks(
     if (slot.standardHengerId) agg.hengere.add(slot.standardHengerId);
   }
 
-  for (const agg of ruteAgg.values()) {
+  for (const agg of [...ruteAgg.values()].sort((a, b) => compareRutekode(a.rutekode, b.rutekode))) {
     const sjNavn = [...agg.sjåfører]
       .map((id) => ansattById.get(id))
       .filter((a): a is Ansatt => !!a)

@@ -21,6 +21,7 @@ import { byggDagsFraværOversikt, dagsFraværOversiktTotalt } from "@/lib/plan/d
 import { overlapperFraværDato } from "@/lib/plan/fraværPlan";
 import { byggKoblingsgruppeKontekst, sjåførPåRuterErTillattKoblet } from "@/lib/plan/koblingsgrupper";
 import { byggEffektiveRuter, planTildelingMap, type PlanSkift } from "@/lib/plan/sjåførTilgjengelighet";
+import { compareRutekode } from "@/lib/utils/sort";
 
 export type DriftProblemAlvor = "kritisk" | "advarsel";
 
@@ -229,7 +230,7 @@ function analyserSkift(args: {
 
   problemer.sort((a, b) => {
     if (a.alvor !== b.alvor) return a.alvor === "kritisk" ? -1 : 1;
-    return a.rutekode.localeCompare(b.rutekode, "nb", { numeric: true });
+    return compareRutekode(a.rutekode, b.rutekode);
   });
 
   const ruterMedProblem = new Set(problemer.map((p) => p.rutekode));
@@ -307,7 +308,7 @@ export function byggDagDriftOversikt(args: {
   const problemer = [...dag.problemer, ...kveld.problemer].sort((a, b) => {
     if (a.alvor !== b.alvor) return a.alvor === "kritisk" ? -1 : 1;
     if (a.skift !== b.skift) return a.skift === "Dag" ? -1 : 1;
-    return a.rutekode.localeCompare(b.rutekode, "nb", { numeric: true });
+    return compareRutekode(a.rutekode, b.rutekode);
   });
 
   const dagsoversikt = byggDagsFraværOversikt({

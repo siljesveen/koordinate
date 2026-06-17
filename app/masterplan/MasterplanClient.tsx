@@ -15,7 +15,7 @@ import {
   sjåførErBlokkertMotpartsskift,
   sjåførerPerSkiftDagCache,
 } from "@/lib/plan/sjåførTilgjengelighet";
-import { compareNb } from "@/lib/utils/sort";
+import { compareMasterSlotKronologisk, compareNb, sorterRutekoder } from "@/lib/utils/sort";
 import { useKjoretoySøkBil, useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { merkUkeImportApplied } from "@/lib/masterplan/ukeImportMeta";
@@ -187,7 +187,7 @@ export default function MasterplanClient() {
       .sort((a, b) => {
         if (a.dag !== b.dag) return a.dag - b.dag;
         if (a.skift !== b.skift) return a.skift === "Dag" ? -1 : 1;
-        return a.rutekode.localeCompare(b.rutekode, "nb");
+        return compareMasterSlotKronologisk(a, b);
       });
   }, [masterplan.slots, filterUke, filterDag, filterSkift, modulSøk, ansattById, bilById, hengerById]);
 
@@ -263,7 +263,7 @@ export default function MasterplanClient() {
     for (const [, koder] of baseMap) {
       if (koder.length < 2) continue;
       const ukobled = koder.filter((k) => !alleredeKoblet.has(k));
-      if (ukobled.length >= 2) result.push([koder[0], koder.sort()]);
+      if (ukobled.length >= 2) result.push([koder[0], sorterRutekoder(koder)]);
     }
     return result;
   }, [masterplan.slots, grupper]);
@@ -376,6 +376,11 @@ export default function MasterplanClient() {
       {visKoblinger && (
         <section className={styles.koblingsPanel}>
           <h2 className={styles.sectionTitle}>Koblede ruter</h2>
+          {!canEdit && (
+            <p className={styles.hint}>
+              Kun lesetilgang — logg inn som planlegger/admin for å endre koblinger.
+            </p>
+          )}
           <p className={styles.hint}>
             Ruter i en koblingsgruppe deler alltid sjåfør, bil og henger. Endringer her gjelder permanent.
           </p>
@@ -389,14 +394,14 @@ export default function MasterplanClient() {
                 {kobling.dag && <span className={styles.dagBadge}>{DAGNAVN[kobling.dag]}</span>}
                 {kobling.skift && <span className={styles.skiftBadge}>{kobling.skift}</span>}
               </span>
-              <button type="button" className={styles.fjernBtn} onClick={() => fjernKobling(gruppe)}>
+              <button type="button" className={styles.fjernBtn} onClick={() => fjernKobling(gruppe)} disabled={!canEdit}>
                 Fjern
               </button>
             </div>
           ))}
           {ukobledeGrupper.length > 0 && (
             <div className={styles.autoSection}>
-              <button type="button" className={styles.submitBtn} onClick={autoKoblAlle}>
+              <button type="button" className={styles.submitBtn} onClick={autoKoblAlle} disabled={!canEdit}>
                 Auto-kobl {ukobledeGrupper.length} grupper (felles -1, -2…)
               </button>
               <p className={styles.hint}>
@@ -428,7 +433,7 @@ export default function MasterplanClient() {
               type="button"
               className={styles.submitBtn}
               onClick={opprettDagKoblinger}
-              disabled={!dagKoblingBama.trim() || !dagKoblingBase.trim()}
+              disabled={!canEdit || !dagKoblingBama.trim() || !dagKoblingBase.trim()}
             >
               Generer man–lør
             </button>
@@ -468,7 +473,10 @@ export default function MasterplanClient() {
               type="button"
               className={styles.submitBtn}
               onClick={opprettKobling}
-              disabled={nyKoblingInput.split(",").map((s) => s.trim()).filter(Boolean).length < 2}
+              disabled={
+                !canEdit ||
+                nyKoblingInput.split(",").map((s) => s.trim()).filter(Boolean).length < 2
+              }
             >
               Kobl
             </button>

@@ -1,4 +1,5 @@
 import type { DagEndring, Koblingsgruppe, MasterRuteSlot, Skift } from "@/lib/domain";
+import { sorterRutekoder } from "@/lib/utils/sort";
 
 export type KoblingsgruppeKontekst = {
   koblingsgruppeFraRute: Map<string, string>;
@@ -23,7 +24,7 @@ export function byggKoblingsgruppeKontekst(args: {
       if (kobling.skift && kobling.skift !== args.skift) continue;
       if (kobling.dag && kobling.dag !== args.dag) continue;
       for (const kode of kobling.rutekoder) koblingsgruppeFraRute.set(kode, gruppe);
-      ruterIKoblingsgruppe.set(gruppe, kobling.rutekoder);
+      ruterIKoblingsgruppe.set(gruppe, sorterRutekoder(kobling.rutekoder));
     }
   }
 
@@ -32,7 +33,7 @@ export function byggKoblingsgruppeKontekst(args: {
     if (e.dato !== args.dato || e.skift !== args.skift || e.type !== "kobling_opphevet") continue;
     if (e.koblingsgruppe) opphevedeKoblinger.add(e.koblingsgruppe);
     if (e.rutekoder && e.rutekoder.length >= 2) {
-      opphevedeKoblinger.add([...e.rutekoder].sort().join("|"));
+      opphevedeKoblinger.add(sorterRutekoder(e.rutekoder).join("|"));
     }
   }
 
@@ -48,7 +49,7 @@ function erKoblingOpphevetForDag(
 ): boolean {
   if (gruppeKey && ctx.opphevedeKoblinger.has(gruppeKey)) return true;
   if (rutekoder.length >= 2) {
-    return ctx.opphevedeKoblinger.has([...rutekoder].sort().join("|"));
+    return ctx.opphevedeKoblinger.has(sorterRutekoder(rutekoder).join("|"));
   }
   return false;
 }

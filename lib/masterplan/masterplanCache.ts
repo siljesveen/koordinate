@@ -1,4 +1,5 @@
 import type { Koblingsgruppe, MasterRuteplan, MasterRuteSlot, Skift } from "@/lib/domain";
+import { ensureKoblingsgrupper } from "@/lib/masterplan/koblingsgrupperDefaults";
 
 const STORAGE_KEY = "bemanning.masterplan.v1";
 
@@ -150,7 +151,7 @@ export function normalizeLoaded(data: unknown): MasterRuteplan | null {
 export function processMasterplanRaw(data: unknown): MasterRuteplan | null {
   const loaded = normalizeLoaded(data);
   if (!loaded) return null;
-  return ensureBamaAlleDager(deduplicateSlots(loaded));
+  return ensureKoblingsgrupper(ensureBamaAlleDager(deduplicateSlots(loaded)));
 }
 
 export function readMasterplanCacheRaw(): string | null {

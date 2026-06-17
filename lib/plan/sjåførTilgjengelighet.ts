@@ -1,4 +1,5 @@
 import type { DagEndring, MasterRuteSlot, PlanRuteTildeling, Skift } from "@/lib/domain";
+import { sorterMasterSlots } from "@/lib/utils/sort";
 
 export type PlanSkift = "Dag" | "Kveld";
 
@@ -38,7 +39,7 @@ export function byggEffektiveRuter(args: {
       rutekode: e.rutekode,
       rutenavn: e.rutenavn,
     }));
-  return [...fraMaster, ...lagtTil];
+  return sorterMasterSlots([...fraMaster, ...lagtTil]);
 }
 
 export function planTildelingMap(args: {
