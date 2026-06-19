@@ -271,6 +271,13 @@ export async function hentInfoskjermConfigAction(): Promise<
   }
 }
 
+function forklarAuthEpostFeil(melding: string): string {
+  if (/rate limit/i.test(melding)) {
+    return "Supabase e-postgrense nådd (ofte 2–4 e-poster per time uten egen SMTP). Vent litt, bruk «Kopier passordlenke» under, eller sett opp SMTP under Authentication → SMTP Settings i Supabase.";
+  }
+  return melding;
+}
+
 export async function sendPassordLenkeAction(
   email: string,
 ): Promise<{ ok: true } | { error: string }> {
@@ -286,10 +293,38 @@ export async function sendPassordLenkeAction(
       redirectTo: getAuthCallbackUrl(),
     });
 
-    if (error) return { error: error.message };
+    if (error) return { error: forklarAuthEpostFeil(error.message) };
     return { ok: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Kunne ikke sende passordlenke" };
+  }
+}
+
+/** Lager passordlenke uten å sende e-post — nyttig ved rate limit. */
+export async function genererPassordLenkeUrlAction(
+  email: string,
+): Promise<{ url: string } | { error: string }> {
+  try {
+    await krevAdmin();
+    const epost = email.trim().toLowerCase();
+    if (!epost || !epost.includes("@")) {
+      return { error: "Ugyldig e-postadresse" };
+    }
+
+    const admin = createAdminClient();
+    const { data, error } = await admin.auth.admin.generateLink({
+      type: "recovery",
+      email: epost,
+      options: { redirectTo: getAuthCallbackUrl() },
+    });
+
+    if (error) return { error: error.message };
+
+    const url = data.properties?.action_link;
+    if (!url) return { error: "Kunne ikke lage lenke" };
+    return { url };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Kunne ikke lage lenke" };
   }
 }
 

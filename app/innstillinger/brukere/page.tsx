@@ -6,6 +6,7 @@ import {
   hentAppUrlForAdminAction,
   hentInfoskjermConfigAction,
   importerBrukereFraSupabaseAction,
+  genererPassordLenkeUrlAction,
   sendPassordLenkeAction,
   inviterBrukerAction,
   listBrukereAction,
@@ -33,6 +34,7 @@ export default function BrukerePage() {
     recoveryMal: string;
   } | null>(null);
   const [senderPassordLenke, setSenderPassordLenke] = useState<string | null>(null);
+  const [kopiererLenke, setKopiererLenke] = useState<string | null>(null);
   const [infoskjermUrl, setInfoskjermUrl] = useState<string | null>(null);
   const [infoskjermFeil, setInfoskjermFeil] = useState<string | null>(null);
 
@@ -64,6 +66,28 @@ export default function BrukerePage() {
       }
     });
   }, []);
+
+  async function kopierPassordLenke(epost: string) {
+    setKopiererLenke(epost);
+    setStatus(null);
+    try {
+      const result = await genererPassordLenkeUrlAction(epost);
+      if ("error" in result) {
+        setStatus(result.error);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(result.url);
+        setStatus(
+          `Passordlenke kopiert for ${epost}. Lim inn i Teams/e-post til kollegaen — lenken er engangsbruk.`,
+        );
+      } catch {
+        setStatus(`Kopier denne lenken manuelt: ${result.url}`);
+      }
+    } finally {
+      setKopiererLenke(null);
+    }
+  }
 
   async function sendPassordLenke(epost: string) {
     setSenderPassordLenke(epost);
@@ -341,14 +365,24 @@ export default function BrukerePage() {
                   </td>
                   <td>
                     {b.email && b.id !== profile?.id ? (
-                      <button
-                        type="button"
-                        className={styles.secondaryBtn}
-                        disabled={senderPassordLenke === b.email}
-                        onClick={() => void sendPassordLenke(b.email!)}
-                      >
-                        {senderPassordLenke === b.email ? "Sender …" : "Send passordlenke"}
-                      </button>
+                      <div className={styles.handlinger}>
+                        <button
+                          type="button"
+                          className={styles.secondaryBtn}
+                          disabled={senderPassordLenke === b.email}
+                          onClick={() => void sendPassordLenke(b.email!)}
+                        >
+                          {senderPassordLenke === b.email ? "Sender …" : "Send e-post"}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.secondaryBtn}
+                          disabled={kopiererLenke === b.email}
+                          onClick={() => void kopierPassordLenke(b.email!)}
+                        >
+                          {kopiererLenke === b.email ? "Kopierer …" : "Kopier passordlenke"}
+                        </button>
+                      </div>
                     ) : null}
                   </td>
                 </tr>
