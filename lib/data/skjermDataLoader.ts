@@ -115,5 +115,6 @@ export async function byggInfoskjermFraSky(
 export function erGyldigInfoskjermToken(token: string | null | undefined): boolean {
   const secret = process.env.INFOSKJERM_TOKEN?.trim();
   if (!secret) return false;
-  return Boolean(token && token === secret);
+  const fraUrl = token?.trim();
+  return Boolean(fraUrl && fraUrl === secret);
 }

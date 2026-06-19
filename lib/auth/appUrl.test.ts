@@ -7,6 +7,13 @@ describe("getAppOrigin", () => {
     expect(getAppOrigin()).toBe("https://koordinate.example.com");
     vi.unstubAllEnvs();
   });
+
+  it("ignorerer feilaktig verdi som bare er variabelnavnet", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_APP_URL");
+    vi.stubEnv("VERCEL_URL", "koordinate-two.vercel.app");
+    expect(getAppOrigin()).toBe("https://koordinate-two.vercel.app");
+    vi.unstubAllEnvs();
+  });
 });
 
 describe("getAuthCallbackUrl", () => {

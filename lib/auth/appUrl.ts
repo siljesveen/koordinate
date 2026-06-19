@@ -1,10 +1,17 @@
+function erGyldigAppOrigin(url: string | undefined): url is string {
+  if (!url) return false;
+  const u = url.trim();
+  if (!u || u === "NEXT_PUBLIC_APP_URL") return false;
+  return u.startsWith("http://") || u.startsWith("https://");
+}
+
 /**
  * Kanonisk app-URL for e-postinvitasjoner og OAuth redirect.
  * Sett NEXT_PUBLIC_APP_URL i produksjon (f.eks. https://koordinate.dittdomene.no).
  */
 export function getAppOrigin(): string {
   const fraEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-  if (fraEnv) return fraEnv;
+  if (erGyldigAppOrigin(fraEnv)) return fraEnv;
 
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) return `https://${vercel.replace(/\/$/, "")}`;

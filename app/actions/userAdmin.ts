@@ -187,7 +187,18 @@ export async function inviterBrukerAction(
     );
 
     if (inviteError) {
-      return { error: inviteError.message };
+      const msg = inviteError.message;
+      if (/already been registered|already exists|duplicate/i.test(msg)) {
+        return {
+          error: `${email} finnes allerede i Supabase. Bruk «Importer fra Supabase» og sett rolle manuelt, eller slett brukeren under Authentication → Users først.`,
+        };
+      }
+      if (/rate limit|email.*limit/i.test(msg)) {
+        return {
+          error: "Supabase e-postgrense nådd. Vent litt, eller sett opp egen SMTP under Authentication → SMTP Settings.",
+        };
+      }
+      return { error: msg };
     }
 
     const userId = inviteData.user?.id;
@@ -195,14 +206,15 @@ export async function inviterBrukerAction(
       return { error: "Invitasjon sendt, men bruker-id manglet i svar" };
     }
 
-    const { error: profileError } = await admin
-      .from("profiles")
-      .update({
+    const { error: profileError } = await admin.from("profiles").upsert(
+      {
+        id: userId,
         role: input.role,
         display_name: displayName,
         email,
-      })
-      .eq("id", userId);
+      },
+      { onConflict: "id" },
+    );
 
     if (profileError) {
       return {

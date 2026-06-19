@@ -26,6 +26,7 @@ export default function BrukerePage() {
   const [importerer, setImporterer] = useState(false);
   const [urlInfo, setUrlInfo] = useState<{ origin: string; callbackUrl: string } | null>(null);
   const [infoskjermUrl, setInfoskjermUrl] = useState<string | null>(null);
+  const [infoskjermFeil, setInfoskjermFeil] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -47,7 +48,12 @@ export default function BrukerePage() {
     void lastInn();
     void hentAppUrlForAdminAction().then(setUrlInfo).catch(() => setUrlInfo(null));
     void hentInfoskjermConfigAction().then((r) => {
-      if ("url" in r) setInfoskjermUrl(r.url);
+      if ("url" in r) {
+        setInfoskjermUrl(r.url);
+        setInfoskjermFeil(null);
+      } else {
+        setInfoskjermFeil(r.error);
+      }
     });
   }, []);
 
@@ -55,20 +61,39 @@ export default function BrukerePage() {
     e.preventDefault();
     setSender(true);
     setStatus(null);
-    const result = await inviterBrukerAction({
-      email,
-      display_name: displayName,
-      role: rolle,
-    });
-    if ("error" in result) {
-      setStatus(result.error);
-    } else {
-      setStatus(`Invitasjon sendt til ${email.trim().toLowerCase()}`);
-      setEmail("");
-      setDisplayName("");
-      await lastInn();
+    try {
+      const result = await Promise.race([
+        inviterBrukerAction({
+          email,
+          display_name: displayName,
+          role: rolle,
+        }),
+        new Promise<{ error: string }>((resolve) => {
+          window.setTimeout(
+            () =>
+              resolve({
+                error:
+                  "Forespørselen tok for lang tid (over 45 s). Sjekk at SUPABASE_SERVICE_ROLE_KEY er satt i Vercel og at du har redeployet.",
+              }),
+            45_000,
+          );
+        }),
+      ]);
+      if ("error" in result) {
+        setStatus(result.error);
+      } else {
+        setStatus(
+          `Invitasjon sendt til ${email.trim().toLowerCase()}. Sjekk innboks og søppelpost — e-post sendes fra Supabase, ikke fra appen.`,
+        );
+        setEmail("");
+        setDisplayName("");
+        void lastInn();
+      }
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Invitasjon feilet");
+    } finally {
+      setSender(false);
     }
-    setSender(false);
   }
 
   async function endreRolle(brukerId: string, nyRolle: AppRole) {
@@ -150,6 +175,15 @@ export default function BrukerePage() {
           </p>
           <p>
             <code>{infoskjermUrl}</code>
+          </p>
+        </section>
+      ) : infoskjermFeil ? (
+        <section className={styles.card}>
+          <h2 className={styles.cardTitle}>Infoskjerm (Infoskjermen.no)</h2>
+          <p className={styles.status}>{infoskjermFeil}</p>
+          <p className={styles.muted}>
+            Legg til <code>INFOSKJERM_TOKEN</code> under Vercel → Project → Settings → Environment
+            Variables (Production), deretter Redeploy.
           </p>
         </section>
       ) : null}

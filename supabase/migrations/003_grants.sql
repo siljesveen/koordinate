@@ -5,6 +5,7 @@ grant usage on schema public to anon, authenticated;
 
 grant select on public.profiles to authenticated;
 grant update on public.profiles to authenticated;
+grant select, insert, update on public.profiles to service_role;
 
 grant select on public.app_data to authenticated;
 grant select on public.app_data to service_role;
