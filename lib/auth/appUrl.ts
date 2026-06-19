@@ -19,8 +19,20 @@ export function getAppOrigin(): string {
   return "http://localhost:3000";
 }
 
-/** Full callback-URL for Supabase Auth (invite, magic link, OAuth). */
-export function getAuthCallbackUrl(nextPath = "/"): string {
-  const next = nextPath.startsWith("/") ? nextPath : "/";
-  return `${getAppOrigin()}/auth/callback?next=${encodeURIComponent(next)}`;
+/** PKCE callback — uten query i path (matcher enklere i Supabase allow-list). */
+export function getAuthCallbackUrl(): string {
+  return `${getAppOrigin()}/auth/callback`;
+}
+
+/** E-postlenker med token_hash (anbefalt for invitasjon og passordlenke). */
+export function getAuthConfirmUrl(nextPath = "/auth/sett-passord"): string {
+  const next = nextPath.startsWith("/") ? nextPath : "/auth/sett-passord";
+  return `${getAppOrigin()}/auth/confirm?next=${encodeURIComponent(next)}`;
+}
+
+/** Tekst til Supabase e-postmaler (Authentication → Email Templates). */
+export function supabaseEpostMal(type: "invite" | "recovery"): string {
+  const next = encodeURIComponent("/auth/sett-passord");
+  const otpType = type === "invite" ? "invite" : "recovery";
+  return `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=${otpType}&next=${next}`;
 }

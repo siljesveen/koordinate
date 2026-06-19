@@ -1,6 +1,7 @@
 import KoordinateLogo from "@/components/KoordinateLogo";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { AuthHashSession } from "./AuthHashSession";
 import { SettPassordForm } from "./SettPassordForm";
 import styles from "../../login/page.module.css";
 
@@ -31,6 +32,7 @@ export default async function SettPassordPage() {
         </div>
 
         <h1 className={styles.title}>Velg passord</h1>
+        <AuthHashSession />
 
         {!configured ? (
           <p className={styles.hint}>Supabase er ikke konfigurert.</p>

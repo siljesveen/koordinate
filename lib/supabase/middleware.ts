@@ -76,6 +76,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
+  const token_hash = request.nextUrl.searchParams.get("token_hash");
+  const otpType = request.nextUrl.searchParams.get("type");
+  if (token_hash && otpType && path !== "/auth/confirm") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/confirm";
+    return NextResponse.redirect(url);
+  }
+
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
   if (!user && !isPublic) {

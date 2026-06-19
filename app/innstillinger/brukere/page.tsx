@@ -29,6 +29,8 @@ export default function BrukerePage() {
     origin: string;
     callbackUrl: string;
     confirmUrl: string;
+    inviteMal: string;
+    recoveryMal: string;
   } | null>(null);
   const [senderPassordLenke, setSenderPassordLenke] = useState<string | null>(null);
   const [infoskjermUrl, setInfoskjermUrl] = useState<string | null>(null);
@@ -163,37 +165,61 @@ export default function BrukerePage() {
       </header>
 
       {urlInfo ? (
-        <section className={styles.card}>
-          <h2 className={styles.cardTitle}>URL for invitasjoner</h2>
-          <p className={styles.muted}>
-            Disse verdiene må stemme med Supabase → Authentication → URL Configuration.
-          </p>
-          <dl className={styles.urlListe}>
-            <div>
-              <dt>Site URL (produksjon)</dt>
-              <dd>
-                <code>{urlInfo.origin}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>Redirect URL (legg til i allow-list)</dt>
-              <dd>
-                <code>{urlInfo.callbackUrl}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>Bekreftelses-URL (legg også til i allow-list)</dt>
-              <dd>
-                <code>{urlInfo.confirmUrl}</code>
-              </dd>
-            </div>
-          </dl>
-          <p className={styles.hint}>
-            Feil lenke i e-post skyldes nesten alltid at Site URL i Supabase fortsatt er{" "}
-            <code>localhost</code>, at redirect-URL mangler i listen, eller at appen ikke er
-            redeployet etter siste oppdatering.
-          </p>
-        </section>
+        <>
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>URL for invitasjoner</h2>
+            <p className={styles.muted}>
+              Supabase → Authentication → URL Configuration. Bruk wildcard{" "}
+              <code>{urlInfo.origin}/**</code> under Redirect URLs hvis du er usikker.
+            </p>
+            <dl className={styles.urlListe}>
+              <div>
+                <dt>Site URL (produksjon)</dt>
+                <dd>
+                  <code>{urlInfo.origin}</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Redirect URL</dt>
+                <dd>
+                  <code>{urlInfo.callbackUrl}</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Bekreftelses-URL</dt>
+                <dd>
+                  <code>{urlInfo.confirmUrl}</code>
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>E-postmaler i Supabase (viktig)</h2>
+            <p className={styles.muted}>
+              Uten dette får brukere «feil lenke». Gå til Authentication → Email Templates og
+              erstatt lenken i hver mal med teksten under (behold øvrig tekst).
+            </p>
+            <p className={styles.muted}>
+              <strong>Invite user</strong> — lim inn som lenke/href:
+            </p>
+            <p>
+              <code>{urlInfo.inviteMal}</code>
+            </p>
+            <p className={styles.muted}>
+              <strong>Reset password</strong> — lim inn som lenke/href:
+            </p>
+            <p>
+              <code>{urlInfo.recoveryMal}</code>
+            </p>
+            <p className={styles.hint}>
+              Eksempel i HTML-mal:{" "}
+              <code>
+                {`<a href="${urlInfo.inviteMal}">Godta invitasjon og velg passord</a>`}
+              </code>
+            </p>
+          </section>
+        </>
       ) : null}
 
       {infoskjermUrl ? (

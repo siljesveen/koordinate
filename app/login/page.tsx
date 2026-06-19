@@ -32,7 +32,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         {authError ? (
           <p className={styles.error}>
-            Lenken er ugyldig eller utløpt. Be administrator om ny invitasjon eller passordlenke.
+            Lenken er ugyldig eller utløpt. Be administrator sjekke e-postmalene i Supabase
+            (Innstillinger → Brukere) og send ny invitasjon eller passordlenke.
           </p>
         ) : null}
 

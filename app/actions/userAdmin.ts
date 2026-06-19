@@ -1,6 +1,6 @@
 "use server";
 
-import { getAppOrigin, getAuthCallbackUrl } from "@/lib/auth/appUrl";
+import { getAppOrigin, getAuthCallbackUrl, getAuthConfirmUrl, supabaseEpostMal } from "@/lib/auth/appUrl";
 import { listAlleAuthBrukere, visningsnavnFraAuthBruker } from "@/lib/auth/authBrukerUtils";
 import { isAdmin, type AppRole, type UserProfile } from "@/lib/auth/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -176,7 +176,7 @@ export async function inviterBrukerAction(
     }
 
     const admin = createAdminClient();
-    const redirectTo = getAuthCallbackUrl("/auth/sett-passord");
+    const redirectTo = getAuthCallbackUrl();
 
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
       email,
@@ -283,7 +283,7 @@ export async function sendPassordLenkeAction(
 
     const supabase = await createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(epost, {
-      redirectTo: getAuthCallbackUrl("/auth/sett-passord"),
+      redirectTo: getAuthCallbackUrl(),
     });
 
     if (error) return { error: error.message };
@@ -297,12 +297,16 @@ export async function hentAppUrlForAdminAction(): Promise<{
   origin: string;
   callbackUrl: string;
   confirmUrl: string;
+  inviteMal: string;
+  recoveryMal: string;
 }> {
   await krevAdmin();
   const origin = getAppOrigin();
   return {
     origin,
-    callbackUrl: getAuthCallbackUrl("/auth/sett-passord"),
-    confirmUrl: `${origin}/auth/confirm`,
+    callbackUrl: getAuthCallbackUrl(),
+    confirmUrl: getAuthConfirmUrl(),
+    inviteMal: supabaseEpostMal("invite"),
+    recoveryMal: supabaseEpostMal("recovery"),
   };
 }

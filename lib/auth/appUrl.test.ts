@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { getAppOrigin, getAuthCallbackUrl } from "./appUrl";
+import { getAppOrigin, getAuthCallbackUrl, getAuthConfirmUrl, supabaseEpostMal } from "./appUrl";
 
 describe("getAppOrigin", () => {
   it("bruker NEXT_PUBLIC_APP_URL når satt", () => {
@@ -17,11 +17,29 @@ describe("getAppOrigin", () => {
 });
 
 describe("getAuthCallbackUrl", () => {
-  it("bygger callback med next-parameter", () => {
+  it("bygger callback uten query (allow-list-vennlig)", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://koordinate.example.com");
-    expect(getAuthCallbackUrl("/plan")).toBe(
-      "https://koordinate.example.com/auth/callback?next=%2Fplan",
+    expect(getAuthCallbackUrl()).toBe("https://koordinate.example.com/auth/callback");
+    vi.unstubAllEnvs();
+  });
+});
+
+describe("getAuthConfirmUrl", () => {
+  it("bygger confirm med next til sett-passord", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://koordinate.example.com");
+    expect(getAuthConfirmUrl()).toBe(
+      "https://koordinate.example.com/auth/confirm?next=%2Fauth%2Fsett-passord",
     );
+    vi.unstubAllEnvs();
+  });
+});
+
+describe("supabaseEpostMal", () => {
+  it("inneholder token_hash og type for invitasjon", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://koordinate.example.com");
+    const mal = supabaseEpostMal("invite");
+    expect(mal).toContain("/auth/confirm?token_hash={{ .TokenHash }}");
+    expect(mal).toContain("type=invite");
     vi.unstubAllEnvs();
   });
 });
