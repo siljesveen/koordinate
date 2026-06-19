@@ -6,6 +6,7 @@ import {
   hentAppUrlForAdminAction,
   hentInfoskjermConfigAction,
   importerBrukereFraSupabaseAction,
+  sendPassordLenkeAction,
   inviterBrukerAction,
   listBrukereAction,
   oppdaterBrukerRolleAction,
@@ -24,7 +25,12 @@ export default function BrukerePage() {
   const [laster, setLaster] = useState(true);
   const [sender, setSender] = useState(false);
   const [importerer, setImporterer] = useState(false);
-  const [urlInfo, setUrlInfo] = useState<{ origin: string; callbackUrl: string } | null>(null);
+  const [urlInfo, setUrlInfo] = useState<{
+    origin: string;
+    callbackUrl: string;
+    confirmUrl: string;
+  } | null>(null);
+  const [senderPassordLenke, setSenderPassordLenke] = useState<string | null>(null);
   const [infoskjermUrl, setInfoskjermUrl] = useState<string | null>(null);
   const [infoskjermFeil, setInfoskjermFeil] = useState<string | null>(null);
 
@@ -56,6 +62,21 @@ export default function BrukerePage() {
       }
     });
   }, []);
+
+  async function sendPassordLenke(epost: string) {
+    setSenderPassordLenke(epost);
+    setStatus(null);
+    try {
+      const result = await sendPassordLenkeAction(epost);
+      if ("error" in result) {
+        setStatus(result.error);
+      } else {
+        setStatus(`Passordlenke sendt til ${epost}. Kollegaen kan sette passord via e-posten.`);
+      }
+    } finally {
+      setSenderPassordLenke(null);
+    }
+  }
 
   async function sendInvitasjon(e: React.FormEvent) {
     e.preventDefault();
@@ -135,7 +156,8 @@ export default function BrukerePage() {
           </p>
           <h1 className={styles.title}>Brukere</h1>
           <p className={styles.lead}>
-            Inviter nye brukere og velg rolle. Invitasjonslenken peker til appens innlogging.
+            Inviter nye brukere og velg rolle. Etter invitasjon settes passord på en egen side — ikke
+            på innloggingssiden.
           </p>
         </div>
       </header>
@@ -159,10 +181,17 @@ export default function BrukerePage() {
                 <code>{urlInfo.callbackUrl}</code>
               </dd>
             </div>
+            <div>
+              <dt>Bekreftelses-URL (legg også til i allow-list)</dt>
+              <dd>
+                <code>{urlInfo.confirmUrl}</code>
+              </dd>
+            </div>
           </dl>
           <p className={styles.hint}>
             Feil lenke i e-post skyldes nesten alltid at Site URL i Supabase fortsatt er{" "}
-            <code>localhost</code> eller at redirect-URL mangler i listen.
+            <code>localhost</code>, at redirect-URL mangler i listen, eller at appen ikke er
+            redeployet etter siste oppdatering.
           </p>
         </section>
       ) : null}
@@ -262,6 +291,7 @@ export default function BrukerePage() {
                 <th>Navn</th>
                 <th>E-post</th>
                 <th>Rolle</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -282,6 +312,18 @@ export default function BrukerePage() {
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    {b.email && b.id !== profile?.id ? (
+                      <button
+                        type="button"
+                        className={styles.secondaryBtn}
+                        disabled={senderPassordLenke === b.email}
+                        onClick={() => void sendPassordLenke(b.email!)}
+                      >
+                        {senderPassordLenke === b.email ? "Sender …" : "Send passordlenke"}
+                      </button>
+                    ) : null}
                   </td>
                 </tr>
               ))}

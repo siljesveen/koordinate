@@ -176,7 +176,7 @@ export async function inviterBrukerAction(
     }
 
     const admin = createAdminClient();
-    const redirectTo = getAuthCallbackUrl("/");
+    const redirectTo = getAuthCallbackUrl("/auth/sett-passord");
 
     const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
       email,
@@ -271,10 +271,38 @@ export async function hentInfoskjermConfigAction(): Promise<
   }
 }
 
-export async function hentAppUrlForAdminAction(): Promise<{ origin: string; callbackUrl: string }> {
+export async function sendPassordLenkeAction(
+  email: string,
+): Promise<{ ok: true } | { error: string }> {
+  try {
+    await krevAdmin();
+    const epost = email.trim().toLowerCase();
+    if (!epost || !epost.includes("@")) {
+      return { error: "Ugyldig e-postadresse" };
+    }
+
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(epost, {
+      redirectTo: getAuthCallbackUrl("/auth/sett-passord"),
+    });
+
+    if (error) return { error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Kunne ikke sende passordlenke" };
+  }
+}
+
+export async function hentAppUrlForAdminAction(): Promise<{
+  origin: string;
+  callbackUrl: string;
+  confirmUrl: string;
+}> {
   await krevAdmin();
+  const origin = getAppOrigin();
   return {
-    origin: getAppOrigin(),
-    callbackUrl: getAuthCallbackUrl("/"),
+    origin,
+    callbackUrl: getAuthCallbackUrl("/auth/sett-passord"),
+    confirmUrl: `${origin}/auth/confirm`,
   };
 }

@@ -31,7 +31,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className={styles.sub}>Logg inn for å bruke planleggingsverktøyet.</p>
 
         {authError ? (
-          <p className={styles.error}>Innlogging feilet. Prøv igjen.</p>
+          <p className={styles.error}>
+            Lenken er ugyldig eller utløpt. Be administrator om ny invitasjon eller passordlenke.
+          </p>
         ) : null}
 
         {!configured ? (
@@ -44,9 +46,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         ) : (
           <>
             <p className={styles.hint}>
-              Får du ikke logget inn? Tøm informasjonskapsler for{" "}
-              <code>localhost</code> (søk etter <code>sb-</code> i nettleseren) og
-              prøv på nytt.
+              <strong>Første gang?</strong> Bruk lenken i invitasjons-e-posten — du må sette passord
+              der før du kan logge inn her.
             </p>
             <LoginForm nextPath={nextPath} />
           </>

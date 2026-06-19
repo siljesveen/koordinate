@@ -5,7 +5,14 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "./env";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/skjerm", "/api/skjerm"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth/callback",
+  "/auth/confirm",
+  "/auth/sett-passord",
+  "/skjerm",
+  "/api/skjerm",
+];
 
 function erSupabaseAuthCookie(navn: string): boolean {
   return navn.startsWith("sb-") && navn.includes("auth-token");
