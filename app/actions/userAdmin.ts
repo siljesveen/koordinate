@@ -1,5 +1,6 @@
 "use server";
 
+import { byggAktiverLenkeUrl } from "@/lib/auth/aktiverLenke";
 import { getAppOrigin, getAuthCallbackUrl, getAuthConfirmUrl, supabaseEpostMal } from "@/lib/auth/appUrl";
 import { listAlleAuthBrukere, visningsnavnFraAuthBruker } from "@/lib/auth/authBrukerUtils";
 import { isAdmin, type AppRole, type UserProfile } from "@/lib/auth/types";
@@ -320,9 +321,11 @@ export async function genererPassordLenkeUrlAction(
 
     if (error) return { error: error.message };
 
-    const url = data.properties?.action_link;
-    if (!url) return { error: "Kunne ikke lage lenke" };
-    return { url };
+    const hashed = data.properties?.hashed_token;
+    if (!hashed) return { error: "Kunne ikke lage lenke" };
+
+    const otpType = data.properties?.verification_type === "invite" ? "invite" : "recovery";
+    return { url: byggAktiverLenkeUrl({ token_hash: hashed, type: otpType }) };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Kunne ikke lage lenke" };
   }

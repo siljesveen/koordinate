@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/login",
   "/auth/callback",
   "/auth/confirm",
+  "/auth/aktiver",
   "/auth/sett-passord",
   "/skjerm",
   "/api/skjerm",
@@ -78,9 +79,9 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token_hash = request.nextUrl.searchParams.get("token_hash");
   const otpType = request.nextUrl.searchParams.get("type");
-  if (token_hash && otpType && path !== "/auth/confirm") {
+  if (token_hash && otpType && path !== "/auth/aktiver") {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/confirm";
+    url.pathname = "/auth/aktiver";
     return NextResponse.redirect(url);
   }
 

@@ -32,8 +32,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         {authError ? (
           <p className={styles.error}>
-            Lenken er ugyldig eller utløpt. Be administrator sjekke e-postmalene i Supabase
-            (Innstillinger → Brukere) og send ny invitasjon eller passordlenke.
+            Lenken er utløpt eller allerede brukt. Outlook kan ha åpnet den automatisk — be
+            administrator om ny lenke via «Kopier passordlenke» i Teams.
           </p>
         ) : null}
 

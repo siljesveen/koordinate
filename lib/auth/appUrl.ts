@@ -34,5 +34,5 @@ export function getAuthConfirmUrl(nextPath = "/auth/sett-passord"): string {
 export function supabaseEpostMal(type: "invite" | "recovery"): string {
   const next = encodeURIComponent("/auth/sett-passord");
   const otpType = type === "invite" ? "invite" : "recovery";
-  return `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=${otpType}&next=${next}`;
+  return `{{ .SiteURL }}/auth/aktiver?token_hash={{ .TokenHash }}&type=${otpType}&next=${next}`;
 }

@@ -79,7 +79,7 @@ export default function BrukerePage() {
       try {
         await navigator.clipboard.writeText(result.url);
         setStatus(
-          `Passordlenke kopiert for ${epost}. Lim inn i Teams/e-post til kollegaen — lenken er engangsbruk.`,
+          `Passordlenke kopiert for ${epost}. Send i Teams — kollegaen må klikke «Fortsett til passordvalg» på siden som åpnes.`,
         );
       } catch {
         setStatus(`Kopier denne lenken manuelt: ${result.url}`);
@@ -225,13 +225,15 @@ export default function BrukerePage() {
               erstatt lenken i hver mal med teksten under (behold øvrig tekst).
             </p>
             <p className={styles.muted}>
-              <strong>Invite user</strong> — lim inn som lenke/href:
+              <strong>Invite user</strong> og <strong>Reset password</strong> — lenken må peke til{" "}
+              <code>/auth/aktiver</code> (ikke <code>/auth/confirm</code>). Lim inn:
             </p>
             <p>
               <code>{urlInfo.inviteMal}</code>
             </p>
             <p className={styles.muted}>
-              <strong>Reset password</strong> — lim inn som lenke/href:
+              Samme mal brukes for <strong>Reset password</strong> (med <code>type=recovery</code>
+              ):
             </p>
             <p>
               <code>{urlInfo.recoveryMal}</code>

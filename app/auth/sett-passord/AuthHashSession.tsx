@@ -21,7 +21,7 @@ export function AuthHashSession() {
     const type = query.get("type");
     if (token_hash && type) {
       const params = query.toString();
-      window.location.replace(`/auth/confirm?${params}`);
+      window.location.replace(`/auth/aktiver?${params}`);
       return;
     }
 

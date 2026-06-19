@@ -1,27 +1,11 @@
-import { tryggRedirectPath } from "@/lib/auth/tryggRedirectPath";
-import { createClient } from "@/lib/supabase/server";
-import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-function standardNext(type: EmailOtpType | null, nextParam: string | null): string {
-  if (nextParam) return tryggRedirectPath(nextParam);
-  if (type === "invite" || type === "recovery") return "/auth/sett-passord";
-  return "/";
-}
-
+/** Eldre e-postmaler peker hit — videresend til manuell aktivering uten å bruke token. */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
-  const token_hash = searchParams.get("token_hash");
-  const type = searchParams.get("type") as EmailOtpType | null;
-  const next = standardNext(type, searchParams.get("next"));
-
-  if (token_hash && type) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type });
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
-    }
+  const url = new URL(`${origin}/auth/aktiver`);
+  for (const [key, value] of searchParams.entries()) {
+    url.searchParams.set(key, value);
   }
-
-  return NextResponse.redirect(`${origin}/login?error=auth`);
+  return NextResponse.redirect(url.toString());
 }

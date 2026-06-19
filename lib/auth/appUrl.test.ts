@@ -38,7 +38,7 @@ describe("supabaseEpostMal", () => {
   it("inneholder token_hash og type for invitasjon", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://koordinate.example.com");
     const mal = supabaseEpostMal("invite");
-    expect(mal).toContain("/auth/confirm?token_hash={{ .TokenHash }}");
+    expect(mal).toContain("/auth/aktiver?token_hash={{ .TokenHash }}");
     expect(mal).toContain("type=invite");
     vi.unstubAllEnvs();
   });
