@@ -62,42 +62,50 @@ export default function TopNav() {
 
   return (
     <div className={styles.navWrap}>
-      <nav className={styles.nav} aria-label="Hovedmeny">
-        <Link href="/" className={styles.brand}>
-          <KoordinateLogo size={30} className={styles.brandLogo} />
-          <span className={styles.brandText}>
-            <span className={styles.brandKo}>KO</span>
-            <span className={styles.brandOrdinate}>ordinate</span>
-          </span>
-        </Link>
-
-        <div className={styles.divider} />
-
-        {fanerMedGrupper.map((blokk, index) => (
-          <span key={blokk.group ?? index} className={styles.navGroup}>
-            {index > 0 ? <span className={styles.divider} aria-hidden /> : null}
-            {blokk.items.map((item) => renderNavItem(item, pathname))}
-          </span>
-        ))}
-
-        <GlobalSøk />
-
-        <div className={styles.spacer} />
-
-        {configured && profile ? (
-          <div className={styles.userBlock}>
-            <span className={styles.userName} title={profile.email ?? undefined}>
-              {displayName}
+      <div className={styles.navScroll}>
+        <nav className={styles.nav} aria-label="Hovedmeny">
+          <Link href="/" className={styles.brand}>
+            <KoordinateLogo size={30} className={styles.brandLogo} />
+            <span className={styles.brandText}>
+              <span className={styles.brandKo}>KO</span>
+              <span className={styles.brandOrdinate}>ordinate</span>
             </span>
-            <span className={styles.roleBadge}>{roleLabel(profile.role)}</span>
-            <form action={signOut}>
-              <button className={styles.logoutBtn} type="submit">
-                Logg ut
-              </button>
-            </form>
-          </div>
-        ) : null}
-      </nav>
+          </Link>
+
+          <div className={styles.divider} />
+
+          {fanerMedGrupper.map((blokk, index) => (
+            <span key={blokk.group ?? index} className={styles.navGroup}>
+              {index > 0 ? <span className={styles.divider} aria-hidden /> : null}
+              {blokk.items.map((item) => renderNavItem(item, pathname))}
+            </span>
+          ))}
+
+          <GlobalSøk />
+        </nav>
+      </div>
+
+      {configured ? (
+        <div className={styles.userRail}>
+          {profile ? (
+            <>
+              <span className={styles.userName} title={profile.email ?? undefined}>
+                {displayName}
+              </span>
+              <span className={styles.roleBadge}>{roleLabel(profile.role)}</span>
+            </>
+          ) : (
+            <span className={styles.userName} title="Henter brukerinfo">
+              {loading ? "…" : "Bruker"}
+            </span>
+          )}
+          <form action={signOut}>
+            <button className={styles.logoutBtn} type="submit">
+              Logg ut
+            </button>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }

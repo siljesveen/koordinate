@@ -74,12 +74,22 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
+      let aktivBruker = user;
+      if (!aktivBruker) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        aktivBruker = session?.user ?? null;
+      }
+
+      if (!aktivBruker) {
         setProfile(null);
         return;
       }
 
-      setProfile(await hentProfilForBruker(supabase, user.id, user.email ?? null));
+      setProfile(
+        await hentProfilForBruker(supabase, aktivBruker.id, aktivBruker.email ?? null),
+      );
     } finally {
       setLoading(false);
     }
@@ -97,7 +107,19 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       void refresh();
     });
 
-    return () => subscription.unsubscribe();
+    function onSynlig() {
+      if (document.visibilityState === "visible") {
+        void refresh();
+      }
+    }
+    document.addEventListener("visibilitychange", onSynlig);
+    window.addEventListener("focus", onSynlig);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", onSynlig);
+      window.removeEventListener("focus", onSynlig);
+    };
   }, [configured, refresh]);
 
   useEffect(() => {

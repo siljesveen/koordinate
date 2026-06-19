@@ -149,7 +149,9 @@ export default function BrukerePage() {
     if ("error" in result) {
       setStatus(result.error);
     } else {
-      setStatus("Rolle oppdatert");
+      setStatus(
+        "Rolle oppdatert. Be brukeren logge ut og inn igjen (eller laste siden på nytt) for at endringen skal gjelde.",
+      );
       await lastInn();
     }
   }
