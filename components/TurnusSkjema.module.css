@@ -1,0 +1,137 @@
+.turnusSkjema {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rotasjonRad {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.ukeTabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.ukeTab {
+  padding: 0.3rem 0.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--foreground);
+}
+
+.ukeTabActive {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+
+.skiftRad {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.skiftLabel {
+  font-size: 0.85rem;
+  color: var(--brand-muted);
+}
+
+.skiftBtn {
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.skiftBtnDag {
+  background: #e6f1fb;
+  color: #185fa5;
+}
+
+.skiftBtnDagInaktiv {
+  background: var(--surface-raised);
+  color: var(--brand-muted);
+}
+
+.skiftBtnKveld {
+  background: #eeedfe;
+  color: #534ab7;
+}
+
+.skiftBtnKveldInaktiv {
+  background: var(--surface-raised);
+  color: var(--brand-muted);
+}
+
+.dagListe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dagRad {
+  display: grid;
+  grid-template-columns: 6.5rem 1.75rem 1fr 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.45rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+.dagRadAktivDag {
+  background: #f0f7ff;
+}
+
+.dagRadAktivKveld {
+  background: #f3f2ff;
+}
+
+.dagNavn {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.tidFelt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.tidLabel {
+  font-size: 0.72rem;
+  color: var(--brand-muted);
+}
+
+.tidInput {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.tidInput:disabled {
+  opacity: 0.45;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--brand-muted);
+  line-height: 1.4;
+}

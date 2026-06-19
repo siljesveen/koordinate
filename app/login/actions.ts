@@ -1,5 +1,6 @@
 "use server";
 
+import { tryggRedirectPath } from "@/lib/auth/tryggRedirectPath";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { redirect } from "next/navigation";
@@ -41,8 +42,7 @@ export async function signIn(
     return { error: "Feil e-post eller passord." };
   }
 
-  const next = String(formData.get("next") ?? "").trim();
-  redirect(next && next.startsWith("/") ? next : "/");
+  redirect(tryggRedirectPath(String(formData.get("next") ?? "")));
 }
 
 export async function signOut() {

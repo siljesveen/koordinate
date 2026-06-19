@@ -2,6 +2,7 @@
 
 import { listDirtyKeys } from "@/lib/data/dirtyKeys";
 import { onSkySyncNotice, type SkySyncNotice } from "@/lib/data/skySyncNotify";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import { useSkySaveStore } from "@/lib/state/skySaveStore";
@@ -40,7 +41,8 @@ type Melding =
 
 /** Én fast høyde — unngår at siden hopper ved lagring/synk-meldinger. */
 export default function AppTransientBanner() {
-  const { profile, configured, canEdit } = useAuth();
+  const { profile, configured, canEdit, skySyncStatus } = useAuth();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { lastResult, lastOkAt, dismissError, showError } = useSkySaveStore();
   const { reloadFromCloud } = useAppDataReload();
   const [syncNotice, setSyncNotice] = useState<SkySyncNotice | null>(null);
@@ -68,7 +70,7 @@ export default function AppTransientBanner() {
   const dev = process.env.NODE_ENV === "development";
   const reserverPlass = supabaseAktiv && (Boolean(profile) || dev);
 
-  if (!reserverPlass) return null;
+  if (!reserverPlass) return bekreftDialog;
 
   let melding: Melding = null;
 
@@ -93,6 +95,20 @@ export default function AppTransientBanner() {
       text,
       actions: canEdit ? "sync" : "dismiss",
     };
+  } else if (skySyncStatus?.error) {
+    melding = {
+      id: "sky-sync-error",
+      kind: "warn",
+      text: `Kunne ikke hente data fra sky: ${skySyncStatus.error}. Prøv «Hent fra sky» under Innstillinger.`,
+    };
+  } else if (skySyncStatus?.skyTom) {
+    melding = {
+      id: "sky-empty",
+      kind: "warn",
+      text: canEdit
+        ? "Supabase er tom — gå til Innstillinger og overfør data fra nettleseren, så andre brukere kan lese planen."
+        : "Ingen data i sky ennå. Be admin/planlegger om å overføre data fra Innstillinger.",
+    };
   } else if (!canEdit) {
     melding = {
       id: "readonly",
@@ -111,13 +127,11 @@ export default function AppTransientBanner() {
     const dirty = listDirtyKeys();
     if (dirty.length > 0) {
       const navn = dirty.map(kortNøkkel).join(", ");
-      if (
-        !window.confirm(
-          `Forkaste ulagrede lokale endringer (${navn}) og hente alt fra sky?\n\nDette kan ikke angres.`,
-        )
-      ) {
-        return;
-      }
+      const ok = await requestBekreft(
+        `Forkaste ulagrede lokale endringer (${navn}) og hente alt fra sky?\n\nDette kan ikke angres.`,
+        { bekreftTekst: "Hent fra sky" },
+      );
+      if (!ok) return;
     }
     setHenter(true);
     try {
@@ -131,9 +145,12 @@ export default function AppTransientBanner() {
 
   if (!melding) {
     return (
-      <div className={styles.rail} aria-hidden="true">
-        <div className={styles.placeholder} />
-      </div>
+      <>
+        <div className={styles.rail} aria-hidden="true">
+          <div className={styles.placeholder} />
+        </div>
+        {bekreftDialog}
+      </>
     );
   }
 
@@ -141,37 +158,40 @@ export default function AppTransientBanner() {
     melding.kind === "error" ? styles.error : melding.kind === "warn" ? styles.warn : styles.ok;
 
   return (
-    <div className={styles.rail} role="status" aria-live="polite">
-      <div className={className}>
-        <span className={styles.text}>{melding.text}</span>
-        {melding.actions === "sync" && canEdit ? (
-          <button
-            type="button"
-            className={styles.btn}
-            onClick={handleHentFraSky}
-            disabled={henter}
-          >
-            {henter ? "Henter …" : "Hent fra sky"}
-          </button>
-        ) : null}
-        {melding.actions === "dismiss" || (melding.actions === "sync" && !canEdit) ? (
-          <button
-            type="button"
-            className={styles.btn}
-            onClick={() => {
-              setSyncNotice(null);
-              dismissError();
-            }}
-          >
-            Lukk
-          </button>
-        ) : null}
-        {syncNotice?.type === "applied" ? (
-          <button type="button" className={styles.btn} onClick={() => setSyncNotice(null)}>
-            Lukk
-          </button>
-        ) : null}
+    <>
+      <div className={styles.rail} role="status" aria-live="polite">
+        <div className={className}>
+          <span className={styles.text}>{melding.text}</span>
+          {melding.actions === "sync" && canEdit ? (
+            <button
+              type="button"
+              className={styles.btn}
+              onClick={handleHentFraSky}
+              disabled={henter}
+            >
+              {henter ? "Henter …" : "Hent fra sky"}
+            </button>
+          ) : null}
+          {melding.actions === "dismiss" || (melding.actions === "sync" && !canEdit) ? (
+            <button
+              type="button"
+              className={styles.btn}
+              onClick={() => {
+                setSyncNotice(null);
+                dismissError();
+              }}
+            >
+              Lukk
+            </button>
+          ) : null}
+          {syncNotice?.type === "applied" ? (
+            <button type="button" className={styles.btn} onClick={() => setSyncNotice(null)}>
+              Lukk
+            </button>
+          ) : null}
+        </div>
       </div>
-    </div>
+      {bekreftDialog}
+    </>
   );
 }

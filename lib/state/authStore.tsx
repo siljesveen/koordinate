@@ -9,31 +9,51 @@ import {
   useRef,
   useState,
 } from "react";
-import { canEditData, type UserProfile } from "@/lib/auth/types";
-import { fetchProfileAction } from "@/app/actions/skyData";
-import { syncOnLogin } from "@/lib/data/appDataStorage";
+import { canEditData, canEditMasterdata, type UserProfile } from "@/lib/auth/types";
+import { hentProfilForBruker } from "@/lib/auth/hentProfil";
+import { syncOnLogin, type SkySyncResult } from "@/lib/data/appDataStorage";
 import { notifyAppDataKeysUpdated } from "@/lib/data/appDataEngine";
 import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
 import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
+export type SkySyncStatus = {
+  updated: number;
+  missingCount: number;
+  error?: string;
+  /** Sky har ingen rader — visningsbrukere får da ikke plan/masterplan/fravær. */
+  skyTom: boolean;
+};
+
 type AuthContextValue = {
   profile: UserProfile | null;
   loading: boolean;
   configured: boolean;
   canEdit: boolean;
+  canEditMasterdata: boolean;
   dataReady: boolean;
+  skySyncStatus: SkySyncStatus | null;
   refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function tilSkySyncStatus(result: SkySyncResult): SkySyncStatus {
+  return {
+    updated: result.updated,
+    missingCount: result.missing.length,
+    error: result.error,
+    skyTom: !result.error && result.updated === 0 && result.missing.length > 0,
+  };
+}
 
 export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
   const configured = isSupabaseConfigured();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(configured);
   const [dataReady, setDataReady] = useState(!configured);
+  const [skySyncStatus, setSkySyncStatus] = useState<SkySyncStatus | null>(null);
   const profileRef = useRef(profile);
   profileRef.current = profile;
   const syncedUserIdRef = useRef<string | null>(null);
@@ -49,12 +69,6 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
     }
     try {
-      const serverProfile = await fetchProfileAction();
-      if (serverProfile) {
-        setProfile(serverProfile);
-        return;
-      }
-
       const supabase = createClient();
       const {
         data: { user },
@@ -65,12 +79,7 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setProfile({
-        id: user.id,
-        email: user.email ?? null,
-        display_name: null,
-        role: "visning",
-      });
+      setProfile(await hentProfilForBruker(supabase, user.id, user.email ?? null));
     } finally {
       setLoading(false);
     }
@@ -94,6 +103,7 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!configured) {
       setDataReady(true);
+      setSkySyncStatus(null);
       syncedUserIdRef.current = null;
       return;
     }
@@ -102,6 +112,7 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
     }
     if (!profile) {
       setDataReady(true);
+      setSkySyncStatus(null);
       syncedUserIdRef.current = null;
       return;
     }
@@ -123,7 +134,9 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       }
     }, timeoutMs);
 
-    void syncOnLogin().finally(() => {
+    void syncOnLogin().then((result) => {
+      if (!cancelled) setSkySyncStatus(tilSkySyncStatus(result));
+    }).finally(() => {
       window.clearTimeout(timeoutId);
       if (!cancelled) {
         syncedUserIdRef.current = profile.id;
@@ -144,13 +157,18 @@ export function AuthStoreProvider({ children }: { children: React.ReactNode }) {
       loading,
       configured,
       dataReady,
+      skySyncStatus,
       canEdit:
         configured && profile
           ? canEditData(profile.role)
           : !configured && isDevEnvironment(),
+      canEditMasterdata:
+        configured && profile
+          ? canEditMasterdata(profile.role)
+          : !configured && isDevEnvironment(),
       refresh,
     }),
-    [profile, loading, configured, dataReady, refresh],
+    [profile, loading, configured, dataReady, skySyncStatus, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

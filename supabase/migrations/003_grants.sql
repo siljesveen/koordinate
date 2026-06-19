@@ -7,4 +7,5 @@ grant select on public.profiles to authenticated;
 grant update on public.profiles to authenticated;
 
 grant select on public.app_data to authenticated;
+grant select on public.app_data to service_role;
 grant insert, update, delete on public.app_data to authenticated;

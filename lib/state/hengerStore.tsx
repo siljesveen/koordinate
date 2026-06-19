@@ -62,14 +62,14 @@ function nyId(): string {
 }
 
 export function HengerStoreProvider({ children }: { children: React.ReactNode }) {
-  const { canEdit } = useAuth();
+  const { canEditMasterdata } = useAuth();
   const { data: hengere, setData: setHengere } = useAppData<Henger[]>(STORAGE_KEY, {
     getDefault: () => [],
     parse: (raw) => normalizeLoaded(raw),
   });
 
   const lagre = (item: Henger) => {
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     setHengere((prev) => {
       const i = prev.findIndex((h) => h.id === item.id);
       if (i >= 0) {
@@ -82,12 +82,12 @@ export function HengerStoreProvider({ children }: { children: React.ReactNode })
   };
 
   const slett = (id: string) => {
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     setHengere((prev) => prev.filter((h) => h.id !== id));
   };
 
   const syncSjåførForAnsatt = (ansattId: string, nyHengerId?: string, gammelHengerId?: string) => {
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     setHengere((prev) => syncHengereEtterAnsattFastHenger(prev, ansattId, nyHengerId, gammelHengerId));
   };
 

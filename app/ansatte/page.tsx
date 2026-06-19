@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import SokbarVelger from "@/components/SokbarVelger";
-import { MOCK_RUTER, fullNavn, type Ansatt, type AnsattSelskap, type Bil, type Fravær, type Henger } from "@/lib/domain";
+import { fullNavn, type Ansatt, type AnsattSelskap, type Bil, type Fravær, type Henger, type Turnus } from "@/lib/domain";
+import { IMPORTERTE_RUTER } from "@/lib/imported/ruter-from-ringnes";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
@@ -19,6 +20,8 @@ import { useBekreftDialog } from "@/components/useBekreftDialog";
 import ModalPortal from "@/components/ModalPortal";
 import TurnusKort from "@/components/TurnusKort";
 import TurnusEditor from "@/components/TurnusEditor";
+import TurnusSkjema from "@/components/TurnusSkjema";
+import { standardNyTurnus, turnusHarArbeidsdager } from "@/lib/turnus/turnusSkjemaUtils";
 import styles from "./page.module.css";
 
 type AktivFilter = "alle" | "aktiv" | "inaktiv";
@@ -121,7 +124,7 @@ function nyId(): string {
 }
 
 function ruteEtikett(ruteId: string): string {
-  const r = MOCK_RUTER.find((x) => x.id === ruteId);
+  const r = IMPORTERTE_RUTER.find((x) => x.id === ruteId);
   return r ? `${r.rutenummer} · ${r.rutenavn}` : ruteId;
 }
 
@@ -202,7 +205,7 @@ function visFastHenger(id: string | undefined, h: Henger | undefined): ReactNode
 }
 
 export default function AnsattePage() {
-  const { canEdit } = useAuth();
+  const { canEditMasterdata } = useAuth();
   const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { fravær, slettForAnsatt: slettFraværForAnsatt } = useFraværStore();
@@ -212,6 +215,8 @@ export default function AnsattePage() {
   const { fjernReferanser: fjernTildelingRef } = usePlanRuteTildelingStore();
   const [turnusUke, setTurnusUke] = useState<1 | 2>(1);
   const [turnusEditorÅpen, setTurnusEditorÅpen] = useState<string | null>(null);
+  const [harTurnus, setHarTurnus] = useState(false);
+  const [turnusUtkast, setTurnusUtkast] = useState<Turnus>(() => standardNyTurnus());
   const [søk, setSøk] = useModulSøkFraUrl();
   const [filter, setFilter] = useState<AktivFilter>("aktiv");
 
@@ -334,6 +339,8 @@ export default function AnsattePage() {
     setVisId(null);
     setRedigererId(null);
     setSkjema(toSkjema());
+    setHarTurnus(true);
+    setTurnusUtkast(standardNyTurnus());
     setModalÅpen(true);
   }
 
@@ -347,12 +354,16 @@ export default function AnsattePage() {
     setVisId(null);
     setRedigererId(ansatt.id);
     setSkjema(toSkjema(ansatt));
+    setHarTurnus(!!ansatt.turnus);
+    setTurnusUtkast(ansatt.turnus ?? standardNyTurnus());
     setModalÅpen(true);
   }
 
   function lukkModal() {
     setModalÅpen(false);
     setRedigererId(null);
+    setHarTurnus(false);
+    setTurnusUtkast(standardNyTurnus());
   }
 
   function lukkVisning() {
@@ -364,6 +375,8 @@ export default function AnsattePage() {
     setVisId(null);
     setRedigererId(visAnsatt.id);
     setSkjema(toSkjema(visAnsatt));
+    setHarTurnus(!!visAnsatt.turnus);
+    setTurnusUtkast(visAnsatt.turnus ?? standardNyTurnus());
     setModalÅpen(true);
   }
 
@@ -375,7 +388,7 @@ export default function AnsattePage() {
 
   async function lagre(e: React.FormEvent) {
     e.preventDefault();
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
 
     const nyFornavn = skjema.fornavn.trim();
     const nyEtternavn = skjema.etternavn.trim();
@@ -413,6 +426,11 @@ export default function AnsattePage() {
       }
     }
 
+    if (harTurnus && !turnusHarArbeidsdager(turnusUtkast)) {
+      window.alert("Velg minst én arbeidsdag i turnusen.");
+      return;
+    }
+
     const oppdatert: Ansatt = {
       id: redigererId ?? nyId(),
       fornavn: nyFornavn,
@@ -430,6 +448,7 @@ export default function AnsattePage() {
       fastHengerId: skjema.fastHengerId.trim() ? skjema.fastHengerId.trim() : undefined,
       aktiv: skjema.aktiv,
       kommentar: skjema.kommentar.trim() ? skjema.kommentar.trim() : undefined,
+      turnus: harTurnus ? turnusUtkast : undefined,
     };
 
     const gammelFastBilId = redigerer?.fastBilId;
@@ -476,7 +495,7 @@ export default function AnsattePage() {
             <option value="inaktiv">Kun inaktive</option>
             <option value="alle">Alle</option>
           </select>
-          {canEdit ? (
+          {canEditMasterdata ? (
             <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
               Ny ansatt
             </button>
@@ -758,46 +777,39 @@ export default function AnsattePage() {
                     <FraværListeBlokk rader={fraværForDetaljAnsatt} />
                   </div>
                 ) : null}
-              </div>
 
-              {/* Turnus-editor */}
-              {redigererId && (() => {
-                const ansatt = ansatte.find((a) => a.id === redigererId);
-                if (!ansatt?.turnus) return null;
-                return (
-                  <div className={styles.turnusSection}>
-                    <div className={styles.turnusHeader}>
-                      <span className={styles.turnusTitle}>Turnus</span>
-                      <div className={styles.turnusUkeTabs}>
-                        {([1, 2] as const)
-                          .filter((uke) => {
-                            const ansatt = redigererId
-                              ? ansatte.find((a) => a.id === redigererId)
-                              : visAnsatt;
-                            if (uke === 2 && !ansatt?.turnus?.uke2) return false;
-                            return true;
-                          })
-                          .map((uke) => (
-                            <button
-                              key={uke}
-                              type="button"
-                              className={`${styles.turnusUkeTab} ${turnusUke === uke ? styles.turnusUkeTabActive : ""}`}
-                              onClick={() => setTurnusUke(uke)}
-                            >
-                              U{uke}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                    <TurnusKort
-                      turnus={ansatt.turnus}
-                      visUke={turnusUke}
-                      dagsDato={new Date().toISOString().slice(0, 10)}
-                    />
+                <div className={`${styles.spanFullGrid} ${styles.turnusSection}`}>
+                  <div className={styles.turnusHeader}>
+                    <span className={styles.turnusTitle}>Turnus</span>
                   </div>
-                );
-              })()}
-
+                  <label className={styles.turnusRegistrerRad}>
+                    <input
+                      type="checkbox"
+                      checked={harTurnus}
+                      onChange={(e) => {
+                        const på = e.target.checked;
+                        setHarTurnus(på);
+                        if (på && !turnusHarArbeidsdager(turnusUtkast)) {
+                          setTurnusUtkast(standardNyTurnus());
+                        }
+                      }}
+                    />
+                    Registrer turnus for denne ansatte
+                  </label>
+                  {harTurnus ? (
+                    <TurnusSkjema
+                      key={redigererId ?? "ny"}
+                      value={turnusUtkast}
+                      onChange={setTurnusUtkast}
+                    />
+                  ) : (
+                    <p className={styles.turnusHint}>
+                      Turnus kan legges til senere. Uten turnus brukes ikke faste arbeidstider fra
+                      turnus i planlegging.
+                    </p>
+                  )}
+                </div>
+              </div>
               </div>
               <div className={styles.formActionsSticky}>
                 <button type="button" className={styles.secondaryBtn} onClick={lukkModal}>
@@ -883,19 +895,13 @@ export default function AnsattePage() {
               <FraværListeBlokk rader={fraværForDetaljAnsatt} />
 
               {/* Turnus (read-only visning) */}
-              {visAnsatt.turnus && (
+              {visAnsatt.turnus ? (
                 <div className={styles.turnusSection}>
                   <div className={styles.turnusHeader}>
                     <span className={styles.turnusTitle}>Turnus</span>
                     <div className={styles.turnusUkeTabs}>
                       {([1, 2] as const)
-                        .filter((uke) => {
-                          const ansatt = redigererId
-                            ? ansatte.find((a) => a.id === redigererId)
-                            : visAnsatt;
-                          if (uke === 2 && !ansatt?.turnus?.uke2) return false;
-                          return true;
-                        })
+                        .filter((uke) => uke === 1 || !!visAnsatt.turnus?.uke2)
                         .map((uke) => (
                           <button
                             key={uke}
@@ -913,7 +919,7 @@ export default function AnsattePage() {
                     visUke={turnusUke}
                     dagsDato={new Date().toISOString().slice(0, 10)}
                   />
-                  {canEdit && (
+                  {canEditMasterdata && (
                     <button
                       type="button"
                       className={styles.secondaryBtn}
@@ -923,17 +929,31 @@ export default function AnsattePage() {
                     </button>
                   )}
                 </div>
-              )}
+              ) : canEditMasterdata ? (
+                <div className={styles.turnusSection}>
+                  <div className={styles.turnusHeader}>
+                    <span className={styles.turnusTitle}>Turnus</span>
+                  </div>
+                  <p className={styles.turnusHint}>Ingen turnus registrert.</p>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={() => setTurnusEditorÅpen(visAnsatt.id)}
+                  >
+                    Legg til turnus
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             <div className={styles.modalFooterBar}>
               <button
                 type="button"
                 className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
-                disabled={!canEdit}
-                title={canEdit ? undefined : "Kun lesetilgang"}
+                disabled={!canEditMasterdata}
+                title={canEditMasterdata ? undefined : "Kun lesetilgang"}
                 onClick={async () => {
-                  if (!canEdit) return;
+                  if (!canEditMasterdata) return;
                   const ok = await requestBekreft(
                     `Er du sikker på at du vil slette oppføringen for ${fullNavn(visAnsatt)}? Fravær og tildelinger knyttet til denne personen fjernes også.`,
                     { bekreftTekst: "Slett" },
@@ -955,10 +975,10 @@ export default function AnsattePage() {
               <button
                 type="button"
                 className={styles.primaryBtn}
-                disabled={!canEdit}
-                title={canEdit ? undefined : "Kun lesetilgang"}
+                disabled={!canEditMasterdata}
+                title={canEditMasterdata ? undefined : "Kun lesetilgang"}
                 onClick={() => {
-                  if (!canEdit) return;
+                  if (!canEditMasterdata) return;
                   redigerFraVisning();
                 }}
               >

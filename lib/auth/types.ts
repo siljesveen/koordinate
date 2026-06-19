@@ -25,3 +25,7 @@ export function canEditData(role: AppRole): boolean {
 export function isAdmin(role: AppRole): boolean {
   return role === "admin";
 }
+
+export function canEditMasterdata(role: AppRole): boolean {
+  return isAdmin(role);
+}

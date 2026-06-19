@@ -11,11 +11,14 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
+import { canAccessHref } from "@/lib/auth/permissions";
+import type { AppRole } from "@/lib/auth/types";
 import { fullNavn, type Ansatt, type Bil, type Henger } from "@/lib/domain";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
+import { useAuth } from "@/lib/state/authStore";
 import { navnMatcherSøk } from "@/lib/utils/kjoretoySjaførSøk";
 import { compareRutekode } from "@/lib/utils/sort";
 import { kjoretoyMatcherSøk, tekstMatcherSøk } from "@/lib/utils/søkMatch";
@@ -180,6 +183,8 @@ function matcherTreff(treff: SøkTreff, søk: string, ansattById: Map<string, An
 
 export default function GlobalSøk() {
   const router = useRouter();
+  const { profile } = useAuth();
+  const role: AppRole = profile?.role ?? "visning";
   const { ansatte } = useAnsattStore();
   const { biler } = useBilStore();
   const { hengere } = useHengerStore();
@@ -230,8 +235,9 @@ export default function GlobalSøk() {
     if (!q) return [];
     return indeks
       .filter((t) => matcherTreff(t, q, ansattById))
+      .filter((t) => canAccessHref(role, t.href))
       .slice(0, 12);
-  }, [indeks, søk, ansattById]);
+  }, [indeks, søk, ansattById, role]);
 
   const grupperte = useMemo(() => {
     const grupper: Partial<Record<SøkKind, SøkTreff[]>> = {};

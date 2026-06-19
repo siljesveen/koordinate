@@ -1,6 +1,7 @@
 "use server";
 
 import { canEditData, type AppRole, type UserProfile } from "@/lib/auth/types";
+import { hentProfilForBruker } from "@/lib/auth/hentProfil";
 import { grunnTilUploadBlokkering, type SkyRowSnapshot } from "@/lib/data/skyUploadGuard";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -10,27 +11,7 @@ async function hentProfil(
   userId: string,
   email: string | null,
 ): Promise<UserProfile> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, email, display_name, role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error || !data) {
-    return {
-      id: userId,
-      email,
-      display_name: null,
-      role: "visning",
-    };
-  }
-
-  return {
-    id: data.id,
-    email: data.email,
-    display_name: data.display_name,
-    role: data.role as AppRole,
-  };
+  return hentProfilForBruker(supabase, userId, email);
 }
 
 export async function testSkyTilkoblingAction(): Promise<{ ok: boolean; error?: string }> {

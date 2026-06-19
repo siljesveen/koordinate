@@ -675,10 +675,6 @@
 }
 
 @media print {
-  :global(nav) {
-    display: none !important;
-  }
-
   .header,
   .datoBar,
   .faner,

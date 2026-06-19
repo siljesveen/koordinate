@@ -11,6 +11,7 @@ import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStor
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { hengerMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAuth } from "@/lib/state/authStore";
 import styles from "./page.module.css";
 
@@ -42,7 +43,8 @@ function toSkjema(h: Henger | null): HengerSkjema {
 }
 
 export default function HengerPage() {
-  const { canEdit } = useAuth();
+  const { canEditMasterdata } = useAuth();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { hengere, lagre, slett } = useHengerStore();
   const { poster: hengerUtilgjengelig } = useHengerUtilgjengeligStore();
@@ -108,11 +110,13 @@ export default function HengerPage() {
     setRedigererId(null);
   }
 
-  function slettHenger() {
+  async function slettHenger() {
     if (!redigererId) return;
-    if (typeof window !== "undefined" && !window.confirm(`Slette hengeren ${skjema.kjennemerke || redigerer?.kjennemerke}?`)) {
-      return;
-    }
+    const ok = await requestBekreft(
+      `Slette hengeren ${skjema.kjennemerke || redigerer?.kjennemerke}?`,
+      { bekreftTekst: "Slett" },
+    );
+    if (!ok) return;
     setAnsatte((prev) =>
       prev.map((a) => (a.fastHengerId === redigererId ? { ...a, fastHengerId: undefined } : a)),
     );
@@ -123,7 +127,7 @@ export default function HengerPage() {
 
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     const km = skjema.kjennemerke.trim();
     if (!km) return;
 
@@ -163,7 +167,7 @@ export default function HengerPage() {
             placeholder="Søk reg.nr, sjåfør, type…"
             aria-label="Søk hengere"
           />
-          {canEdit ? (
+          {canEditMasterdata ? (
             <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
               Ny henger
             </button>
@@ -330,6 +334,7 @@ export default function HengerPage() {
           </div>
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

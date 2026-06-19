@@ -7,6 +7,7 @@ import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBemanningsplanStore } from "@/lib/state/bemanningsplanStore";
 import { useFraværStore } from "@/lib/state/fravaerStore";
 import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAuth } from "@/lib/state/authStore";
 import {
   analyserPlanKoblinger,
@@ -62,6 +63,7 @@ function toSkjema(item: Fravær | null, ansatte: Ansatt[]): FraværSkjema {
 
 export default function FraværPage() {
   const { canEdit } = useAuth();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { plan, settPlan, harOpplastetPlan } = useBemanningsplanStore();
   const aktiveAnsatte = useMemo(() => ansatte.filter((a) => a.aktiv !== false), [ansatte]);
@@ -153,11 +155,12 @@ export default function FraværPage() {
     setRedigererId(null);
   }
 
-  function slettFravær() {
+  async function slettFravær() {
     if (!redigererId) return;
     const a = ansattById.get(skjema.ansattId);
     const navn = a ? fullNavn(a) : "fraværet";
-    if (typeof window !== "undefined" && !window.confirm(`Slette fravær for ${navn}?`)) return;
+    const ok = await requestBekreft(`Slette fravær for ${navn}?`, { bekreftTekst: "Slett" });
+    if (!ok) return;
     slett(redigererId);
     lukk();
   }
@@ -555,6 +558,7 @@ export default function FraværPage() {
           </div>
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

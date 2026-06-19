@@ -8,6 +8,7 @@ import { useHengerStore } from "@/lib/state/hengerStore";
 import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStore";
 import { useKjoretoySøkHenger } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import SokbarVelger from "@/components/SokbarVelger";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import styles from "@/app/fravaer/page.module.css";
 
 const TYPER: KjøretøyUtilgjengeligType[] = [
@@ -64,6 +65,7 @@ function toSkjema(item: HengerUtilgjengelig | null, hengere: Henger[]): Skjema {
 }
 
 export default function HengerUtilgjengeligPage() {
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte } = useAnsattStore();
   const { hengere } = useHengerStore();
   const hengerVelgerValg = useMemo(
@@ -126,11 +128,14 @@ export default function HengerUtilgjengeligPage() {
     setRedigererId(null);
   }
 
-  function slettPeriode() {
+  async function slettPeriode() {
     if (!redigererId) return;
     const h = hengerById.get(skjema.hengerId);
     const navn = h ? hengerTekst(h) : skjema.hengerId;
-    if (typeof window !== "undefined" && !window.confirm(`Slette utilgjengelighetsperioden for ${navn}?`)) return;
+    const ok = await requestBekreft(`Slette utilgjengelighetsperioden for ${navn}?`, {
+      bekreftTekst: "Slett",
+    });
+    if (!ok) return;
     slett(redigererId);
     lukk();
   }
@@ -378,6 +383,7 @@ export default function HengerUtilgjengeligPage() {
           </div>
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 .page {
-  max-width: 36rem;
+  max-width: 42rem;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
   font-family: var(--font-inter), system-ui, sans-serif;
@@ -53,6 +53,11 @@
 
 .primaryBtn:hover {
   background: var(--brand-primary-hover);
+}
+
+a.primaryBtn {
+  display: inline-block;
+  text-decoration: none;
 }
 
 .secondaryBtn {
@@ -179,4 +184,131 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   padding-top: 0.25rem;
+}
+
+.header {
+  margin-bottom: 1.25rem;
+}
+
+.kicker {
+  font-size: 0.8rem;
+  margin: 0 0 0.35rem;
+  color: var(--brand-muted);
+}
+
+.kicker a {
+  color: var(--brand-primary);
+}
+
+.lead {
+  font-size: 0.88rem;
+  color: var(--brand-muted);
+  margin: 0.35rem 0 0;
+  line-height: 1.45;
+}
+
+.card {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.cardTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+}
+
+.cardHeaderRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.cardHeaderRow .cardTitle {
+  margin: 0;
+}
+
+.muted {
+  font-size: 0.82rem;
+  color: var(--brand-muted);
+  margin: 0 0 0.5rem;
+  line-height: 1.4;
+}
+
+.urlListe {
+  margin: 0.5rem 0;
+  font-size: 0.82rem;
+}
+
+.urlListe dt {
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.urlListe dd {
+  margin: 0.15rem 0 0;
+}
+
+.urlListe code {
+  word-break: break-all;
+  font-size: 0.78rem;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--brand-muted);
+  margin: 0.5rem 0 0;
+}
+
+.formGrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.input {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.4rem;
+  background: var(--surface);
+}
+
+.formActions {
+  margin-top: 0.25rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-raised);
+  border-radius: 0.4rem;
 }

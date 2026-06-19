@@ -6,6 +6,7 @@ import {
   subscribeAppDataKey,
 } from "@/lib/data/appDataEngine";
 import type { AppDataKey } from "@/lib/data/storageKeys";
+import { canEditAppDataKey } from "@/lib/auth/permissions";
 import { useAuth } from "@/lib/state/authStore";
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
@@ -15,8 +16,10 @@ type UseAppDataOptions<T> = {
 };
 
 export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
-  const { dataReady, canEdit } = useAuth();
+  const { dataReady, profile, canEdit } = useAuth();
   const appKey = key as AppDataKey;
+  const canEditKey =
+    profile != null ? canEditAppDataKey(profile.role, appKey) : canEdit;
   const [data, setData] = useState<T>(options.getDefault);
   const [loaded, setLoaded] = useState(false);
   const parseRef = useRef(options.parse);
@@ -38,7 +41,7 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
 
   const setDataGuarded = useCallback<Dispatch<SetStateAction<T>>>(
     (updater) => {
-      if (!canEdit) return;
+      if (!canEditKey) return;
       patchAppData<T>(
         appKey,
         () => {
@@ -49,11 +52,11 @@ export function useAppData<T>(key: string, options: UseAppDataOptions<T>) {
               : updater;
           return next;
         },
-        { canEdit },
+        { canEdit: canEditKey },
       );
     },
-    [appKey, canEdit],
+    [appKey, canEditKey],
   );
 
-  return { data, setData: setDataGuarded, loaded: loaded && dataReady, canEdit };
+  return { data, setData: setDataGuarded, loaded: loaded && dataReady, canEdit: canEditKey };
 }

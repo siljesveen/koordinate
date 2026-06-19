@@ -12,6 +12,7 @@ import { useModulSøkFraUrl } from "@/lib/hooks/useModulSøkFraUrl";
 import { bilMatcherModulSøk } from "@/lib/utils/søkMatch";
 import { sorterAnsatte } from "@/lib/utils/sort";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAuth } from "@/lib/state/authStore";
 import styles from "./page.module.css";
 
@@ -49,7 +50,8 @@ function toSkjema(b: Bil | null): BilSkjema {
 }
 
 export default function BilerPage() {
-  const { canEdit } = useAuth();
+  const { canEditMasterdata } = useAuth();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte, setAnsatte } = useAnsattStore();
   const { biler, lagre, slett } = useBilStore();
   const { poster: bilUtilgjengelig } = useBilUtilgjengeligStore();
@@ -118,11 +120,13 @@ export default function BilerPage() {
     setRedigererId(null);
   }
 
-  function slettBil() {
+  async function slettBil() {
     if (!redigererId) return;
-    if (typeof window !== "undefined" && !window.confirm(`Slette bilen ${skjema.kjennemerke || redigerer?.kjennemerke}?`)) {
-      return;
-    }
+    const ok = await requestBekreft(
+      `Slette bilen ${skjema.kjennemerke || redigerer?.kjennemerke}?`,
+      { bekreftTekst: "Slett" },
+    );
+    if (!ok) return;
     setAnsatte((prev) =>
       prev.map((a) => (a.fastBilId === redigererId ? { ...a, fastBilId: undefined } : a)),
     );
@@ -133,7 +137,7 @@ export default function BilerPage() {
 
   function lagreSkjema(e: React.FormEvent) {
     e.preventDefault();
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     const km = skjema.kjennemerke.trim();
     if (!km) return;
 
@@ -177,7 +181,7 @@ export default function BilerPage() {
           <Link href="/verksted" className={styles.secondaryBtn}>
             Verksted
           </Link>
-          {canEdit ? (
+          {canEditMasterdata ? (
             <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
               Ny bil
             </button>
@@ -274,9 +278,9 @@ export default function BilerPage() {
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <div>
-                <div className={styles.modalTitle}>{redigerer ? (canEdit ? "Rediger bil" : "Vis bil") : "Ny bil"}</div>
+                <div className={styles.modalTitle}>{redigerer ? (canEditMasterdata ? "Rediger bil" : "Vis bil") : "Ny bil"}</div>
                 <div className={styles.helper}>
-                  {canEdit ? "Knytt bil til sjåfør via ansattkortet." : "Kun visning — endringer lagres ikke."}
+                  {canEditMasterdata ? "Knytt bil til sjåfør via ansattkortet." : "Kun visning — endringer lagres ikke."}
                 </div>
               </div>
               <button type="button" className={styles.closeBtn} onClick={lukk} aria-label="Lukk">
@@ -284,7 +288,7 @@ export default function BilerPage() {
               </button>
             </div>
             <form className={styles.modalBody} onSubmit={lagreSkjema}>
-              <fieldset className={styles.formGrid} disabled={!canEdit}>
+              <fieldset className={styles.formGrid} disabled={!canEditMasterdata}>
                 <div className={styles.field}>
                   <label className={styles.label}>Kjennemerke *</label>
                   <input
@@ -293,7 +297,7 @@ export default function BilerPage() {
                     onChange={(e) => setSkjema((s) => ({ ...s, kjennemerke: e.target.value }))}
                     required
                     placeholder="AB 12345"
-                    readOnly={!canEdit}
+                    readOnly={!canEditMasterdata}
                   />
                 </div>
                 <div className={styles.field}>
@@ -350,7 +354,7 @@ export default function BilerPage() {
                 </div>
               </fieldset>
               <div className={styles.formActions}>
-                {canEdit && redigerer ? (
+                {canEditMasterdata && redigerer ? (
                   <button
                     type="button"
                     className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
@@ -361,9 +365,9 @@ export default function BilerPage() {
                 ) : null}
                 <div className={styles.formActionsMain}>
                   <button type="button" className={styles.secondaryBtn} onClick={lukk}>
-                    {canEdit ? "Avbryt" : "Lukk"}
+                    {canEditMasterdata ? "Avbryt" : "Lukk"}
                   </button>
-                  {canEdit ? (
+                  {canEditMasterdata ? (
                     <button type="submit" className={styles.primaryBtn}>
                       Lagre
                     </button>
@@ -374,6 +378,7 @@ export default function BilerPage() {
           </div>
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

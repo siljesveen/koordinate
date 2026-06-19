@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/state/authStore";
 import { usePathname } from "next/navigation";
 import styles from "./DataReadyGate.module.css";
 
-const PUBLIC_PREFIXES = ["/login", "/auth"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/skjerm"];
 
 export default function DataReadyGate({ children }: { children: React.ReactNode }) {
   const { configured, loading, dataReady } = useAuth();

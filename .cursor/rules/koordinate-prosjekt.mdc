@@ -24,4 +24,4 @@ alwaysApply: true
 ## Dokumentasjon
 
 - SQL-migrasjoner: `supabase/migrations/` (kjør manuelt i Supabase SQL Editor).
-- Env-variabler: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (se `.env.example`).
+- Env-variabler: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_APP_URL` (produksjon: `https://koordinate-two.vercel.app`), `SUPABASE_SERVICE_ROLE_KEY` (se `.env.example`).

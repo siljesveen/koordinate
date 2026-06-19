@@ -9,6 +9,7 @@ import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useHengerStore } from "@/lib/state/hengerStore";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAuth } from "@/lib/state/authStore";
 import { fullNavn, type Ansatt, type MasterRuteSlot, type Skift } from "@/lib/domain";
 import {
@@ -69,6 +70,7 @@ export default function MasterplanClient() {
   const { biler } = useBilStore();
   const { hengere } = useHengerStore();
   const { canEdit } = useAuth();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
 
   const [filterUke, setFilterUke] = useState<1 | 2 | 3 | 4>(1);
   const [filterDag, setFilterDag] = useState<number>(0); // 0 = alle
@@ -295,10 +297,12 @@ export default function MasterplanClient() {
     setVisLeggTil(false);
   }
 
-  function bekreftSlett(slot: MasterRuteSlot) {
-    if (window.confirm(`Slette rute ${slot.rutekode} (${DAGNAVN[slot.dag]}, ${slot.skift})?`)) {
-      slettSlot(slot.id);
-    }
+  async function bekreftSlett(slot: MasterRuteSlot) {
+    const ok = await requestBekreft(
+      `Slette rute ${slot.rutekode} (${DAGNAVN[slot.dag]}, ${slot.skift})?`,
+      { bekreftTekst: "Slett" },
+    );
+    if (ok) slettSlot(slot.id);
   }
 
   function opprettKobling() {
@@ -336,13 +340,11 @@ export default function MasterplanClient() {
   }
 
   async function leggInnUkeFraPlan(uke: UkeNummer) {
-    if (
-      !window.confirm(
-        `Legge inn uke ${uke} fra Ringnes-planen? Sjåfør og starttid oppdateres for alle uke ${uke}-ruter. Andre uker og koblingsgrupper påvirkes ikke.`,
-      )
-    ) {
-      return;
-    }
+    const ok = await requestBekreft(
+      `Legge inn uke ${uke} fra Ringnes-planen? Sjåfør og starttid oppdateres for alle uke ${uke}-ruter. Andre uker og koblingsgrupper påvirkes ikke.`,
+      { bekreftTekst: "Legg inn" },
+    );
+    if (!ok) return;
     setUkeImporterer(uke);
     setUkeImportMsg(null);
     try {
@@ -684,6 +686,7 @@ export default function MasterplanClient() {
           </tbody>
         </table>
       </div>
+      {bekreftDialog}
     </div>
   );
 }

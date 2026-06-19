@@ -13,6 +13,7 @@ import {
   isoDato,
   parseISODateInput,
 } from "@/lib/kjoretoyTilgjengelighet";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAnsattStore } from "@/lib/state/ansattStore";
 import { useBilStore } from "@/lib/state/bilStore";
 import { useMerkBilTilbake } from "@/lib/hooks/useMerkBilTilbake";
@@ -100,6 +101,7 @@ function bilEtikett(b: Bil): string {
 }
 
 export function VerkstedKalenderTab() {
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte } = useAnsattStore();
   const { biler } = useBilStore();
   const kjoretoySøkBil = useKjoretoySøkBil(ansatte, biler);
@@ -272,18 +274,17 @@ export function VerkstedKalenderTab() {
     lukkModal();
   }
 
-  function bekreftOgMerkTilbake(p: BilUtilgjengelig) {
+  async function bekreftOgMerkTilbake(p: BilUtilgjengelig) {
     if (!bilPeriodeKanMerkesTilbake(p)) return;
     const b = bilById.get(p.bilId);
     const navn = b?.kjennemerke ?? p.bilId;
     const melding = bilMerkeTilbakeBekreftMelding(p, navn);
-    if (window.confirm(melding)) {
-      void merkTilbake(p.id, { kjennemerke: navn });
-    }
+    const ok = await requestBekreft(melding, { bekreftTekst: "Merk tilbake" });
+    if (ok) void merkTilbake(p.id, { kjennemerke: navn });
   }
 
   function håndterBarKlikk(p: BilUtilgjengelig) {
-    bekreftOgMerkTilbake(p);
+    void bekreftOgMerkTilbake(p);
   }
 
   return (
@@ -600,6 +601,7 @@ export function VerkstedKalenderTab() {
           </div>
         </div>
       ) : null}
+      {bekreftDialog}
     </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { listDirtyKeys } from "@/lib/data/dirtyKeys";
 import { onSkySyncNotice, type SkySyncNotice } from "@/lib/data/skySyncNotify";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -36,6 +37,7 @@ function meldingFor(notice: SkySyncNotice): { text: string; kind: "info" | "warn
 export default function SkySyncBanner() {
   const { profile, configured, canEdit } = useAuth();
   const { reloadFromCloud } = useAppDataReload();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const [notice, setNotice] = useState<SkySyncNotice | null>(null);
   const [henter, setHenter] = useState(false);
 
@@ -61,13 +63,11 @@ export default function SkySyncBanner() {
     const force = dirty.length > 0;
     if (force) {
       const navn = dirty.map(kortNøkkel).join(", ");
-      if (
-        !window.confirm(
-          `Forkaste ulagrede lokale endringer (${navn}) og hente alt fra sky?\n\nDette kan ikke angres.`,
-        )
-      ) {
-        return;
-      }
+      const ok = await requestBekreft(
+        `Forkaste ulagrede lokale endringer (${navn}) og hente alt fra sky?\n\nDette kan ikke angres.`,
+        { bekreftTekst: "Hent fra sky" },
+      );
+      if (!ok) return;
     }
     setHenter(true);
     try {
@@ -79,18 +79,21 @@ export default function SkySyncBanner() {
   }
 
   return (
-    <div className={className} role="status">
-      <span>{text}</span>
-      {notice.type !== "applied" && canEdit ? (
-        <>
-          <button type="button" className={styles.dismiss} onClick={handleHentFraSky} disabled={henter}>
-            {henter ? "Henter …" : "Hent fra sky"}
-          </button>
-          <button type="button" className={styles.dismiss} onClick={() => setNotice(null)}>
-            Lukk
-          </button>
-        </>
-      ) : null}
-    </div>
+    <>
+      <div className={className} role="status">
+        <span>{text}</span>
+        {notice.type !== "applied" && canEdit ? (
+          <>
+            <button type="button" className={styles.dismiss} onClick={handleHentFraSky} disabled={henter}>
+              {henter ? "Henter …" : "Hent fra sky"}
+            </button>
+            <button type="button" className={styles.dismiss} onClick={() => setNotice(null)}>
+              Lukk
+            </button>
+          </>
+        ) : null}
+      </div>
+      {bekreftDialog}
+    </>
   );
 }

@@ -6,7 +6,7 @@ import DevDataStatus from "@/components/DevDataStatus";
 import { usePathname } from "next/navigation";
 import styles from "./AppChrome.module.css";
 
-const HIDE_NAV_PREFIXES = ["/login", "/auth"];
+const HIDE_NAV_PREFIXES = ["/login", "/auth", "/skjerm"];
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

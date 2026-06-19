@@ -65,14 +65,14 @@ function nyId(): string {
 }
 
 export function BilStoreProvider({ children }: { children: React.ReactNode }) {
-  const { canEdit } = useAuth();
+  const { canEditMasterdata } = useAuth();
   const { data: biler, setData: setBiler } = useAppData<Bil[]>(STORAGE_KEY, {
     getDefault: () => [],
     parse: (raw) => normalizeLoaded(raw),
   });
 
   const lagre = (item: Bil) => {
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     setBiler((prev) => {
       const i = prev.findIndex((b) => b.id === item.id);
       if (i >= 0) {
@@ -85,12 +85,12 @@ export function BilStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const slett = (id: string) => {
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     setBiler((prev) => prev.filter((b) => b.id !== id));
   };
 
   const syncSjåførForAnsatt = (ansattId: string, nyBilId?: string, gammelBilId?: string) => {
-    if (!canEdit) return;
+    if (!canEditMasterdata) return;
     setBiler((prev) => syncBilerEtterAnsattFastBil(prev, ansattId, nyBilId, gammelBilId));
   };
 

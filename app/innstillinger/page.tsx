@@ -1,61 +1,29 @@
 "use client";
 
+import Link from "next/link";
 import { fetchSkyOverviewAction, verifySkySaveAction } from "@/app/actions/skyData";
+import { isAdmin } from "@/lib/auth/types";
 import {
   uploadLocalStorageToSky,
   type UploadToSkyResult,
 } from "@/lib/data/appDataStorage";
 import { replaceAppDataLocal } from "@/lib/data/appDataEngine";
+import {
+  exportAppDataFromLocalStorage,
+  parseBackupFile,
+  tellBackupPoster,
+  triggerBackupDownload,
+} from "@/lib/data/backupExport";
 import { clearAllDirtyKeys } from "@/lib/data/dirtyKeys";
 import { forklaringBlokkering } from "@/lib/data/skyUploadGuard";
 import { isDevEnvironment } from "@/lib/env/isDevEnvironment";
-import { APP_DATA_KEYS, type AppDataKey } from "@/lib/data/storageKeys";
+import { APP_DATA_KEYS } from "@/lib/data/storageKeys";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
+import { useAppDataReload } from "@/lib/state/appDataReload";
 import { useAuth } from "@/lib/state/authStore";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
-
-const STORAGE_KEYS = APP_DATA_KEYS;
-
-type ExportData = Record<string, unknown>;
-
-function eksporterData(): ExportData {
-  const data: ExportData = {};
-  for (const key of STORAGE_KEYS) {
-    const raw = window.localStorage.getItem(key);
-    if (raw) {
-      try {
-        data[key] = JSON.parse(raw);
-      } catch {
-        data[key] = raw;
-      }
-    }
-  }
-  return data;
-}
-
-function lastNed(data: ExportData) {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const dato = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `koordinate-backup-${dato}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function tellPoster(data: ExportData): { nøkler: number; poster: number } {
-  let poster = 0;
-  for (const val of Object.values(data)) {
-    if (Array.isArray(val)) poster += val.length;
-    else if (val && typeof val === "object") poster += 1;
-  }
-  return { nøkler: Object.keys(data).length, poster };
-}
 
 function formatUploadMelding(result: UploadToSkyResult, prefiks: string): string {
   if (result.error && result.imported === 0) {
@@ -76,17 +44,20 @@ function formatUploadMelding(result: UploadToSkyResult, prefiks: string): string
 
 export default function InnstillingerPage() {
   const { profile, canEdit, configured } = useAuth();
+  const { reloadFromCloud } = useAppDataReload();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const supabaseAktiv = configured || isSupabaseConfigured();
   const visAvansert = isDevEnvironment();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [importData, setImportData] = useState<ExportData | null>(null);
+  const [importData, setImportData] = useState<Record<string, unknown> | null>(null);
   const [skyOverview, setSkyOverview] = useState<string | null>(null);
   const [skyAntallNøkler, setSkyAntallNøkler] = useState<number | null>(null);
   const [lasterSky, setLasterSky] = useState(false);
   const [lasterOpp, setLasterOpp] = useState(false);
   const [testerLagring, setTesterLagring] = useState(false);
   const [importerer, setImporterer] = useState(false);
+  const [lasterHent, setLasterHent] = useState(false);
 
   const skyTom = !lasterSky && skyAntallNøkler === 0;
   const skyHarData = !lasterSky && skyAntallNøkler !== null && skyAntallNøkler > 0;
@@ -119,9 +90,9 @@ export default function InnstillingerPage() {
   }, [supabaseAktiv, profile]);
 
   function handleEksport() {
-    const data = eksporterData();
-    const { nøkler, poster } = tellPoster(data);
-    lastNed(data);
+    const backup = exportAppDataFromLocalStorage();
+    const { nøkler, poster } = tellBackupPoster(backup.data);
+    triggerBackupDownload(backup);
     setStatus(`Eksportert ${nøkler} nøkler med ${poster} poster. Ta vare på filen!`);
   }
 
@@ -140,14 +111,36 @@ export default function InnstillingerPage() {
     }
   }
 
-  async function handleLagreTilSky() {
-    if (
-      !window.confirm(
-        "Overføre data fra denne nettleseren til Supabase?\n\nNøkler der sky allerede har nyere eller mer komplett data hoppes over automatisk.",
-      )
-    ) {
-      return;
+  async function handleHentFraSky() {
+    setLasterHent(true);
+    setStatus(null);
+    try {
+      const result = await reloadFromCloud();
+      if (result.error) {
+        setStatus(`Kunne ikke hente fra sky: ${result.error}`);
+      } else if (result.updated === 0) {
+        setStatus(
+          skyTom
+            ? "Sky er tom — ingen data å hente. Admin må overføre data fra sin nettleser først."
+            : "Ingen nye endringer fra sky (lokal cache er allerede oppdatert).",
+        );
+      } else {
+        setStatus(
+          `Hentet ${result.updated} datasett fra sky. Last inn siden på nytt for å vise alt.`,
+        );
+      }
+      await oppdaterSkyOversikt();
+    } finally {
+      setLasterHent(false);
     }
+  }
+
+  async function handleLagreTilSky() {
+    const ok = await requestBekreft(
+      "Overføre data fra denne nettleseren til Supabase?\n\nNøkler der sky allerede har nyere eller mer komplett data hoppes over automatisk.",
+      { bekreftTekst: "Overfør" },
+    );
+    if (!ok) return;
     setLasterOpp(true);
     setStatus(null);
     try {
@@ -167,23 +160,18 @@ export default function InnstillingerPage() {
     reader.onload = () => {
       try {
         const parsed = JSON.parse(reader.result as string);
-        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-          setStatus("Filen inneholder ikke gyldig backup-data.");
-          setImportData(null);
-          return;
-        }
-        const gyldige = Object.keys(parsed).filter((k) =>
-          (STORAGE_KEYS as readonly string[]).includes(k),
-        );
-        if (gyldige.length === 0) {
+        const backup = parseBackupFile(parsed);
+        if (!backup) {
           setStatus("Filen inneholder ingen kjente KOordinate-nøkler.");
           setImportData(null);
           return;
         }
-        setImportData(parsed as ExportData);
-        const { nøkler, poster } = tellPoster(parsed);
+        setImportData(backup.data);
+        const { nøkler, poster } = tellBackupPoster(backup.data);
+        const formatTekst =
+          backup.format === "legacy" ? " (eldre backup-format)" : "";
         setStatus(
-          `Klar til import: ${nøkler} nøkler, ${poster} poster. Etter bekreftelse importeres filen${
+          `Klar til import: ${nøkler} nøkler, ${poster} poster${formatTekst}. Etter bekreftelse importeres filen${
             supabaseAktiv && canEdit ? " og trygg del lastes opp til sky" : ""
           }.`,
         );
@@ -198,21 +186,19 @@ export default function InnstillingerPage() {
 
   async function bekreftImport() {
     if (!importData || !canEdit) return;
-    if (
-      !window.confirm(
-        "Importere backup? Lokale nøkler i filen erstattes. Eksisterende sky-data overskrives bare der det er trygt.",
-      )
-    ) {
-      return;
-    }
+    const ok = await requestBekreft(
+      "Importere backup? Lokale nøkler i filen erstattes. Eksisterende sky-data overskrives bare der det er trygt.",
+      { bekreftTekst: "Importer" },
+    );
+    if (!ok) return;
 
     setImporterer(true);
     setStatus(null);
     try {
       let importert = 0;
-      for (const key of STORAGE_KEYS) {
+      for (const key of APP_DATA_KEYS) {
         if (!(key in importData)) continue;
-        replaceAppDataLocal(key as AppDataKey, importData[key], { canEdit, skipSky: true });
+        replaceAppDataLocal(key, importData[key], { canEdit, skipSky: true });
         importert++;
       }
       setImportData(null);
@@ -237,12 +223,25 @@ export default function InnstillingerPage() {
     window.location.reload();
   }
 
-  const nåværende = typeof window !== "undefined" ? eksporterData() : {};
-  const { nøkler, poster } = tellPoster(nåværende);
+  const nåværende =
+    typeof window !== "undefined" ? exportAppDataFromLocalStorage().data : {};
+  const { nøkler, poster } = tellBackupPoster(nåværende);
 
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Innstillinger</h1>
+
+      {isAdmin(profile?.role ?? "visning") ? (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Brukere og tilgang</h2>
+          <p className={styles.info}>
+            Inviter planleggere og visningsbrukere, og se at invitasjons-URL er riktig.
+          </p>
+          <Link href="/innstillinger/brukere" className={styles.primaryBtn}>
+            Administrer brukere
+          </Link>
+        </section>
+      ) : null}
 
       {supabaseAktiv && profile ? (
         skyTom ? (
@@ -271,7 +270,22 @@ export default function InnstillingerPage() {
                 </button>
               </div>
             ) : (
-              <p className={styles.info}>Du har kun lesetilgang — kontakt admin for overføring.</p>
+              <>
+                <p className={styles.info}>
+                  Du har kun lesetilgang. Når admin har overført data til sky, bruk knappen under
+                  for å hente planen på nytt.
+                </p>
+                <div className={styles.buttonRow}>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    disabled={lasterHent}
+                    onClick={() => void handleHentFraSky()}
+                  >
+                    {lasterHent ? "Henter …" : "Hent fra sky"}
+                  </button>
+                </div>
+              </>
             )}
           </section>
         ) : (
@@ -288,6 +302,14 @@ export default function InnstillingerPage() {
             <div className={styles.buttonRow}>
               <button type="button" className={styles.primaryBtn} onClick={handleEksport}>
                 Last ned backup (sikkerhetskopi)
+              </button>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                disabled={lasterHent}
+                onClick={() => void handleHentFraSky()}
+              >
+                {lasterHent ? "Henter …" : "Hent fra sky på nytt"}
               </button>
             </div>
             {canEdit ? (
@@ -396,6 +418,7 @@ export default function InnstillingerPage() {
           ) : null}
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

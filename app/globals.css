@@ -132,3 +132,9 @@ textarea::placeholder {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--brand-muted);
 }
+
+@media print {
+  nav {
+    display: none !important;
+  }
+}

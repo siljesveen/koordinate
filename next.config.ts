@@ -1,6 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/skjerm",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              "frame-ancestors 'self' https://*.infoskjermen.no https://app.infoskjermen.no https://infoskjermen.no",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: "/biler/kalender", destination: "/verksted", permanent: false },

@@ -1,10 +1,3 @@
-export type DagsplanStatus =
-  | "Ledig"
-  | "På jobb"
-  | "På rute"
-  | "Syk"
-  | "Fri";
-
 export type Skift = "Dag" | "Kveld";
 
 export type FraværType = "Syk" | "Ferie" | "Fri" | "Permisjon" | "Avspasering" | "Annet";
@@ -155,18 +148,6 @@ export type Rute = {
   fastSjåfør?: string;
   backupSjåfør?: string;
   aktiv: boolean;
-};
-
-export type Dagsplan = {
-  id: string;
-  dato: string;
-  ansattId: string;
-  status: DagsplanStatus;
-  /** Skift gjelder typisk for «På jobb»/«På rute». */
-  skift?: Skift;
-  ruteId?: string;
-  kommentar?: string;
-  sistOppdatert: string;
 };
 
 export type Fravær = {

@@ -21,6 +21,10 @@
   overflow-y: visible;
 }
 
+.navGroup {
+  display: contents;
+}
+
 /* ── Brand ── */
 
 .brand {

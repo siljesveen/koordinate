@@ -1,8 +1,11 @@
+import { tryggRedirectPath } from "@/lib/auth/tryggRedirectPath";
+import { canAccessPath } from "@/lib/auth/permissions";
+import type { AppRole } from "@/lib/auth/types";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "./env";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/skjerm", "/api/skjerm"];
 
 function erSupabaseAuthCookie(navn: string): boolean {
   return navn.startsWith("sb-") && navn.includes("auth-token");
@@ -79,9 +82,32 @@ export async function updateSession(request: NextRequest) {
 
   if (user && path === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = request.nextUrl.searchParams.get("next") || "/";
+    url.pathname = tryggRedirectPath(request.nextUrl.searchParams.get("next"));
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  if (user && !isPublic) {
+    let role: AppRole = "visning";
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.role === "admin" || profile?.role === "planlegger" || profile?.role === "visning") {
+        role = profile.role;
+      }
+    } catch {
+      // Nettverksfeil — fall tilbake til minst tilgang.
+    }
+
+    if (!canAccessPath(role, path)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

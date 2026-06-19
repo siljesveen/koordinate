@@ -34,7 +34,7 @@ Sist oppdatert: 13. mai 2026
 
 | Prinsipp | Konsekvens |
 |----------|------------|
-| **Klient først / localStorage** | Ingen server, ingen innlogging. Backup = eksport (planlagt). |
+| **Klient først / localStorage** | Ingen server uten Supabase. Backup via Innstillinger → Last ned backup. |
 | **Ett domene = én lagringskontrakt** | Nye felter → versjonert nøkkel (`*.v2`) eller normaliseringsfunksjon. |
 | **Master vs. dynamisk** | Master-ruteplanen er varig. Dag-tildelinger og dag-endringer gjelder kun én dato. Dynamisk plan skriver aldri tilbake til master. |
 | **Arv med overstyring** | Tomme felt i dag-tildeling = arv fra master. Kun eksplisitt satte felt overstyrer. |
@@ -58,9 +58,11 @@ Sist oppdatert: 13. mai 2026
 | `bemanning.henger.v1` | `hengerStore` | Hengerregister | — |
 | `bemanning.bilUtilgjengelig.v1` | `bilUtilgjengeligStore` | Utilgjengelighetsperioder for biler | `bilId` |
 | `bemanning.hengerUtilgjengelig.v1` | `hengerUtilgjengeligStore` | Utilgjengelighetsperioder for hengere | `hengerId` |
-| `bemanning.turnus4uker.v1` | `turnus4ukerStore` | 4-ukers turnus per ansatt | `ansattId` |
-| `bemanning.turnusmal.v1` | `turnusMalStore` | Turnusmaler (ukeoppskrifter) | — |
-| `bemanning.dagsplan.v1` | `dagsplanStore` | Legacy dagsplan (ikke lenger i bruk av aktive sider) | `ansattId` |
+| `bemanning.skiftTilgjengelighet.v1` | `skiftTilgjengelighetStore` | Skift-overstyring per ansatt | `ansattId` |
+| `bemanning.plan.v1` | `bemanningsplanStore` | Importert bemanningsplan (Excel) | — |
+| `bemanning.henting.v1` / `bemanning.hentingDag.v1` | `hentingStore` | Hentinger og katalog | — |
+
+**Fjernet (juni 2026):** `bemanning.dagsplan.v1`, `bemanning.turnusmal.v1`, `bemanning.turnus4uker.v1` — slettes automatisk ved oppstart via `removeLegacyStorageKeys`.
 
 ### 4b. Datatyper (definert i `lib/domain/types.ts`)
 
@@ -157,15 +159,15 @@ app/
   henger/utilgjengelig/     Henger-utilgjengelighet
   fravaer/page.tsx          Fraværsregistrering
   kjoretoy-utilgjengelig/   Samlet utilgjengelighetsoversikt
-  turnus/page.tsx           Legacy turnus (ikke i nav)
 
-lib/
+  lib/
+  data/
+    backupExport.ts       Eksport/import av JSON-backup
   domain/
     types.ts                Alle datatyper
     index.ts                Re-exports + fullNavn()
-    mockData.ts             Mock/importert data
   state/
-    *Store.tsx              12 context-baserte stores med localStorage
+    *Store.tsx              Context-baserte stores med localStorage
   imported/
     ansatte-from-excel.ts   Excel-importert ansattedata
     ruter-from-ringnes.ts   Importerte ruter
@@ -180,11 +182,10 @@ lib/
 
 | # | Beskrivelse | Alvorlighet |
 |---|-------------|-------------|
-| 1 | `dagsplanStore` er legacy — brukes ikke av aktive sider | Lav — kan fjernes |
+| 1 | ~~`dagsplanStore` / `turnusMalStore` / `/turnus`~~ | ✅ Fjernet juni 2026 |
 | 2 | `ansatte-from-excel.ts` har noen duplikat-IDer (data shadowing) | Lav — påvirker kun initial import |
-| 3 | Ingen backup/eksport — all data kun i localStorage | **Høy** — planlagt neste |
-| 4 | `turnusMalStore` er lite brukt etter turnus ble integrert i ansatte | Lav |
-| 5 | Mock-data (`MOCK_RUTER`, `MOCK_ANSATTE` osv.) importeres fortsatt i noen filer | Lav — brukes som fallback |
+| 3 | ~~Ingen backup/eksport~~ | ✅ Innstillinger → JSON-backup + import (juni 2026) |
+| 4 | ~~`MOCK_*`-aliaser i domain~~ | ✅ Erstattet med direkte import fra `lib/imported/` |
 
 ---
 
@@ -218,8 +219,8 @@ Dynamisk plan velger dato, legger til/fjerner ruter for den dagen — skriver al
 ## 10. Produkt-backlog
 
 ### Neste opp
-- [ ] **Eksport / import av data** — backup-mekanisme for all localStorage-data
-- [ ] «I morgen»-snarvei i Plan
+- [x] ~~**Eksport / import av data**~~ — `lib/data/backupExport.ts` + Innstillinger (juni 2026)
+- [x] «I morgen»-snarvei i Plan
 
 ### Ønskeliste (uprioritert)
 - [ ] Innebygd kort hjelp («Slik bruker du Plan»)
@@ -227,7 +228,7 @@ Dynamisk plan velger dato, legger til/fjerner ruter for den dagen — skriver al
 - [ ] Kalendervisning for kjøretøy-utilgjengelighet
 - [ ] Server / database / pålogging (kun etter eget vedtak)
 - [ ] Bedre matching av Excel-navn ved import av nye filer
-- [ ] Fjern legacy `dagsplanStore` og `/turnus`-side
+- [x] ~~Fjern legacy `dagsplanStore` og `/turnus`-side~~ (juni 2026)
 
 ### Ikke bygg uten avklaring
 - Ekstra database uten migreringsplan

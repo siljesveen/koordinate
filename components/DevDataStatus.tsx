@@ -6,6 +6,7 @@ import {
   testSkyTilkoblingAction,
 } from "@/app/actions/skyData";
 import { listDirtyKeys } from "@/lib/data/dirtyKeys";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import { useAuth } from "@/lib/state/authStore";
 import { useAppDataReload } from "@/lib/state/appDataReload";
 import { useCallback, useEffect, useState } from "react";
@@ -32,6 +33,7 @@ export default function DevDataStatus() {
 
   const { configured, profile, loading, dataReady } = useAuth();
   const { reloadFromCloud, lastSync } = useAppDataReload();
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const [skyStatus, setSkyStatus] = useState<SkyStatus>("idle");
   const [skyFeil, setSkyFeil] = useState<string | null>(null);
   const [henter, setHenter] = useState(false);
@@ -95,13 +97,11 @@ export default function DevDataStatus() {
     const dirty = listDirtyKeys();
     let force = false;
     if (dirty.length > 0) {
-      if (
-        !window.confirm(
-          `Ulagrede lokale endringer (${dirty.join(", ")}). Forkaste og hente alt fra sky?`,
-        )
-      ) {
-        return;
-      }
+      const ok = await requestBekreft(
+        `Ulagrede lokale endringer (${dirty.join(", ")}). Forkaste og hente alt fra sky?`,
+        { bekreftTekst: "Hent fra sky" },
+      );
+      if (!ok) return;
       force = true;
     }
     setHenter(true);
@@ -264,6 +264,7 @@ export default function DevDataStatus() {
           ) : null}
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

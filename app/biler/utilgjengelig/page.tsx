@@ -16,6 +16,7 @@ import { useMerkBilTilbake } from "@/lib/hooks/useMerkBilTilbake";
 import { useBilUtilgjengeligStore } from "@/lib/state/bilUtilgjengeligStore";
 import { useKjoretoySøkBil } from "@/lib/hooks/useKjoretoySøkMedAnsatte";
 import SokbarVelger from "@/components/SokbarVelger";
+import { useBekreftDialog } from "@/components/useBekreftDialog";
 import styles from "@/app/fravaer/page.module.css";
 
 const TYPER: KjøretøyUtilgjengeligType[] = [
@@ -77,6 +78,7 @@ function toSkjema(item: BilUtilgjengelig | null, biler: Bil[]): Skjema {
 }
 
 export default function BilUtilgjengeligPage() {
+  const { requestBekreft, dialog: bekreftDialog } = useBekreftDialog();
   const { ansatte } = useAnsattStore();
   const { biler } = useBilStore();
   const kjoretoySøkBil = useKjoretoySøkBil(ansatte, biler);
@@ -142,11 +144,14 @@ export default function BilUtilgjengeligPage() {
     setRedigererId(null);
   }
 
-  function slettPeriode() {
+  async function slettPeriode() {
     if (!redigererId) return;
     const b = bilById.get(skjema.bilId);
     const navn = b ? bilTekst(b) : skjema.bilId;
-    if (typeof window !== "undefined" && !window.confirm(`Slette utilgjengelighetsperioden for ${navn}?`)) return;
+    const ok = await requestBekreft(`Slette utilgjengelighetsperioden for ${navn}?`, {
+      bekreftTekst: "Slett",
+    });
+    if (!ok) return;
     slett(redigererId);
     lukk();
   }
@@ -176,14 +181,15 @@ export default function BilUtilgjengeligPage() {
     lukk();
   }
 
-  function bekreftOgMerkTilbake() {
+  async function bekreftOgMerkTilbake() {
     if (!redigerer) return;
     if (!bilPeriodeKanMerkesTilbake(redigerer)) return;
     const b = bilById.get(redigerer.bilId);
     const navn = b ? bilTekst(b) : redigerer.bilId;
-    if (window.confirm(bilMerkeTilbakeBekreftMelding(redigerer, navn))) {
-      void merkTilbake(redigerer.id, { kjennemerke: navn }).then(() => lukk());
-    }
+    const ok = await requestBekreft(bilMerkeTilbakeBekreftMelding(redigerer, navn), {
+      bekreftTekst: "Merk tilbake",
+    });
+    if (ok) void merkTilbake(redigerer.id, { kjennemerke: navn }).then(() => lukk());
   }
 
   return (
@@ -437,6 +443,7 @@ export default function BilUtilgjengeligPage() {
           </div>
         </div>
       ) : null}
+      {bekreftDialog}
     </div>
   );
 }

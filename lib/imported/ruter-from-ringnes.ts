@@ -2,7 +2,7 @@ import type { Rute } from "@/lib/domain/types";
 import { RINGNES_CYCLE } from "./ringnesCycle";
 
 /**
- * Stabil id for lagring (f.eks. ansatt.ruteIds, dagsplan.ruteId).
+ * Stabil id for lagring (f.eks. ansatt.ruteIds).
  * Prefiks unngår kollisjon med andre kilder senere.
  */
 export function ringnesRuteId(rutenummer: string): string {

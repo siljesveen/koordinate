@@ -59,7 +59,7 @@ export function bilPeriodeKanMerkesTilbake(periode: Periode): boolean {
   return overlapperUtilgjengeligPeriode(iDag, periode);
 }
 
-/** Tekst til `window.confirm` før merk tilbake / fjern planlagt. */
+/** Tekst til bekreftelsesdialog før merk tilbake / fjern planlagt. */
 export function bilMerkeTilbakeBekreftMelding(periode: Periode, navn: string): string {
   const iDag = isoIDag();
   if (periode.fraDato > iDag) {

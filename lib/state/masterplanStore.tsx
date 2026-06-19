@@ -127,7 +127,7 @@ function ansattMapFraLocalStorage(): Map<string, Ansatt> {
 }
 
 export function MasterplanStoreProvider({ children }: { children: React.ReactNode }) {
-  const { dataReady, canEdit } = useAuth();
+  const { dataReady, canEditMasterdata } = useAuth();
   const [masterplan, setMasterplan] = useState<MasterRuteplan>(
     () =>
       readMasterplanFromLocalCache() ?? {
@@ -140,8 +140,8 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   const loadedRef = useRef(
     typeof window !== "undefined" && (readMasterplanFromLocalCache()?.slots.length ?? 0) > 0,
   );
-  const canEditRef = useRef(canEdit);
-  canEditRef.current = canEdit;
+  const canEditRef = useRef(canEditMasterdata);
+  canEditRef.current = canEditMasterdata;
 
   const syncFraCache = useCallback(() => {
     const loaded = readMasterplanFromLocalCache();
@@ -167,7 +167,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
   /** Engangsimport av uke-patch — kun lokal utvikling, utsatt så navigering ikke blokkeres. */
   useEffect(() => {
     if (!isDevEnvironment()) return;
-    if (!dataReady || !canEdit || !loadedRef.current) return;
+    if (!dataReady || !canEditMasterdata || !loadedRef.current) return;
     if (masterplan.slots.length === 0) return;
 
     let cancelled = false;
@@ -217,7 +217,7 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
       cancelled = true;
       cancelSchedule(idleId as number);
     };
-  }, [dataReady, canEdit, masterplan.slots.length]);
+  }, [dataReady, canEditMasterdata, masterplan.slots.length]);
 
   const lagreSlot = useCallback((slot: MasterRuteSlot) => {
     if (!canEditRef.current) return;
