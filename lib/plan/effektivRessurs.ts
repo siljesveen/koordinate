@@ -208,3 +208,20 @@ export function effektivRessursForSlot(
     hengerUtilgjengeligFlag,
   };
 }
+
+/**
+ * AnsattId som kan dras fra ruten.
+ * Uavhengig av om effektivRessurs har nullstilt sjåfør (f.eks. master + fravær / annet skift).
+ */
+export function sjåførDragAnsattId(
+  selectVal: string,
+  slot: Pick<MasterRuteSlot, "standardSjåførAnsattId">,
+  ansattById: Map<string, Ansatt>,
+): string | undefined {
+  if (selectVal === "__ingen__") return undefined;
+  const id = selectVal === "__baseline__" ? slot.standardSjåførAnsattId : selectVal;
+  if (!id) return undefined;
+  const a = ansattById.get(id);
+  if (!a?.aktiv) return undefined;
+  return id;
+}

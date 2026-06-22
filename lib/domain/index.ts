@@ -19,6 +19,7 @@ export type {
   PlanRuteTildeling,
   Rute,
   SkiftTilgjengelighet,
+  ReserveTilgjengelighet,
   Turnus,
   TurnusUke,
   TurnusUkedag,

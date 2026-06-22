@@ -12,6 +12,7 @@ import {
   type PlanRuteTildeling,
   type Skift,
   type SkiftTilgjengelighet,
+  type ReserveTilgjengelighet,
 } from "@/lib/domain";
 import {
   erBilUtilgjengeligPåDato,
@@ -23,6 +24,7 @@ import { byggDagDriftOversikt, formatPlanDatoLang } from "@/lib/plan/dagDriftOve
 import { byggDagsFraværOversikt } from "@/lib/plan/dagsFraværOversikt";
 import { overlapperFraværDato } from "@/lib/plan/fraværPlan";
 import { byggSkiftOverstyringMap } from "@/lib/plan/skiftTilgjengelighet";
+import { byggReserveMap, reserveTilgjengeligTekst } from "@/lib/plan/reserveTilgjengelighet";
 import {
   byggEffektiveRuter,
   motsattSkift,
@@ -31,12 +33,13 @@ import {
   type PlanSkift,
 } from "@/lib/plan/sjåførTilgjengelighet";
 import type { BemanningPlanData } from "@/lib/utils/parseBemanningsplanExcel";
-import { aktivTurnusUke, ukedagNummer } from "@/lib/utils/turnusUtils";
+import { ansattErTilgjengeligITurnus, turnusDagInfo } from "@/lib/utils/turnusUtils";
 
 export type InfoskjermTilgjengeligRad = {
   id: string;
   navn: string;
   arbeidstid?: string;
+  erReserve?: boolean;
   harDagKommentar: boolean;
 };
 
@@ -69,10 +72,14 @@ function overlapperDato(post: Pick<Fravær, "fraDato" | "tilDato">, dato: string
   return overlapperFraværDato(post, dato);
 }
 
-function arbeidstidTekst(ansatt: Ansatt, dato: string): string | undefined {
+function arbeidstidTekst(
+  ansatt: Ansatt,
+  dato: string,
+  reserve?: ReserveTilgjengelighet,
+): string | undefined {
+  if (reserve) return reserveTilgjengeligTekst(reserve.fraKl);
   if (!ansatt.turnus) return undefined;
-  const uke = aktivTurnusUke(ansatt.turnus, dato);
-  const dagInfo = uke.dager[ukedagNummer(dato)];
+  const dagInfo = turnusDagInfo(ansatt.turnus, dato);
   if (!dagInfo) return undefined;
   return `${dagInfo.startTid}–${dagInfo.sluttTid}`;
 }
@@ -88,11 +95,13 @@ function beregnTilgjengeligeForSkift(args: {
   dagEndringer: DagEndring[];
   tildelinger: PlanRuteTildeling[];
   skiftTilgjengelighet: SkiftTilgjengelighet[];
+  reserveTilgjengelighet: ReserveTilgjengelighet[];
   bilUtilgjengelig: BilUtilgjengelig[];
   hengerUtilgjengelig: HengerUtilgjengelig[];
   bemanningsplan: BemanningPlanData | null;
 }): InfoskjermTilgjengeligRad[] {
   const skiftOverstyringMap = byggSkiftOverstyringMap(args.skiftTilgjengelighet, args.dato);
+  const reserveMap = byggReserveMap(args.reserveTilgjengelighet, args.dato, args.skift);
   const effektiveRuter = byggEffektiveRuter({
     uke: args.uke,
     dag: args.dag,
@@ -160,14 +169,22 @@ function beregnTilgjengeligeForSkift(args: {
       ) {
         return false;
       }
+      if (reserveMap.has(a.id)) return true;
+      if (!ansattErTilgjengeligITurnus(a, args.dato, args.skift as Skift, overstyrtSkift)) {
+        return false;
+      }
       return true;
     })
-    .map((a) => ({
-      id: a.id,
-      navn: fullNavn(a),
-      arbeidstid: arbeidstidTekst(a, args.dato),
-      harDagKommentar: harDagKommentarIPlan(a, args.bemanningsplan, args.dato),
-    }))
+    .map((a) => {
+      const reserve = reserveMap.get(a.id);
+      return {
+        id: a.id,
+        navn: fullNavn(a),
+        arbeidstid: arbeidstidTekst(a, args.dato, reserve),
+        erReserve: Boolean(reserve),
+        harDagKommentar: harDagKommentarIPlan(a, args.bemanningsplan, args.dato),
+      };
+    })
     .sort((a, b) => a.navn.localeCompare(b.navn, "nb"));
 }
 
@@ -182,6 +199,7 @@ export function byggInfoskjermOversikt(args: {
   dagEndringer: DagEndring[];
   tildelinger: PlanRuteTildeling[];
   skiftTilgjengelighet: SkiftTilgjengelighet[];
+  reserveTilgjengelighet: ReserveTilgjengelighet[];
   bilUtilgjengelig: BilUtilgjengelig[];
   hengerUtilgjengelig: HengerUtilgjengelig[];
   biler: Bil[];
@@ -215,6 +233,7 @@ export function byggInfoskjermOversikt(args: {
     dagEndringer: args.dagEndringer,
     tildelinger: args.tildelinger,
     skiftTilgjengelighet: args.skiftTilgjengelighet,
+    reserveTilgjengelighet: args.reserveTilgjengelighet,
     bilUtilgjengelig: args.bilUtilgjengelig,
     hengerUtilgjengelig: args.hengerUtilgjengelig,
     bemanningsplan: args.bemanningsplan,
@@ -231,6 +250,7 @@ export function byggInfoskjermOversikt(args: {
     dagEndringer: args.dagEndringer,
     tildelinger: args.tildelinger,
     skiftTilgjengelighet: args.skiftTilgjengelighet,
+    reserveTilgjengelighet: args.reserveTilgjengelighet,
     bilUtilgjengelig: args.bilUtilgjengelig,
     hengerUtilgjengelig: args.hengerUtilgjengelig,
     bemanningsplan: args.bemanningsplan,

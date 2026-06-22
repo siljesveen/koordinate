@@ -14,6 +14,7 @@ import {
   type PlanRuteTildeling,
   type Skift,
   type SkiftTilgjengelighet,
+  type ReserveTilgjengelighet,
 } from "@/lib/domain";
 import {
   erBilIUtilgjengeligPeriodePåDato,
@@ -31,6 +32,7 @@ import {
   effektivRessursForSlot as effektivRessursForSlotPure,
   masterplanBilIdForSlot as masterplanBilIdForSlotPure,
   masterplanHengerIdForSlot as masterplanHengerIdForSlotPure,
+  sjåførDragAnsattId,
   type EffektivRessurs,
 } from "@/lib/plan/effektivRessurs";
 import {
@@ -47,8 +49,10 @@ import {
   sjåførerJobberPåSkift,
 } from "@/lib/plan/sjåførTilgjengelighet";
 import { byggSkiftOverstyringMap } from "@/lib/plan/skiftTilgjengelighet";
+import { byggReserveMap } from "@/lib/plan/reserveTilgjengelighet";
 import { sorterMasterSlots, sorterRutekoder } from "@/lib/utils/sort";
 import { slotMatcherModulSøk } from "@/lib/utils/søkMatch";
+import { ansattErTilgjengeligITurnus, turnusUtilgjengeligGrunn } from "@/lib/utils/turnusUtils";
 import { type PlanSkift, overlapperDato, parseISODateInput } from "./planPageUtils";
 
 export type { PlanSkift, EffektivRessurs };
@@ -70,6 +74,7 @@ export type UsePlanLogikkParams = {
   masterplan: MasterRuteplan;
   dagEndringer: DagEndring[];
   skiftTilgjengelighet: SkiftTilgjengelighet[];
+  reserveTilgjengelighet: ReserveTilgjengelighet[];
 };
 
 export function usePlanLogikk({
@@ -87,6 +92,7 @@ export function usePlanLogikk({
   masterplan,
   dagEndringer,
   skiftTilgjengelighet,
+  reserveTilgjengelighet,
 }: UsePlanLogikkParams) {
   const uke = useMemo(() => syklusUkeFraDato(parseISODateInput(dato)), [dato]);
 
@@ -95,6 +101,11 @@ export function usePlanLogikk({
   const skiftOverstyringMap = useMemo(
     () => byggSkiftOverstyringMap(skiftTilgjengelighet, dato),
     [skiftTilgjengelighet, dato],
+  );
+
+  const reserveMap = useMemo(
+    () => byggReserveMap(reserveTilgjengelighet, dato, skift),
+    [reserveTilgjengelighet, dato, skift],
   );
 
   const masterSlotsForDag = useMemo(
@@ -457,6 +468,13 @@ export function usePlanLogikk({
       return "__ingen__";
     }
 
+    function sjåførDragAnsattIdForRute(
+      selectVal: string,
+      slot: MasterRuteSlot,
+    ): string | undefined {
+      return sjåførDragAnsattId(selectVal, slot, ansattById);
+    }
+
     return {
       erKoblingOpphevetForDag,
       finnKoblingForRute,
@@ -483,6 +501,7 @@ export function usePlanLogikk({
       sjåførVisningNavn,
       masterSjåførFraværInfo,
       sjåførSelectVerdi,
+      sjåførDragAnsattIdForRute,
     };
   }, [
     koblingsKontekst,
@@ -585,7 +604,9 @@ export function usePlanLogikk({
         const hengBlokk =
           Boolean(a.fastHengerId) &&
           erHengerUtilgjengeligPåDato(a.fastHengerId!, dato, hengerUtilgjengelig);
-        return !harFravær && !bilBlokk && !hengBlokk;
+        if (harFravær || bilBlokk || hengBlokk) return false;
+        if (reserveMap.has(a.id)) return true;
+        return ansattErTilgjengeligITurnus(a, dato, skift, overstyrtSkift);
       })
       .slice()
       .sort((a, b) => fullNavn(a).localeCompare(fullNavn(b), "nb"));
@@ -603,6 +624,7 @@ export function usePlanLogikk({
     tildelingMap,
     skiftOverstyringMap,
     skift,
+    reserveMap,
   ]);
 
   const tilgjengeligeIdSet = useMemo(
@@ -638,6 +660,11 @@ export function usePlanLogikk({
       if (avspasering.ansattIds.has(a.id) && !grunner.includes("Avspasering")) {
         grunner.push("Avspasering");
       }
+      const turnusGrunn =
+        reserveMap.has(a.id)
+          ? null
+          : turnusUtilgjengeligGrunn(a, dato, skift, skiftOverstyringMap.get(a.id));
+      if (turnusGrunn) grunner.push(turnusGrunn);
       if (grunner.length > 0) map.set(a.id, grunner.join(", "));
     }
     return map;
@@ -653,6 +680,8 @@ export function usePlanLogikk({
     blokkerteAvFlerdagsruter,
     sjåførerPåMotsattSkift,
     avspasering,
+    skiftOverstyringMap,
+    reserveMap,
   ]);
 
   const filtrerteAnsatte = useMemo(() => {
@@ -770,6 +799,7 @@ export function usePlanLogikk({
     uke,
     dayNo,
     skiftOverstyringMap,
+    reserveMap,
     effektiveRuter,
     tildelingMap,
     ansattById,

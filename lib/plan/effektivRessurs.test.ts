@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Ansatt, DagEndring, MasterRuteSlot, PlanRuteTildeling } from "@/lib/domain";
 import {
   effektivRessursForSlot,
+  sjåførDragAnsattId,
   type EffektivRessursArgs,
 } from "./effektivRessurs";
 import { byggKoblingsgruppeKontekst } from "./koblingsgrupper";
@@ -58,6 +59,22 @@ function lagArgs(overrides: Partial<EffektivRessursArgs> = {}): EffektivRessursA
     ...overrides,
   };
 }
+
+describe("sjåførDragAnsattId", () => {
+  it("returnerer master-id for baseline selv når effektiv sjåfør er nullstilt", () => {
+    const ansattById = new Map([["s1", ansatt("s1")]]);
+    const slot = masterSlot({ standardSjåførAnsattId: "s1" });
+    expect(sjåførDragAnsattId("__baseline__", slot, ansattById)).toBe("s1");
+    expect(sjåførDragAnsattId("__ingen__", slot, ansattById)).toBeUndefined();
+    expect(sjåførDragAnsattId("s1", slot, ansattById)).toBe("s1");
+  });
+
+  it("returnerer undefined for inaktiv ansatt", () => {
+    const ansattById = new Map([["s1", ansatt("s1", { aktiv: false })]]);
+    const slot = masterSlot({ standardSjåførAnsattId: "s1" });
+    expect(sjåførDragAnsattId("__baseline__", slot, ansattById)).toBeUndefined();
+  });
+});
 
 describe("effektivRessursForSlot", () => {
   it("bruker master-sjåfør når ingen plan-tildeling finnes", () => {

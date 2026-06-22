@@ -291,3 +291,21 @@ export type SkiftTilgjengelighet = {
   skift: Skift;
   kommentar?: string;
 };
+
+/**
+ * Manuell reserve-tilgjengelighet for en dag — uten turnus-krav.
+ * Brukes når noen avtales inn som reserve uten å oppfylle vanlig turnus.
+ */
+export type ReserveTilgjengelighet = {
+  id: string;
+  ansattId: string;
+  /** Første dato (ISO yyyy-mm-dd) reserven gjelder. */
+  fraDato: string;
+  /** Siste dato (ISO). Utelatt = kun fraDato (én dag). */
+  tilDato?: string;
+  /** Skiftet reserven gjelder. */
+  skift: Skift;
+  /** HH:mm — avtalt ankomst / tilgjengelig fra. */
+  fraKl: string;
+  kommentar?: string;
+};

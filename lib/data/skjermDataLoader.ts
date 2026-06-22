@@ -11,6 +11,7 @@ import type {
   MasterRuteplan,
   PlanRuteTildeling,
   SkiftTilgjengelighet,
+  ReserveTilgjengelighet,
 } from "@/lib/domain";
 import { processMasterplanRaw } from "@/lib/masterplan/masterplanCache";
 import { byggInfoskjermOversikt, type InfoskjermOversikt } from "@/lib/plan/infoskjermOversikt";
@@ -103,6 +104,7 @@ export async function byggInfoskjermFraSky(
     dagEndringer: somListe<DagEndring>(map.get("bemanning.dagendring.v1")),
     tildelinger: somListe<PlanRuteTildeling>(map.get("bemanning.planRuteTildeling.v2")),
     skiftTilgjengelighet: somListe<SkiftTilgjengelighet>(map.get("bemanning.skiftTilgjengelighet.v1")),
+    reserveTilgjengelighet: somListe<ReserveTilgjengelighet>(map.get("bemanning.reserveTilgjengelighet.v1")),
     bilUtilgjengelig: somListe<BilUtilgjengelig>(map.get("bemanning.bilUtilgjengelig.v1")),
     hengerUtilgjengelig: somListe<HengerUtilgjengelig>(map.get("bemanning.hengerUtilgjengelig.v1")),
     biler: somListe<Bil>(map.get("bemanning.biler.v1")),

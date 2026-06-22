@@ -22,6 +22,7 @@ import { useHengerUtilgjengeligStore } from "@/lib/state/hengerUtilgjengeligStor
 import { useMasterplanStore } from "@/lib/state/masterplanStore";
 import { usePlanRuteTildelingStore } from "@/lib/state/planRuteTildelingStore";
 import { useSkiftTilgjengelighetStore } from "@/lib/state/skiftTilgjengelighetStore";
+import { useReserveTilgjengelighetStore } from "@/lib/state/reserveTilgjengelighetStore";
 import styles from "./page.module.css";
 
 function addDays(iso: string, delta: number): string {
@@ -61,6 +62,12 @@ function SkiftPanel({ blokk }: { blokk: InfoskjermSkiftBlokk }) {
             <li key={r.id} className={styles.tilgjengeligRad}>
               <span className={styles.tilgjengeligNavn}>
                 {r.navn}
+                {r.erReserve ? (
+                  <span className={styles.reserveMerke} title="Manuell reserve">
+                    {" "}
+                    R
+                  </span>
+                ) : null}
                 {r.harDagKommentar ? (
                   <span className={styles.stjerne} title="Merknad i bemanningsplan">
                     {" "}
@@ -92,6 +99,7 @@ export default function Home() {
   const { poster: bilUtilgjengelig } = useBilUtilgjengeligStore();
   const { poster: hengerUtilgjengelig } = useHengerUtilgjengeligStore();
   const { poster: skiftTilgjengelighet } = useSkiftTilgjengelighetStore();
+  const { poster: reserveTilgjengelighet } = useReserveTilgjengelighetStore();
   const { plan: bemanningsplan } = useBemanningsplanStore();
 
   const iDagIso = useMemo(() => isoDato(new Date()), []);
@@ -114,6 +122,7 @@ export default function Home() {
       dagEndringer,
       tildelinger,
       skiftTilgjengelighet,
+      reserveTilgjengelighet,
       bilUtilgjengelig,
       hengerUtilgjengelig,
       biler,
@@ -131,6 +140,7 @@ export default function Home() {
       dagEndringer,
       tildelinger,
       skiftTilgjengelighet,
+      reserveTilgjengelighet,
       bilUtilgjengelig,
       hengerUtilgjengelig,
       biler,

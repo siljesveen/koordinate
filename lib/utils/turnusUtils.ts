@@ -1,4 +1,4 @@
-import type { Turnus, TurnusUke } from "@/lib/domain";
+import type { Ansatt, Skift, Turnus, TurnusUke, TurnusUkedag } from "@/lib/domain";
 
 /**
  * Beregn ISO-ukenummer for en dato.
@@ -38,6 +38,66 @@ export function aktivTurnusUke(turnus: Turnus, dato: string): TurnusUke {
 export function ukedagNummer(dato: string): "1" | "2" | "3" | "4" | "5" | "6" | "7" {
   const dag = new Date(dato).getDay();
   return (dag === 0 ? 7 : dag).toString() as "1" | "2" | "3" | "4" | "5" | "6" | "7";
+}
+
+/** Arbeidstid i aktiv turnus-uke for gitt kalenderdag, eller undefined. */
+export function turnusDagInfo(turnus: Turnus, dato: string): TurnusUkedag | undefined {
+  const uke = aktivTurnusUke(turnus, dato);
+  return uke.dager[ukedagNummer(dato)];
+}
+
+/** Om ansatt har registrert arbeidstid i turnus på gitt dato. */
+export function ansattHarTurnusArbeidstidPåDag(
+  ansatt: Pick<Ansatt, "turnus">,
+  dato: string,
+): boolean {
+  if (!ansatt.turnus) return false;
+  return Boolean(turnusDagInfo(ansatt.turnus, dato));
+}
+
+/** Effektivt skift fra turnus (med evt. plan-overstyring). */
+export function ansattTurnusSkiftPåDato(
+  ansatt: Pick<Ansatt, "turnus">,
+  dato: string,
+  skiftOverstyring?: Skift,
+): Skift | undefined {
+  if (!ansatt.turnus) return undefined;
+  if (skiftOverstyring) return skiftOverstyring;
+  return aktivTurnusUke(ansatt.turnus, dato).skift;
+}
+
+/**
+ * Om ansatt skal vises i «tilgjengelige» ut fra turnus:
+ * må ha timer den dagen og matche planlagt skift (evt. overstyrt skift).
+ */
+export function ansattErTilgjengeligITurnus(
+  ansatt: Pick<Ansatt, "turnus">,
+  dato: string,
+  planSkift: Skift,
+  skiftOverstyring?: Skift,
+): boolean {
+  if (!ansattHarTurnusArbeidstidPåDag(ansatt, dato)) return false;
+  const effektivSkift = ansattTurnusSkiftPåDato(ansatt, dato, skiftOverstyring);
+  return effektivSkift === planSkift;
+}
+
+/** Forklaring når turnus hindrer visning i tilgjengelige-listen. */
+export function turnusUtilgjengeligGrunn(
+  ansatt: Pick<Ansatt, "turnus">,
+  dato: string,
+  planSkift: Skift,
+  skiftOverstyring?: Skift,
+): string | null {
+  if (!ansatt.turnus) return "Ingen turnus";
+  if (!ansattHarTurnusArbeidstidPåDag(ansatt, dato)) return "Fri i turnus";
+  const turnusSkift = aktivTurnusUke(ansatt.turnus, dato).skift;
+  const effektiv = skiftOverstyring ?? turnusSkift;
+  if (effektiv !== planSkift) {
+    return skiftOverstyring
+      ? `Overstyrt til ${skiftOverstyring.toLowerCase()}`
+      : `Turnus: ${turnusSkift.toLowerCase()}`;
+  }
+  return null;
 }
 
 /**

@@ -46,6 +46,7 @@ export type PlanRuteRadLogikk = {
   bilValgbareForRute: (rute: string) => PlanKjoretoyItem[];
   hengerValgbareForRute: (rute: string) => PlanKjoretoyItem[];
   sjåførSelectVerdi: (til: PlanRuteTildeling | undefined, slot: MasterRuteSlot) => string;
+  sjåførDragAnsattIdForRute: (selectVal: string, slot: MasterRuteSlot) => string | undefined;
   sjåførVisningNavn: (
     selectValue: string,
     res: EffektivRessurs,
@@ -172,6 +173,7 @@ export default function PlanRuteRad({
     bilValgbareForRute,
     hengerValgbareForRute,
     sjåførSelectVerdi,
+    sjåførDragAnsattIdForRute,
     sjåførVisningNavn,
     masterSjåførFraværInfo,
     bilErLedigForRute,
@@ -254,6 +256,7 @@ export default function PlanRuteRad({
   const bilValgbare = bilValgbareForRute(slot.rutekode);
   const hengerValgbare = hengerValgbareForRute(slot.rutekode);
   const sjåførSelect = sjåførSelectVerdi(til, slot);
+  const sjåførDragId = sjåførDragAnsattIdForRute(sjåførSelect, slot);
   const masterSjåførFravær = masterSjåførFraværInfo(slot, til);
 
   return (
@@ -306,7 +309,7 @@ export default function PlanRuteRad({
               masterSjåførFravær.påFravær ? masterSjåførFravær.grunn : undefined
             }
             påAnnetSkift={res.sjåførPåAnnetSkift?.toLowerCase()}
-            dragAnsattId={res.sjåfør?.id}
+            dragAnsattId={sjåførDragId}
             onDragStart={(e, ansattId) =>
               handleDragStartAnsatt(e, {
                 ansattId,

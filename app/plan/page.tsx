@@ -30,7 +30,12 @@ import {
   skiftTilgjengelighetId,
   useSkiftTilgjengelighetStore,
 } from "@/lib/state/skiftTilgjengelighetStore";
+import {
+  reserveTilgjengelighetId,
+  useReserveTilgjengelighetStore,
+} from "@/lib/state/reserveTilgjengelighetStore";
 import PlanSkiftMenu from "./PlanSkiftMenu";
+import PlanReserveMenu from "./PlanReserveMenu";
 import DagsFraværOversiktModal from "./DagsFraværOversiktModal";
 import { type PlanSjåførVelg } from "./PlanSjåførVelger";
 import { sorterRutekoder } from "@/lib/utils/sort";
@@ -40,6 +45,7 @@ import { finnSjåførRuterPåDag } from "@/lib/plan/avspasering";
 import { fraværForAnsattPåDato } from "@/lib/plan/fraværPlan";
 import { isoDato, overlapperDato, parseISODateInput, type PlanSkift } from "./planPageUtils";
 import { usePlanLogikk } from "./usePlanLogikk";
+import { reserveTilgjengeligTekst } from "@/lib/plan/reserveTilgjengelighet";
 import styles from "./page.module.css";
 
 const DRAG_MIME = "application/x-bemanning-plan-ansatt";
@@ -65,6 +71,11 @@ export default function PlanPage() {
     lagre: lagreSkiftTilgjengelighet,
     fjern: fjernSkiftTilgjengelighet,
   } = useSkiftTilgjengelighetStore();
+  const {
+    poster: reserveTilgjengelighet,
+    lagre: lagreReserveTilgjengelighet,
+    fjern: fjernReserveTilgjengelighet,
+  } = useReserveTilgjengelighetStore();
   const [leggTilRuteInput, setLeggTilRuteInput] = useState("");
   const [modulSøk, setModulSøk] = useModulSøkFraUrl();
   const [sjåførSøk, setSjåførSøk] = useState("");
@@ -79,6 +90,7 @@ export default function PlanPage() {
     uke,
     dayNo,
     skiftOverstyringMap,
+    reserveMap,
     effektiveRuter,
     tildelingMap,
     ansattNavnById,
@@ -113,6 +125,7 @@ export default function PlanPage() {
     planHarBilTildelt,
     planHarHengerTildelt,
     sjåførSelectVerdi,
+    sjåførDragAnsattIdForRute,
     sjåførVisningNavn,
     masterSjåførFraværInfo,
     bilErLedigForRute,
@@ -136,6 +149,7 @@ export default function PlanPage() {
     masterplan,
     dagEndringer,
     skiftTilgjengelighet,
+    reserveTilgjengelighet,
   });
 
   function settSkiftForAnsatt(
@@ -173,6 +187,21 @@ export default function PlanPage() {
       const dekker = p.tilDato ? dato >= p.fraDato && dato <= p.tilDato : dato === p.fraDato;
       if (dekker) fjernSkiftTilgjengelighet(p.id);
     }
+  }
+
+  function settReserveForAnsatt(ansattId: string, fraKl: string) {
+    lagreReserveTilgjengelighet({
+      id: reserveTilgjengelighetId(ansattId, dato, skift as Skift),
+      ansattId,
+      fraDato: dato,
+      skift: skift as Skift,
+      fraKl,
+    });
+  }
+
+  function fjernReserveForAnsatt(ansattId: string) {
+    const post = reserveMap.get(ansattId);
+    if (post) fjernReserveTilgjengelighet(post.id);
   }
 
   useEffect(() => {
@@ -350,6 +379,11 @@ export default function PlanPage() {
   function handleDragOverSlot(e: DragEvent) {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+  }
+
+  function handleDragLeaveSection(e: DragEvent, clear: () => void) {
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    clear();
   }
 
   async function applySjåførOnRute(
@@ -583,6 +617,7 @@ export default function PlanPage() {
       bilValgbareForRute,
       hengerValgbareForRute,
       sjåførSelectVerdi,
+      sjåførDragAnsattIdForRute,
       sjåførVisningNavn,
       masterSjåførFraværInfo,
       bilErLedigForRute,
@@ -607,6 +642,7 @@ export default function PlanPage() {
       bilValgbareForRute,
       hengerValgbareForRute,
       sjåførSelectVerdi,
+      sjåførDragAnsattIdForRute,
       sjåførVisningNavn,
       masterSjåførFraværInfo,
       bilErLedigForRute,
@@ -822,7 +858,7 @@ export default function PlanPage() {
             <div
               className={`${styles.tilgjengeligSection} ${draOverTilgjengelig ? styles.tilgjengeligDragOver : ""}`}
               onDragOver={(e) => { handleDragOverSlot(e); setDraOverTilgjengelig(true); }}
-              onDragLeave={() => setDraOverTilgjengelig(false)}
+              onDragLeave={(e) => handleDragLeaveSection(e, () => setDraOverTilgjengelig(false))}
               onDrop={(e) => { handleDropFjernSjåfør(e); setDraOverTilgjengelig(false); }}
             >
               <div className={styles.sectionLabel}>Tilgjengelige ({tilgjengeligeAnsatte.length})</div>
@@ -834,18 +870,34 @@ export default function PlanPage() {
                 placeholder="Søk sjåfør…"
                 aria-label="Søk blant tilgjengelige sjåfører"
               />
-              <div
-                className={styles.driverList}
-              >
-                {filtrerteAnsatte.tilgjengelige.map((a) => (
+              <div className={styles.driverList}>
+                {filtrerteAnsatte.tilgjengelige.map((a) => {
+                  const reserve = reserveMap.get(a.id);
+                  return (
                   <div
                     key={a.id}
-                    className={styles.driverRow}
+                    className={`${styles.driverRow}${reserve ? ` ${styles.driverRowReserve}` : ""}`}
                     draggable
                     onDragStart={(e) => handleDragStartAnsatt(e, { ansattId: a.id })}
-                    title={`Dra ${fullNavn(a)} til en rute`}
+                    title={
+                      reserve
+                        ? `Dra ${fullNavn(a)} til en rute — ${reserveTilgjengeligTekst(reserve.fraKl)}`
+                        : `Dra ${fullNavn(a)} til en rute`
+                    }
                   >
-                    <span className={styles.driverName}>{fullNavn(a)}</span>
+                    <span className={styles.driverName}>
+                      {fullNavn(a)}
+                      {reserve ? (
+                        <span className={styles.reserveBadge}>{reserve.fraKl}</span>
+                      ) : null}
+                    </span>
+                    <PlanReserveMenu
+                      navn={fullNavn(a)}
+                      skift={skift as Skift}
+                      reserve={reserve ? { fraKl: reserve.fraKl } : undefined}
+                      onSett={(kl) => settReserveForAnsatt(a.id, kl)}
+                      onFjern={() => fjernReserveForAnsatt(a.id)}
+                    />
                     <PlanSkiftMenu
                       navn={fullNavn(a)}
                       overstyrtSkift={skiftOverstyringMap.get(a.id)}
@@ -853,7 +905,8 @@ export default function PlanPage() {
                       onFjern={() => fjernSkiftForAnsatt(a.id)}
                     />
                   </div>
-                ))}
+                );
+                })}
                 {filtrerteAnsatte.utilgjengelige.length > 0 && (
                   <>
                     <div className={styles.driverDivider}>Utilgjengelige</div>
@@ -867,6 +920,13 @@ export default function PlanPage() {
                       >
                         <span className={styles.driverName}>{fullNavn(a)}</span>
                         <span className={styles.driverGrunn}>{a.grunn}</span>
+                        <PlanReserveMenu
+                          navn={fullNavn(a)}
+                          skift={skift as Skift}
+                          reserve={reserveMap.get(a.id) ? { fraKl: reserveMap.get(a.id)!.fraKl } : undefined}
+                          onSett={(kl) => settReserveForAnsatt(a.id, kl)}
+                          onFjern={() => fjernReserveForAnsatt(a.id)}
+                        />
                         <PlanSkiftMenu
                           navn={fullNavn(a)}
                           overstyrtSkift={skiftOverstyringMap.get(a.id)}
@@ -888,7 +948,13 @@ export default function PlanPage() {
 
             <hr className={styles.divider} />
 
-            <div className={styles.avspaseringSection}>
+            <div
+              className={`${styles.avspaseringSection} ${draOverAvspasering ? styles.avspaseringDragOver : ""}`}
+              onDragOver={(e) => { handleDragOverSlot(e); setDraOverAvspasering(true); }}
+              onDragLeave={(e) => handleDragLeaveSection(e, () => setDraOverAvspasering(false))}
+              onDrop={(e) => { handleDropRegistrerAvspasering(e); setDraOverAvspasering(false); }}
+              aria-label="Avspasering"
+            >
               <button
                 type="button"
                 className={styles.avspaseringToggle}
@@ -903,14 +969,6 @@ export default function PlanPage() {
                 </span>
               </button>
 
-              <div
-                className={`${styles.avspaseringDropSection} ${draOverAvspasering ? styles.avspaseringDragOver : ""}`}
-                onDragOver={(e) => { handleDragOverSlot(e); setDraOverAvspasering(true); }}
-                onDragLeave={() => setDraOverAvspasering(false)}
-                onDrop={(e) => { handleDropRegistrerAvspasering(e); setDraOverAvspasering(false); }}
-                aria-label="Avspasering"
-              />
-
               {visAvspasering && avspasering.entries.length > 0 && (
                 <div id="plan-avspasering-liste" className={styles.avspaseringList}>
                   {avspasering.entries.map((e) => (
@@ -924,7 +982,13 @@ export default function PlanPage() {
 
             <hr className={styles.divider} />
 
-            <div className={styles.fraværBlock}>
+            <div
+              className={`${styles.fraværBlock} ${draOverFravær ? styles.fraværDragOver : ""}`}
+              onDragOver={(e) => { handleDragOverSlot(e); setDraOverFravær(true); }}
+              onDragLeave={(e) => handleDragLeaveSection(e, () => setDraOverFravær(false))}
+              onDrop={(e) => { handleDropRegistrerFravær(e); setDraOverFravær(false); }}
+              aria-label="Fravær"
+            >
               <button
                 type="button"
                 className={styles.avspaseringToggle}
@@ -938,14 +1002,6 @@ export default function PlanPage() {
                   {visFravær ? "▾" : "▸"}
                 </span>
               </button>
-
-              <div
-                className={`${styles.fraværDropSection} ${draOverFravær ? styles.fraværDragOver : ""}`}
-                onDragOver={(e) => { handleDragOverSlot(e); setDraOverFravær(true); }}
-                onDragLeave={() => setDraOverFravær(false)}
-                onDrop={(e) => { handleDropRegistrerFravær(e); setDraOverFravær(false); }}
-                aria-label="Fravær"
-              />
 
               {visFravær && fraværPåDato.length > 0 && (
                 <div id="plan-fravær-liste" className={styles.avspaseringList}>

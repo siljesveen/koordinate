@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { Turnus } from "@/lib/domain";
-import { aktivTurnusUke, ukedagNummer } from "./turnusUtils";
+import type { Ansatt, Turnus } from "@/lib/domain";
+import {
+  aktivTurnusUke,
+  ansattErTilgjengeligITurnus,
+  ansattHarTurnusArbeidstidPåDag,
+  turnusUtilgjengeligGrunn,
+  ukedagNummer,
+} from "./turnusUtils";
 
 const turnus: Turnus = {
   referanseDato: "2026-06-16",
@@ -32,5 +38,56 @@ describe("aktivTurnusUke", () => {
       uke1: { skift: "Dag", dager: {} },
     };
     expect(aktivTurnusUke(utenUke2, "2026-06-16")).toBe(utenUke2.uke1);
+  });
+});
+
+const ansattMedTurnus = (turnus: Turnus): Ansatt => ({
+  id: "a1",
+  fornavn: "Test",
+  etternavn: "Sjåfør",
+  telefon: "",
+  epost: "",
+  rolle: "",
+  avdeling: "",
+  stillingsprosent: 100,
+  kompetanse: [],
+  førerkort: [],
+  aktiv: true,
+  turnus,
+});
+
+describe("ansattHarTurnusArbeidstidPåDag", () => {
+  it("returnerer true når dagen har timer", () => {
+    expect(ansattHarTurnusArbeidstidPåDag(ansattMedTurnus(turnus), "2026-06-15")).toBe(true);
+  });
+
+  it("returnerer false uten turnus eller fri dag", () => {
+    expect(ansattHarTurnusArbeidstidPåDag({ turnus: undefined }, "2026-06-15")).toBe(false);
+    expect(ansattHarTurnusArbeidstidPåDag(ansattMedTurnus(turnus), "2026-06-16")).toBe(false);
+  });
+});
+
+describe("ansattErTilgjengeligITurnus", () => {
+  it("krever timer og matchende skift", () => {
+    const a = ansattMedTurnus(turnus);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-22", "Dag")).toBe(true);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-15", "Kveld")).toBe(true);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-15", "Dag")).toBe(false);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-16", "Kveld")).toBe(false);
+  });
+
+  it("bruker skift-overstyring", () => {
+    const a = ansattMedTurnus(turnus);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-22", "Kveld", "Kveld")).toBe(true);
+  });
+});
+
+describe("turnusUtilgjengeligGrunn", () => {
+  it("forklarer manglende turnus, fri dag og feil skift", () => {
+    const a = ansattMedTurnus(turnus);
+    expect(turnusUtilgjengeligGrunn({ turnus: undefined }, "2026-06-15", "Dag")).toBe("Ingen turnus");
+    expect(turnusUtilgjengeligGrunn(a, "2026-06-16", "Kveld")).toBe("Fri i turnus");
+    expect(turnusUtilgjengeligGrunn(a, "2026-06-15", "Dag")).toBe("Turnus: kveld");
+    expect(turnusUtilgjengeligGrunn(a, "2026-06-22", "Dag")).toBeNull();
   });
 });

@@ -155,6 +155,18 @@ export default function PlanSjåførVelger({
       ? `Sjåfør flyttet til ${påAnnetSkift}`
       : undefined;
 
+  const kanDra = Boolean(dragAnsattId);
+
+  const dragTittel = kanDra
+    ? sjåførHarFravær || masterPåFravær
+      ? "Dra — har fravær"
+      : påAnnetSkift
+        ? `Dra — flyttet til ${påAnnetSkift}`
+        : sjåførFraMaster
+          ? "Dra — fra master"
+          : "Dra til annen rute eller drop-sone"
+    : masterFraværTittel;
+
   useEffect(() => {
     if (!åpen) return;
     const t = window.setTimeout(() => søkRef.current?.focus(), 0);
@@ -256,24 +268,16 @@ export default function PlanSjåførVelger({
   return (
     <div className={styles.kjoretoyCombo} ref={rotRef}>
       <div
-        className={`${styles.kjoretoyComboTrigger} ${styles.sjåførComboTrigger} ${åpen ? styles.kjoretoyComboTriggerOpen : ""} ${visningFraMaster ? styles.kjoretoyComboTriggerMaster : ""} ${valgtViserAdvarsel ? styles.kjoretoyComboTriggerMasterWarn : ""}`}
-        title={masterFraværTittel ?? (visningFraMaster ? "Sjåfør fra masterplan" : undefined)}
+        className={`${styles.kjoretoyComboTrigger} ${styles.sjåførComboTrigger} ${åpen ? styles.kjoretoyComboTriggerOpen : ""} ${visningFraMaster ? styles.kjoretoyComboTriggerMaster : ""} ${valgtViserAdvarsel ? styles.kjoretoyComboTriggerMasterWarn : ""} ${kanDra ? styles.dragChip : ""}`}
+        title={dragTittel ?? (visningFraMaster ? "Sjåfør fra masterplan" : undefined)}
+        draggable={kanDra}
+        onDragStart={(e) => {
+          if (!dragAnsattId) return;
+          onDragStart(e, dragAnsattId);
+        }}
       >
         <span
-          className={`${styles.kjoretoyComboValue} ${styles.sjåførComboValue} ${visningFraMaster ? styles.kjoretoyComboValueMaster : ""} ${dragAnsattId ? styles.dragChip : ""}`}
-          draggable={Boolean(dragAnsattId)}
-          onDragStart={(e) => {
-            if (dragAnsattId) onDragStart(e, dragAnsattId);
-          }}
-          title={
-            dragAnsattId
-              ? sjåførHarFravær
-                ? "Dra — har fravær (manuelt innsatt)"
-                : sjåførFraMaster
-                  ? "Dra — fra master"
-                  : "Dra til annen rute"
-              : masterFraværTittel
-          }
+          className={`${styles.kjoretoyComboValue} ${styles.sjåførComboValue} ${visningFraMaster ? styles.kjoretoyComboValueMaster : ""}`}
         >
           <span className={styles.sjåførComboNavn}>{visningNavn}</span>
           {påAnnetSkift && (
@@ -286,6 +290,8 @@ export default function PlanSjåførVelger({
           aria-haspopup="listbox"
           aria-expanded={åpen}
           aria-label={ariaLabel}
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
           onClick={() => setÅpen((o) => !o)}
         >
           <span className={styles.kjoretoyComboChevron} aria-hidden>
