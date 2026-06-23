@@ -181,9 +181,36 @@
 .layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 260px;
+  grid-template-columns: 1fr 6px 280px;
   overflow: hidden;
   min-height: 0;
+}
+
+.resizeHandleColumn {
+  cursor: col-resize;
+  background: var(--border);
+  transition: background 0.15s;
+  touch-action: none;
+}
+
+.resizeHandleColumn:hover,
+.resizeHandleColumn:active {
+  background: var(--brand-primary);
+}
+
+.resizeHandleRow {
+  flex-shrink: 0;
+  height: 6px;
+  cursor: row-resize;
+  background: var(--border);
+  border-radius: 3px;
+  margin: 0.1rem 0;
+  touch-action: none;
+}
+
+.resizeHandleRow:hover,
+.resizeHandleRow:active {
+  background: var(--brand-primary);
 }
 
 /* ── Rutetabell (venstre) ── */
@@ -648,6 +675,34 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  min-width: 0;
+}
+
+.sidebarPanels {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0.4rem 0.5rem;
+  gap: 0;
+}
+
+.sidebarPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebarRest {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
 }
 
 .sidebarInner {
@@ -687,7 +742,7 @@
   flex-direction: column;
   gap: 0.25rem;
   min-height: 0;
-  flex: 1;
+  flex-shrink: 0;
   border-radius: 0.4rem;
   border: 2px solid transparent;
   padding: 0.2rem;
@@ -706,7 +761,8 @@
   border-radius: 0.4rem;
   border: 2px solid transparent;
   padding: 0.2rem;
-  min-height: 2.25rem;
+  min-height: 0;
+  flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s;
 }
 
@@ -722,7 +778,8 @@
   border-radius: 0.4rem;
   border: 2px solid transparent;
   padding: 0.2rem;
-  min-height: 2.25rem;
+  min-height: 0;
+  flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s;
 }
 
@@ -739,6 +796,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .avspaseringToggle:hover {
@@ -756,7 +814,8 @@
   border-radius: 0.35rem;
   border: 1px solid var(--border);
   background: var(--background-subtle);
-  max-height: 8rem;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -834,12 +893,29 @@
 
 .driverRow {
   display: flex;
-  align-items: center;
-  padding: 0.2rem 0.4rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.12rem;
+  padding: 0.25rem 0.4rem;
   cursor: grab;
   user-select: none;
   border: 1px solid var(--border);
   transition: background 0.1s;
+}
+
+.driverRowTop {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.driverRowActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-left: auto;
 }
 
 .driverRow:last-child {
@@ -907,12 +983,15 @@
 }
 
 .driverGrunn {
+  display: block;
+  width: 100%;
   font-size: 0.6rem;
   font-weight: 600;
   color: #ef4444;
   white-space: nowrap;
-  flex-shrink: 0;
-  margin-left: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 0.05rem;
 }
 
 .tag {

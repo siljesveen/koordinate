@@ -46,6 +46,8 @@ import { fraværForAnsattPåDato } from "@/lib/plan/fraværPlan";
 import { isoDato, overlapperDato, parseISODateInput, type PlanSkift } from "./planPageUtils";
 import { usePlanLogikk } from "./usePlanLogikk";
 import { reserveTilgjengeligTekst } from "@/lib/plan/reserveTilgjengelighet";
+import PlanResizeHandle from "./PlanResizeHandle";
+import { usePlanPanelResize } from "./usePlanPanelResize";
 import styles from "./page.module.css";
 
 const DRAG_MIME = "application/x-bemanning-plan-ansatt";
@@ -85,6 +87,7 @@ export default function PlanPage() {
   const [visAvspasering, setVisAvspasering] = useState(false);
   const [visFravær, setVisFravær] = useState(false);
   const [visDagsoversikt, setVisDagsoversikt] = useState(false);
+  const { sizes: panelSizes, startResize: startPanelResize } = usePlanPanelResize();
 
   const {
     uke,
@@ -777,7 +780,10 @@ export default function PlanPage() {
       </div>
 
       {/* ── Hovedområde ── */}
-      <div className={styles.layout}>
+      <div
+        className={styles.layout}
+        style={{ gridTemplateColumns: `1fr 6px ${panelSizes.sidebarWidth}px` }}
+      >
         {/* ── Tabell (venstre) ── */}
         <div className={styles.tableArea}>
           <table className={styles.table}>
@@ -851,12 +857,19 @@ export default function PlanPage() {
           </div>
         </div>
 
+        <PlanResizeHandle
+          direction="column"
+          label="Juster bredde på sidepanel"
+          onPointerDown={(e) => startPanelResize("sidebarWidth", e)}
+        />
+
         {/* ── Sidebar (høyre) ── */}
         <aside className={styles.sidebar}>
-          <div className={styles.sidebarInner}>
+          <div className={styles.sidebarPanels}>
             {/* Tilgjengelige */}
             <div
-              className={`${styles.tilgjengeligSection} ${draOverTilgjengelig ? styles.tilgjengeligDragOver : ""}`}
+              className={`${styles.tilgjengeligSection} ${styles.sidebarPanel} ${draOverTilgjengelig ? styles.tilgjengeligDragOver : ""}`}
+              style={{ height: panelSizes.tilgjengeligH }}
               onDragOver={(e) => { handleDragOverSlot(e); setDraOverTilgjengelig(true); }}
               onDragLeave={(e) => handleDragLeaveSection(e, () => setDraOverTilgjengelig(false))}
               onDrop={(e) => { handleDropFjernSjåfør(e); setDraOverTilgjengelig(false); }}
@@ -885,25 +898,29 @@ export default function PlanPage() {
                         : `Dra ${fullNavn(a)} til en rute`
                     }
                   >
-                    <span className={styles.driverName}>
-                      {fullNavn(a)}
-                      {reserve ? (
-                        <span className={styles.reserveBadge}>{reserve.fraKl}</span>
-                      ) : null}
-                    </span>
-                    <PlanReserveMenu
-                      navn={fullNavn(a)}
-                      skift={skift as Skift}
-                      reserve={reserve ? { fraKl: reserve.fraKl } : undefined}
-                      onSett={(kl) => settReserveForAnsatt(a.id, kl)}
-                      onFjern={() => fjernReserveForAnsatt(a.id)}
-                    />
-                    <PlanSkiftMenu
-                      navn={fullNavn(a)}
-                      overstyrtSkift={skiftOverstyringMap.get(a.id)}
-                      onSett={(s, omfang) => settSkiftForAnsatt(a.id, s, omfang)}
-                      onFjern={() => fjernSkiftForAnsatt(a.id)}
-                    />
+                    <div className={styles.driverRowTop}>
+                      <span className={styles.driverName}>
+                        {fullNavn(a)}
+                        {reserve ? (
+                          <span className={styles.reserveBadge}>{reserve.fraKl}</span>
+                        ) : null}
+                      </span>
+                      <div className={styles.driverRowActions}>
+                        <PlanReserveMenu
+                          navn={fullNavn(a)}
+                          skift={skift as Skift}
+                          reserve={reserve ? { fraKl: reserve.fraKl } : undefined}
+                          onSett={(kl) => settReserveForAnsatt(a.id, kl)}
+                          onFjern={() => fjernReserveForAnsatt(a.id)}
+                        />
+                        <PlanSkiftMenu
+                          navn={fullNavn(a)}
+                          overstyrtSkift={skiftOverstyringMap.get(a.id)}
+                          onSett={(s, omfang) => settSkiftForAnsatt(a.id, s, omfang)}
+                          onFjern={() => fjernSkiftForAnsatt(a.id)}
+                        />
+                      </div>
+                    </div>
                   </div>
                 );
                 })}
@@ -918,21 +935,27 @@ export default function PlanPage() {
                         onDragStart={(e) => handleDragStartAnsatt(e, { ansattId: a.id })}
                         title={`${fullNavn(a)} — ${a.grunn}`}
                       >
-                        <span className={styles.driverName}>{fullNavn(a)}</span>
-                        <span className={styles.driverGrunn}>{a.grunn}</span>
-                        <PlanReserveMenu
-                          navn={fullNavn(a)}
-                          skift={skift as Skift}
-                          reserve={reserveMap.get(a.id) ? { fraKl: reserveMap.get(a.id)!.fraKl } : undefined}
-                          onSett={(kl) => settReserveForAnsatt(a.id, kl)}
-                          onFjern={() => fjernReserveForAnsatt(a.id)}
-                        />
-                        <PlanSkiftMenu
-                          navn={fullNavn(a)}
-                          overstyrtSkift={skiftOverstyringMap.get(a.id)}
-                          onSett={(s, omfang) => settSkiftForAnsatt(a.id, s, omfang)}
-                          onFjern={() => fjernSkiftForAnsatt(a.id)}
-                        />
+                        <div className={styles.driverRowTop}>
+                          <span className={styles.driverName}>{fullNavn(a)}</span>
+                          <div className={styles.driverRowActions}>
+                            <PlanReserveMenu
+                              navn={fullNavn(a)}
+                              skift={skift as Skift}
+                              reserve={reserveMap.get(a.id) ? { fraKl: reserveMap.get(a.id)!.fraKl } : undefined}
+                              onSett={(kl) => settReserveForAnsatt(a.id, kl)}
+                              onFjern={() => fjernReserveForAnsatt(a.id)}
+                            />
+                            <PlanSkiftMenu
+                              navn={fullNavn(a)}
+                              overstyrtSkift={skiftOverstyringMap.get(a.id)}
+                              onSett={(s, omfang) => settSkiftForAnsatt(a.id, s, omfang)}
+                              onFjern={() => fjernSkiftForAnsatt(a.id)}
+                            />
+                          </div>
+                        </div>
+                        <span className={styles.driverGrunn} title={a.grunn}>
+                          {a.grunn}
+                        </span>
                       </div>
                     ))}
                   </>
@@ -946,10 +969,15 @@ export default function PlanPage() {
               </div>
             </div>
 
-            <hr className={styles.divider} />
+            <PlanResizeHandle
+              direction="row"
+              label="Juster høyde på tilgjengelige"
+              onPointerDown={(e) => startPanelResize("tilgjengeligH", e)}
+            />
 
             <div
-              className={`${styles.avspaseringSection} ${draOverAvspasering ? styles.avspaseringDragOver : ""}`}
+              className={`${styles.avspaseringSection} ${styles.sidebarPanel} ${draOverAvspasering ? styles.avspaseringDragOver : ""}`}
+              style={{ height: panelSizes.avspaseringH }}
               onDragOver={(e) => { handleDragOverSlot(e); setDraOverAvspasering(true); }}
               onDragLeave={(e) => handleDragLeaveSection(e, () => setDraOverAvspasering(false))}
               onDrop={(e) => { handleDropRegistrerAvspasering(e); setDraOverAvspasering(false); }}
@@ -980,10 +1008,15 @@ export default function PlanPage() {
               )}
             </div>
 
-            <hr className={styles.divider} />
+            <PlanResizeHandle
+              direction="row"
+              label="Juster høyde på avspasering"
+              onPointerDown={(e) => startPanelResize("avspaseringH", e)}
+            />
 
             <div
-              className={`${styles.fraværBlock} ${draOverFravær ? styles.fraværDragOver : ""}`}
+              className={`${styles.fraværBlock} ${styles.sidebarPanel} ${draOverFravær ? styles.fraværDragOver : ""}`}
+              style={{ height: panelSizes.fraværH }}
               onDragOver={(e) => { handleDragOverSlot(e); setDraOverFravær(true); }}
               onDragLeave={(e) => handleDragLeaveSection(e, () => setDraOverFravær(false))}
               onDrop={(e) => { handleDropRegistrerFravær(e); setDraOverFravær(false); }}
@@ -1017,9 +1050,13 @@ export default function PlanPage() {
               )}
             </div>
 
-            <hr className={styles.divider} />
+            <PlanResizeHandle
+              direction="row"
+              label="Juster høyde på fravær"
+              onPointerDown={(e) => startPanelResize("fraværH", e)}
+            />
 
-            {/* Fjernede ruter */}
+            <div className={styles.sidebarRest}>
             {fjernedeRuterForDag.length > 0 && (
               <div>
                 <div className={styles.sectionLabel}>Fjernet i dag ({fjernedeRuterForDag.length})</div>
@@ -1071,6 +1108,7 @@ export default function PlanPage() {
               </div>
             )}
 
+            </div>
           </div>
         </aside>
       </div>
