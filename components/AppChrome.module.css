@@ -1,8 +1,0 @@
-.statusHeader {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-chrome);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-}

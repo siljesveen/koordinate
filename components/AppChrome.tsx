@@ -1,10 +1,7 @@
 "use client";
 
 import TopNav from "@/app/TopNav";
-import AppTransientBanner from "@/components/AppTransientBanner";
-import DevDataStatus from "@/components/DevDataStatus";
 import { usePathname } from "next/navigation";
-import styles from "./AppChrome.module.css";
 
 const HIDE_NAV_PREFIXES = ["/login", "/auth", "/skjerm"];
 
@@ -16,10 +13,6 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <header className={styles.statusHeader}>
-        <DevDataStatus />
-        <AppTransientBanner />
-      </header>
       {!hideNav ? <TopNav /> : null}
       {children}
     </>
