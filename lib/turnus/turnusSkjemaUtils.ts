@@ -12,6 +12,12 @@ export const TURNUS_DAG_NAVN: Record<string, string> = {
 
 export const TURNUS_ALLE_DAGER = ["1", "2", "3", "4", "5", "6", "7"] as const;
 
+/** Bred arbeidstid for fleksible sjåfører (dekker dag- og kveldruter). */
+export const FLEKSIBEL_START_TID = "05:00";
+export const FLEKSIBEL_SLUTT_TID = "23:00";
+
+const FLEKSIBEL_HVERDAGER = new Set(["1", "2", "3", "4", "5"]);
+
 export type TurnusDagRad = {
   dagNr: string;
   aktiv: boolean;
@@ -54,6 +60,22 @@ export function standardNyTurnus(): Turnus {
   };
 }
 
+/** Aktiver man–fre med bred arbeidstid når fleksibel turnus slås på. */
+export function raderForFleksibelTurnus(rader: TurnusDagRad[]): TurnusDagRad[] {
+  const harAktive = rader.some((r) => r.aktiv);
+  return rader.map((rad) => {
+    if (rad.aktiv || (!harAktive && FLEKSIBEL_HVERDAGER.has(rad.dagNr))) {
+      return {
+        ...rad,
+        aktiv: true,
+        startTid: FLEKSIBEL_START_TID,
+        sluttTid: FLEKSIBEL_SLUTT_TID,
+      };
+    }
+    return rad;
+  });
+}
+
 export function byggTurnusFraRader(args: {
   basis?: Turnus;
   medRotasjon: boolean;
@@ -61,14 +83,19 @@ export function byggTurnusFraRader(args: {
   skift2: "Dag" | "Kveld";
   rader1: TurnusDagRad[];
   rader2: TurnusDagRad[];
+  fleksibelTilgjengelig?: boolean;
 }): Turnus {
-  return {
+  const turnus: Turnus = {
     referanseDato: args.basis?.referanseDato ?? "2026-06-16",
     aktivUkeVedReferanse: args.basis?.aktivUkeVedReferanse ?? 2,
     uke1: raderTilUke(args.rader1, args.skift1),
     uke2: args.medRotasjon ? raderTilUke(args.rader2, args.skift2) : undefined,
     kommentar: args.basis?.kommentar,
   };
+  if (args.fleksibelTilgjengelig) {
+    turnus.fleksibelTilgjengelig = true;
+  }
+  return turnus;
 }
 
 export function turnusHarArbeidsdager(turnus: Turnus): boolean {

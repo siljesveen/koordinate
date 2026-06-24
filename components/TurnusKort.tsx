@@ -36,6 +36,19 @@ export default function TurnusKort({ turnus, visUke, dagsDato }: Props) {
 
       {/* Skift-badge + aktiv-indikator */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {turnus.fleksibelTilgjengelig ? (
+          <span style={{
+            display: "inline-block",
+            padding: "3px 10px",
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 600,
+            background: "linear-gradient(90deg, #E6F1FB 0%, #EEEDFE 100%)",
+            color: "#185FA5",
+          }}>
+            Fleksibel · dag + kveld
+          </span>
+        ) : (
         <span style={{
           display: "inline-block",
           padding: "3px 10px",
@@ -47,6 +60,7 @@ export default function TurnusKort({ turnus, visUke, dagsDato }: Props) {
         }}>
           {uke.skift}skift
         </span>
+        )}
         {erAktivUke && (
           <span style={{ fontSize: 12, color: "var(--color-text-secondary)", fontStyle: "italic" }}>
             Nåværende uke
@@ -69,7 +83,9 @@ export default function TurnusKort({ turnus, visUke, dagsDato }: Props) {
               padding: "8px 4px",
               borderRadius: 8,
               background: harArbeid
-                ? erDag ? "#F0F7FF" : "#F3F2FF"
+                ? turnus.fleksibelTilgjengelig
+                  ? "linear-gradient(180deg, #F0F7FF 0%, #F3F2FF 100%)"
+                  : erDag ? "#F0F7FF" : "#F3F2FF"
                 : "var(--color-background-secondary)",
             }}>
               <span style={{

@@ -148,7 +148,13 @@ export function mergeUkeMasterplanPatch(
         standardHengerId: upd.standardHengerId,
       };
     }
-    return slotMedSjåførOgKjoretoy(medSjåfør, upd.standardSjåførAnsattId);
+    const ansatt = ansattById?.get(upd.standardSjåførAnsattId);
+    const fraAnsatt = slotMedSjåførOgKjoretoy(medSjåfør, upd.standardSjåførAnsattId, ansatt);
+    return {
+      ...fraAnsatt,
+      standardBilId: upd.standardBilId ?? fraAnsatt.standardBilId,
+      standardHengerId: upd.standardHengerId ?? fraAnsatt.standardHengerId,
+    };
   });
   return { plan: { ...plan, slots }, updated };
 }

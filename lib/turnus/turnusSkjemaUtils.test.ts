@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   byggTurnusFraRader,
+  raderForFleksibelTurnus,
   raderTilUke,
   standardNyTurnus,
   turnusHarArbeidsdager,
@@ -79,5 +80,29 @@ describe("turnusHarArbeidsdager", () => {
 
   it("returnerer true når minst én uke har dager", () => {
     expect(turnusHarArbeidsdager(standardNyTurnus())).toBe(true);
+  });
+});
+
+describe("raderForFleksibelTurnus", () => {
+  it("aktiverer man–fre med bred arbeidstid", () => {
+    const rader = raderForFleksibelTurnus(ukeTilRader(undefined));
+    expect(rader.filter((r) => r.aktiv).map((r) => r.dagNr)).toEqual(["1", "2", "3", "4", "5"]);
+    expect(rader[0].startTid).toBe("05:00");
+    expect(rader[0].sluttTid).toBe("23:00");
+  });
+});
+
+describe("byggTurnusFraRader fleksibel", () => {
+  it("lagrer fleksibelTilgjengelig på turnus", () => {
+    const turnus = byggTurnusFraRader({
+      medRotasjon: false,
+      skift1: "Dag",
+      skift2: "Kveld",
+      rader1: ukeTilRader(standardNyTurnus().uke1),
+      rader2: ukeTilRader(undefined),
+      fleksibelTilgjengelig: true,
+    });
+    expect(turnus.fleksibelTilgjengelig).toBe(true);
+    expect(turnus.uke2).toBeUndefined();
   });
 });

@@ -247,6 +247,14 @@ export default function MasterplanClient() {
     [lagreSlot],
   );
 
+  const lagreSjåførMedKjoretoy = useCallback(
+    (slotId: string, ansattId: string | undefined) => {
+      const ansatt = ansattId ? ansattById.get(ansattId) : undefined;
+      lagreSjåførForSlot(slotId, ansattId, ansatt);
+    },
+    [ansattById, lagreSjåførForSlot],
+  );
+
   const grupper = masterplan.koblingsgrupper ?? {};
 
   const ukobledeGrupper = useMemo(() => {
@@ -672,7 +680,7 @@ export default function MasterplanClient() {
                 hengerOptions={hengerVelgerValg}
                 kjoretoySøkBil={kjoretoySøkBil}
                 kjoretoySøkHenger={kjoretoySøkHenger}
-                onLagreSjåfør={lagreSjåførForSlot}
+                onLagreSjåfør={lagreSjåførMedKjoretoy}
                 onOppdaterFelt={oppdaterSlotFelt}
                 onOppdater={oppdaterSlot}
                 onSlett={bekreftSlett}

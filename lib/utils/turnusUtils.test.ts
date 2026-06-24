@@ -80,6 +80,22 @@ describe("ansattErTilgjengeligITurnus", () => {
     const a = ansattMedTurnus(turnus);
     expect(ansattErTilgjengeligITurnus(a, "2026-06-22", "Kveld", "Kveld")).toBe(true);
   });
+
+  it("fleksibel turnus er tilgjengelig på begge skift", () => {
+    const fleksibel: Turnus = {
+      referanseDato: "2026-06-16",
+      aktivUkeVedReferanse: 1,
+      fleksibelTilgjengelig: true,
+      uke1: {
+        skift: "Dag",
+        dager: { "1": { startTid: "05:00", sluttTid: "23:00" } },
+      },
+    };
+    const a = ansattMedTurnus(fleksibel);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-15", "Dag")).toBe(true);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-15", "Kveld")).toBe(true);
+    expect(ansattErTilgjengeligITurnus(a, "2026-06-15", "Dag", "Kveld")).toBe(false);
+  });
 });
 
 describe("turnusUtilgjengeligGrunn", () => {
@@ -89,5 +105,18 @@ describe("turnusUtilgjengeligGrunn", () => {
     expect(turnusUtilgjengeligGrunn(a, "2026-06-16", "Kveld")).toBe("Fri i turnus");
     expect(turnusUtilgjengeligGrunn(a, "2026-06-15", "Dag")).toBe("Turnus: kveld");
     expect(turnusUtilgjengeligGrunn(a, "2026-06-22", "Dag")).toBeNull();
+  });
+
+  it("fleksibel turnus gir ingen skift-grunn", () => {
+    const fleksibel = ansattMedTurnus({
+      referanseDato: "2026-06-16",
+      aktivUkeVedReferanse: 1,
+      fleksibelTilgjengelig: true,
+      uke1: {
+        skift: "Dag",
+        dager: { "1": { startTid: "05:00", sluttTid: "23:00" } },
+      },
+    });
+    expect(turnusUtilgjengeligGrunn(fleksibel, "2026-06-15", "Kveld")).toBeNull();
   });
 });

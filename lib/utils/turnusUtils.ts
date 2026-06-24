@@ -69,6 +69,7 @@ export function ansattTurnusSkiftPåDato(
 /**
  * Om ansatt skal vises i «tilgjengelige» ut fra turnus:
  * må ha timer den dagen og matche planlagt skift (evt. overstyrt skift).
+ * Fleksibel turnus matcher begge skift når det ikke er skift-overstyring.
  */
 export function ansattErTilgjengeligITurnus(
   ansatt: Pick<Ansatt, "turnus">,
@@ -77,7 +78,9 @@ export function ansattErTilgjengeligITurnus(
   skiftOverstyring?: Skift,
 ): boolean {
   if (!ansattHarTurnusArbeidstidPåDag(ansatt, dato)) return false;
-  const effektivSkift = ansattTurnusSkiftPåDato(ansatt, dato, skiftOverstyring);
+  if (skiftOverstyring) return skiftOverstyring === planSkift;
+  if (ansatt.turnus?.fleksibelTilgjengelig) return true;
+  const effektivSkift = ansattTurnusSkiftPåDato(ansatt, dato);
   return effektivSkift === planSkift;
 }
 
@@ -90,6 +93,7 @@ export function turnusUtilgjengeligGrunn(
 ): string | null {
   if (!ansatt.turnus) return "Ingen turnus";
   if (!ansattHarTurnusArbeidstidPåDag(ansatt, dato)) return "Fri i turnus";
+  if (ansatt.turnus.fleksibelTilgjengelig && !skiftOverstyring) return null;
   const turnusSkift = aktivTurnusUke(ansatt.turnus, dato).skift;
   const effektiv = skiftOverstyring ?? turnusSkift;
   if (effektiv !== planSkift) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { slotMedSjåførOgKjoretoy } from "@/lib/utils/masterplanKjoretoy";
+import { slotMedSjåførOgKjoretoy, backfillMasterplanKjoretoyFraAnsatte } from "@/lib/utils/masterplanKjoretoy";
 import {
   createContext,
   useCallback,
@@ -24,6 +24,10 @@ import {
 } from "@/lib/masterplan/masterplanCache";
 import { sorterRutekoder } from "@/lib/utils/sort";
 import { erUkeImportApplied, merkUkeImportApplied } from "@/lib/masterplan/ukeImportMeta";
+import {
+  erKjoretoyBackfillApplied,
+  merkKjoretoyBackfillApplied,
+} from "@/lib/masterplan/kjoretoyBackfillMeta";
 
 const STORAGE_KEY = MASTERPLAN_STORAGE_KEY as AppDataKey;
 
@@ -104,7 +108,11 @@ type MasterplanStoreValue = {
   masterplan: MasterRuteplan;
   lagreSlot: (slot: MasterRuteSlot) => void;
   oppdaterSlotFelt: (slotId: string, felt: Partial<MasterRuteSlot>) => void;
-  lagreSjåførForSlot: (slotId: string, ansattId: string | undefined) => void;
+  lagreSjåførForSlot: (
+    slotId: string,
+    ansattId: string | undefined,
+    ansatt?: Pick<Ansatt, "fastBilId" | "fastHengerId"> | null,
+  ) => void;
   slettSlot: (id: string) => void;
   lagreHel: (plan: MasterRuteplan) => void;
   koblRuter: (gruppenavn: string, rutekoder: string[], opts?: { skift?: Skift; dag?: 1|2|3|4|5|6|7 }) => void;
@@ -219,6 +227,42 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
     };
   }, [dataReady, canEditMasterdata, masterplan.slots.length]);
 
+  /** Engangs-backfill: fyll inn fast bil/henger for ruter som allerede har sjåfør. */
+  useEffect(() => {
+    if (!dataReady || !canEditMasterdata || !loadedRef.current) return;
+    if (masterplan.slots.length === 0) return;
+    if (erKjoretoyBackfillApplied()) return;
+
+    let cancelled = false;
+    const schedule =
+      typeof requestIdleCallback === "function"
+        ? (fn: () => void) => requestIdleCallback(fn, { timeout: 4000 })
+        : (fn: () => void) => window.setTimeout(fn, 50);
+    const cancelSchedule =
+      typeof cancelIdleCallback === "function"
+        ? cancelIdleCallback
+        : clearTimeout;
+
+    const idleId = schedule(() => {
+      const ansattMap = ansattMapFraLocalStorage();
+      if (ansattMap.size === 0 || cancelled) return;
+
+      patchMasterplan((plan) => {
+        const { plan: next, updated } = backfillMasterplanKjoretoyFraAnsatte(plan, ansattMap);
+        if (updated > 0) {
+          console.info(`[masterplan] Backfill kjøretøy — ${updated} ruter oppdatert.`);
+        }
+        merkKjoretoyBackfillApplied();
+        return updated > 0 ? next : plan;
+      }, canEditRef.current);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelSchedule(idleId as number);
+    };
+  }, [dataReady, canEditMasterdata, masterplan.slots.length]);
+
   const lagreSlot = useCallback((slot: MasterRuteSlot) => {
     if (!canEditRef.current) return;
     patchMasterplan((prev) => {
@@ -235,19 +279,26 @@ export function MasterplanStoreProvider({ children }: { children: React.ReactNod
     patchMasterplan((prev) => brukFeltIPlan(prev, slotId, felt), canEditRef.current);
   }, []);
 
-  const lagreSjåførForSlot = useCallback((slotId: string, ansattId: string | undefined) => {
+  const lagreSjåførForSlot = useCallback(
+    (
+      slotId: string,
+      ansattId: string | undefined,
+      ansatt?: Pick<Ansatt, "fastBilId" | "fastHengerId"> | null,
+    ) => {
     if (!canEditRef.current) return;
     patchMasterplan((prev) => {
       const slot = prev.slots.find((s) => s.id === slotId);
       if (!slot) return prev;
-      const oppdatert = slotMedSjåførOgKjoretoy(slot, ansattId);
+      const oppdatert = slotMedSjåførOgKjoretoy(slot, ansattId, ansatt);
       return brukFeltIPlan(prev, slotId, {
         standardSjåførAnsattId: oppdatert.standardSjåførAnsattId,
         standardBilId: oppdatert.standardBilId,
         standardHengerId: oppdatert.standardHengerId,
       });
     }, canEditRef.current);
-  }, []);
+  },
+    [],
+  );
 
   const slettSlot = useCallback((id: string) => {
     if (!canEditRef.current) return;

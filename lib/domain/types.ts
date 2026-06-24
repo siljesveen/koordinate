@@ -37,6 +37,11 @@ export type Turnus = {
   uke1: TurnusUke;
   /** Utelatt for sjåfører uten rotasjon */
   uke2?: TurnusUke;
+  /**
+   * Sjåfør uten fast skift — tilgjengelig både dag og kveld i plan
+   * (f.eks. sommervikarer). Krever fortsatt arbeidstid på aktuelle dager.
+   */
+  fleksibelTilgjengelig?: boolean;
   kommentar?: string;
 };
 
