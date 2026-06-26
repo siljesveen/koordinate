@@ -15,10 +15,9 @@ import {
   settPlanBinding,
   synkPlanBindinger,
 } from "@/lib/utils/bemanningsplanKobling";
-import { formatFraværKoder, formatFraværTypeOppsummering, sammenlignFraværKoder, tellFraværEtterType, tellFraværKoderForKoblede, tellFraværKoderIPlan, tellLagredeFraværDager, erGyldigPlan } from "@/lib/utils/bemanningsplanKoder";
+import { erGyldigPlan } from "@/lib/utils/bemanningsplanKoder";
 import { importerBemanningsFravær } from "@/lib/utils/importerBemanningsFravær";
 import { parseBemanningsplanExcel, type BemanningPlanData } from "@/lib/utils/parseBemanningsplanExcel";
-import { validerFraværMotAnsatte } from "@/lib/utils/fraværAnsattMatching";
 import { ansattMatcherModulSøk } from "@/lib/utils/søkMatch";
 import FraværTidslinje from "./FraværTidslinje";
 import styles from "./page.module.css";
@@ -89,33 +88,18 @@ export default function FraværPage() {
   const [skjema, setSkjema] = useState<FraværSkjema>(() => toSkjema(null, aktiveAnsatte));
   const [importerer, setImporterer] = useState(false);
   const [lasterPlan, setLasterPlan] = useState(false);
-  const [importStatus, setImportStatus] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [importFeil, setImportFeil] = useState<string | null>(null);
   const [fokusDato, setFokusDato] = useState<string | null>(null);
-
-  const lagretOppsummering = useMemo(
-    () => formatFraværTypeOppsummering(tellFraværEtterType(fravær)),
-    [fravær],
-  );
 
   const kobling = useMemo(() => {
     if (!plan) return null;
     return analyserPlanKoblinger(plan, ansatte);
   }, [ansatte, plan]);
 
-  const planVsLagret = useMemo(() => {
-    if (!plan || !harOpplastetPlan || !kobling) return null;
-    const forventet = tellFraværKoderForKoblede(plan, ansatte);
-    const planAnsattIds = new Set(kobling.koblet.map((k) => k.ansattId).filter(Boolean) as string[]);
-    const lagret = tellLagredeFraværDager(fravær.filter((f) => planAnsattIds.has(f.ansattId)));
-    return { forventet, lagret, tekst: sammenlignFraværKoder(forventet, lagret) };
-  }, [ansatte, fravær, harOpplastetPlan, kobling, plan]);
-
   const redigerer = useMemo(
     () => (redigererId ? fravær.find((f) => f.id === redigererId) ?? null : null),
     [fravær, redigererId],
   );
-
-  const fraværValidering = useMemo(() => validerFraværMotAnsatte(fravær, ansatte), [ansatte, fravær]);
 
   const synlige = useMemo(() => {
     return fravær
@@ -191,27 +175,17 @@ export default function FraværPage() {
   async function håndterPlanOpplasting(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !canEdit) return;
-    setImportStatus(null);
+    setImportFeil(null);
     setLasterPlan(true);
     try {
       const buffer = await file.arrayBuffer();
       const parsed = parseBemanningsplanExcel(buffer, file.name);
       settPlan(parsed);
-      const { ansatte: oppdaterte, result } = synkPlanBindinger(parsed, ansatte);
+      const { ansatte: oppdaterte } = synkPlanBindinger(parsed, ansatte);
       setAnsatte(oppdaterte);
-
-      const { ok, melding } = await utførPlanSynk(
-        parsed,
-        oppdaterte,
-        `Lastet opp «${file.name}».`,
-      );
-      const type = ok && result.utenTreff.length === 0 ? "ok" : "error";
-      setImportStatus({ type, text: melding });
+      await utførPlanSynk(parsed, oppdaterte);
     } catch (err) {
-      setImportStatus({
-        type: "error",
-        text: err instanceof Error ? err.message : "Kunne ikke lese Excel-filen",
-      });
+      setImportFeil(err instanceof Error ? err.message : "Kunne ikke lese Excel-filen");
     } finally {
       setLasterPlan(false);
       if (filRef.current) filRef.current.value = "";
@@ -222,60 +196,31 @@ export default function FraværPage() {
     if (!canEdit) return;
     const ny = settPlanBinding(ansatte, ansattId, planNavn);
     setAnsatte(ny);
-    setImportStatus({
-      type: "ok",
-      text: `Koblet «${planNavn}» til valgt ansatt.`,
-    });
+    setImportFeil(null);
     if (plan && erGyldigPlan(plan)) {
-      void utførPlanSynk(plan, ny, `Koblet «${planNavn}» — fravær synkronisert på nytt.`);
+      void utførPlanSynk(plan, ny);
     }
   }
 
-  async function utførPlanSynk(
-    planData: BemanningPlanData,
-    ansattListe: Ansatt[],
-    prefix?: string,
-  ): Promise<{ ok: boolean; melding: string }> {
-    const { fravær: importerte, unmatchedNavn, validering } = await importerBemanningsFravær({
+  async function utførPlanSynk(planData: BemanningPlanData, ansattListe: Ansatt[]): Promise<void> {
+    const { fravær: importerte } = await importerBemanningsFravær({
       ansatte: ansattListe,
       plan: planData,
     });
 
     const kobledeIds = kobledeAnsattIdsFraPlan(planData, ansattListe);
     synkFraPlan(importerte, kobledeIds);
-
-    const forventet = tellFraværKoderForKoblede(planData, ansattListe);
-    const importertDager = tellLagredeFraværDager(importerte);
-    const sammenligning = sammenlignFraværKoder(forventet, importertDager);
-
-    const kildeTekst = planData.fileName ? `«${planData.fileName}»` : "planen";
-    let melding = prefix ? `${prefix} ` : "";
-    melding += `Synkronisert ${importerte.length} perioder fra ${kildeTekst} for ${kobledeIds.length} ansatte`;
-    melding += `. Dager: ${sammenligning}`;
-    if (unmatchedNavn.length > 0) {
-      melding += `. ${unmatchedNavn.length} plan-navn uten ansatt (ikke importert): ${unmatchedNavn.join(", ")}`;
-    }
-    if (validering.duplikatNavn.length > 0) {
-      melding += ` — advarsel: ${validering.duplikatNavn.length} navneduplikat i ansattliste`;
-    }
     if (importerte[0]) setFokusDato(importerte[0].fraDato);
-
-    const harAvvik = Object.keys(forventet).some((k) => (forventet[k] ?? 0) !== (importertDager[k] ?? 0));
-    return { ok: unmatchedNavn.length === 0 && !harAvvik, melding };
   }
 
   async function importerFraBemanningsplan() {
     if (!canEdit || importerer || !plan || !harOpplastetPlan) return;
-    setImportStatus(null);
+    setImportFeil(null);
     setImporterer(true);
     try {
-      const { ok, melding } = await utførPlanSynk(plan, ansatte);
-      setImportStatus({ type: ok ? "ok" : "error", text: melding });
+      await utførPlanSynk(plan, ansatte);
     } catch (err) {
-      setImportStatus({
-        type: "error",
-        text: err instanceof Error ? err.message : "Import feilet",
-      });
+      setImportFeil(err instanceof Error ? err.message : "Import feilet");
     } finally {
       setImporterer(false);
     }
@@ -310,14 +255,6 @@ export default function FraværPage() {
           </select>
           {canEdit ? (
             <>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={importerFraBemanningsplan}
-                disabled={importerer || lasterPlan || !harOpplastetPlan}
-              >
-                {importerer || lasterPlan ? "Synkroniserer…" : "Synkroniser fravær"}
-              </button>
               <button type="button" className={styles.primaryBtn} onClick={åpneNy} disabled={!aktiveAnsatte.length}>
                 Nytt fravær
               </button>
@@ -327,123 +264,67 @@ export default function FraværPage() {
       </header>
 
       {canEdit ? (
-        <section className={styles.planPanel} aria-label="Bemanningsplan">
-          <div className={styles.planPanelTitle}>Bemanningsplan (Excel)</div>
-          <p className={styles.planPanelMeta}>
-            Last opp ny <strong>Bemanning 2026.xlsx</strong> når planen endres — fravær synkroniseres{" "}
-            <strong>automatisk</strong> for alle koblede ansatte. Endringer (nye S/F/A/K/T, fjernede koder) erstatter
-            forrige plan-fravær. Sjekk avstemmingen under: alle koder skal ha <strong>✓</strong>.
-          </p>
-          <div className={styles.planPanelActions}>
-            <label className={styles.fileLabel}>
-              {lasterPlan ? "Leser fil…" : "Last opp bemanningsplan"}
-              <input
-                ref={filRef}
-                className={styles.fileInput}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={håndterPlanOpplasting}
-                disabled={lasterPlan}
-              />
-            </label>
-            {harOpplastetPlan && plan ? (
-              <span className={styles.planPanelMeta}>
-                Aktiv: <strong>{plan.fileName}</strong> ({Object.keys(plan.drivers).length} rader,{" "}
-                {formatFraværKoder(tellFraværKoderIPlan(plan))}, {plan.generated})
-              </span>
-            ) : plan?.drivers && Object.keys(plan.drivers).length > 0 ? (
-              <span className={styles.planPanelMeta}>
-                Lagret plan er utdatert — last opp <strong>Bemanning 2026.xlsx</strong> på nytt for å importere A, T og K.
-              </span>
-            ) : (
-              <span className={styles.planPanelMeta}>
-                Ingen gyldig plan — last opp <strong>Bemanning 2026.xlsx</strong> før import.
-              </span>
-            )}
-          </div>
-
-          {kobling ? (
-            <div className={styles.koblingStats}>
-              <span className={styles.koblingStatOk}>{kobling.koblet.length} koblet</span>
-              {kobling.utenTreff.length > 0 ? (
-                <span className={styles.koblingStatWarn}>{kobling.utenTreff.length} uten ansatt-treff</span>
-              ) : null}
-              {kobling.ansatteUtenPlanRad.length > 0 ? (
-                <span className={styles.planPanelMeta}>
-                  {kobling.ansatteUtenPlanRad.length} ansatte uten rad i plan (kun manuelt fravær)
-                </span>
-              ) : null}
-            </div>
+        <section className={styles.planBar} aria-label="Bemanningsplan">
+          <label className={styles.fileLabel}>
+            {lasterPlan ? "Leser fil…" : harOpplastetPlan ? "Bytt fil" : "Last opp plan"}
+            <input
+              ref={filRef}
+              className={styles.fileInput}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={håndterPlanOpplasting}
+              disabled={lasterPlan}
+            />
+          </label>
+          {harOpplastetPlan && plan ? (
+            <span className={styles.planFileName}>{plan.fileName}</span>
           ) : null}
-
-          {kobling && kobling.utenTreff.length > 0 ? (
-            <div>
-              <p className={styles.helper}>Koble plan-navn manuelt til ansatt:</p>
-              {kobling.utenTreff.map((rad) => (
-                <div key={rad.planNavn} className={styles.koblingRad}>
-                  <span className={styles.koblingPlanNavn}>
-                    {rad.planNavn}
-                    {rad.fraværDager > 0 ? ` (${rad.fraværDager} fraværsdager)` : ""}
-                  </span>
-                  <select
-                    className={styles.koblingSelect}
-                    defaultValue=""
-                    aria-label={`Koble ${rad.planNavn} til ansatt`}
-                    onChange={(e) => {
-                      if (e.target.value) manuellKobling(rad.planNavn, e.target.value);
-                    }}
-                  >
-                    <option value="">Velg ansatt…</option>
-                    {aktiveAnsatte.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {fullNavn(a)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
+          {harOpplastetPlan ? (
+            <button
+              type="button"
+              className={styles.secondaryBtn}
+              onClick={importerFraBemanningsplan}
+              disabled={importerer || lasterPlan}
+            >
+              {importerer || lasterPlan ? "Synkroniserer…" : "Synkroniser"}
+            </button>
+          ) : null}
+          {importFeil ? (
+            <span className={styles.planFeil} role="alert">
+              {importFeil}
+            </span>
           ) : null}
         </section>
       ) : null}
 
-      {importStatus ? (
-        <p
-          className={importStatus.type === "error" ? styles.importStatusError : styles.importStatusOk}
-          role="status"
-        >
-          {importStatus.text}
-        </p>
-      ) : null}
-
-      {fraværValidering.foreldreløse.length > 0 ? (
-        <p className={styles.importStatusError} role="status">
-          {fraværValidering.foreldreløse.length} fraværsperioder peker på ansatte som ikke finnes lenger
-          (feil kobling etter ansattendring). Importer på nytt etter at ansattlisten er riktig, eller slett
-          foreldreløse perioder manuelt.
-        </p>
-      ) : null}
-
-      {fravær.length > 0 ? (
-        <p className={styles.planPanelMeta} role="status">
-          Lagret i kalenderen: <strong>{fravær.length}</strong> perioder
-          {lagretOppsummering ? ` — ${lagretOppsummering}` : ""}
-          {typeFilter ? ` (filter: ${typeFilter})` : ""}
-        </p>
-      ) : harOpplastetPlan ? (
-        <p className={styles.importStatusError} role="status">
-          Plan er lastet opp, men fravær er ikke synkronisert ennå. Last opp på nytt eller trykk{" "}
-          <strong>Synkroniser fravær</strong>.
-        </p>
-      ) : null}
-
-      {planVsLagret ? (
-        <p
-          className={planVsLagret.tekst.includes("≠") ? styles.importStatusError : styles.importStatusOk}
-          role="status"
-        >
-          Avstemming dager (koblede ansatte): {planVsLagret.tekst}
-        </p>
+      {canEdit && kobling && kobling.utenTreff.length > 0 ? (
+        <details className={styles.koblingDetails} open>
+          <summary className={styles.koblingSummary}>
+            {kobling.utenTreff.length} navn i planen må kobles til ansatt
+          </summary>
+          <div className={styles.koblingListeWrap}>
+            {kobling.utenTreff.map((rad) => (
+              <div key={rad.planNavn} className={styles.koblingRad}>
+                <span className={styles.koblingPlanNavn}>{rad.planNavn}</span>
+                <select
+                  className={styles.koblingSelect}
+                  defaultValue=""
+                  aria-label={`Koble ${rad.planNavn} til ansatt`}
+                  onChange={(e) => {
+                    if (e.target.value) manuellKobling(rad.planNavn, e.target.value);
+                  }}
+                >
+                  <option value="">Velg ansatt…</option>
+                  {aktiveAnsatte.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {fullNavn(a)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        </details>
       ) : null}
 
       <FraværTidslinje

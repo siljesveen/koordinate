@@ -61,7 +61,7 @@ export default function TopNav() {
     (loading ? "…" : null);
 
   return (
-    <div className={styles.navWrap}>
+    <div className={`${styles.navWrap} printHide`}>
       <div className={styles.navScroll}>
         <nav className={styles.nav} aria-label="Hovedmeny">
           <Link href="/" className={styles.brand}>

@@ -22,6 +22,7 @@ import TurnusKort from "@/components/TurnusKort";
 import TurnusEditor from "@/components/TurnusEditor";
 import TurnusSkjema from "@/components/TurnusSkjema";
 import { standardNyTurnus, turnusHarArbeidsdager } from "@/lib/turnus/turnusSkjemaUtils";
+import { skrivUtAnsattListe } from "@/lib/utils/ansattListeUtskrift";
 import styles from "./page.module.css";
 
 type AktivFilter = "alle" | "aktiv" | "inaktiv";
@@ -334,6 +335,20 @@ export default function AnsattePage() {
       .sort((a, b) => fullNavn(a).localeCompare(fullNavn(b), "nb"));
   }, [ansatte, filter, søk, bilById, hengerById, rutekoderPerAnsatt]);
 
+  const ansatteTilUtskrift = useMemo(() => {
+    return ansatte
+      .filter((a) => {
+        if (filter === "aktiv") return a.aktiv;
+        if (filter === "inaktiv") return !a.aktiv;
+        return true;
+      })
+      .sort((a, b) => fullNavn(a).localeCompare(fullNavn(b), "nb"));
+  }, [ansatte, filter]);
+
+  function skrivUtListe() {
+    skrivUtAnsattListe(ansatteTilUtskrift, filter);
+  }
+
 
   function åpneNy() {
     setVisId(null);
@@ -495,6 +510,15 @@ export default function AnsattePage() {
             <option value="inaktiv">Kun inaktive</option>
             <option value="alle">Alle</option>
           </select>
+          <button
+            type="button"
+            className={styles.secondaryBtn}
+            onClick={skrivUtListe}
+            disabled={ansatteTilUtskrift.length === 0}
+            title={`Skriver ut alle (${ansatteTilUtskrift.length}) som matcher filteret`}
+          >
+            Skriv ut liste
+          </button>
           {canEditMasterdata ? (
             <button type="button" className={styles.primaryBtn} onClick={åpneNy}>
               Ny ansatt
